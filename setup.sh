@@ -32,7 +32,6 @@ echo "📦 Step 1/5: Installing dependencies..."
 echo ""
 echo "🔧 Step 2/5: Generating Prisma clients..."
 (cd "$FRONTEND_DIR" && npx prisma generate)
-(cd "$BACKEND_DIR" && npm run prisma:generate)
 
 # 3. Push database schema
 echo ""

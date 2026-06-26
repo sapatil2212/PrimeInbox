@@ -6,7 +6,7 @@
   "scripts": {
     "install:all": "cd email-outreach && npm install && cd ../backend && npm install",
     "prisma:push": "cd email-outreach && npx prisma db push",
-    "prisma:generate": "cd email-outreach && npx prisma generate && cd ../backend && npm run prisma:generate",
+    "prisma:generate": "cd email-outreach && npx prisma generate",
     "build:frontend": "cd email-outreach && npm run build",
     "build:backend": "cd backend && npm run build",
     "build:all": "npm run prisma:generate && npm run build:frontend && npm run build:backend",
