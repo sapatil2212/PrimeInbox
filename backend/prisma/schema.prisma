@@ -1,0 +1,751 @@
+datasource db {
+  provider = "mysql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  OWNER
+  ADMIN
+  MANAGER
+  USER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING_VERIFICATION
+}
+
+model Company {
+  id                 String             @id @default(uuid())
+  name               String
+  businessType       String?
+  workspaceSlug      String             @unique
+  subscriptionPlan   String             @default("FREE")
+  subscriptionStatus String             @default("ACTIVE")
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  users              User[]
+  smtpAccounts       SmtpAccount[]
+  smtpGroups         SmtpGroup[]
+  leadLists          LeadList[]
+  leads              Lead[]
+  leadTags           LeadTag[]
+  suppressions       SuppressionList[]
+  categories         TemplateCategory[]
+  templates          EmailTemplate[]
+  campaigns          Campaign[]
+  campaignTags       CampaignTag[]
+  billingSub         Subscription?
+  invoices           Invoice[]
+  payments           Payment[]
+  crmCompanies       CrmCompany[]
+  crmContacts        CrmContact[]
+  crmTasks           CrmTask[]
+  files              File[]
+  notifications      Notification[]
+  reports            Report[]
+  apiKeys            ApiKey[]
+  roles              Role[]
+}
+
+model User {
+  id                 String               @id @default(uuid())
+  companyId          String?
+  name               String
+  email              String               @unique
+  passwordHash       String
+  emailVerified      Boolean              @default(false)
+  profileImage       String?
+  contactNo          String?
+  whatsappNo         String?
+  role               UserRole             @default(USER)
+  status             UserStatus           @default(PENDING_VERIFICATION)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  lastLogin          DateTime?
+  lastIp             String?
+  timezone           String               @default("UTC")
+  language           String               @default("en")
+  theme              String               @default("light")
+  company            Company?             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  verificationTokens VerificationToken[]
+  passwordResets     PasswordResetToken[]
+  auditLogs          AuditLog[]
+  sessions           Session[]
+  apiKeys            ApiKey[]
+  campaignNotes      CampaignNote[]
+  crmTasks           CrmTask[]
+  roles              Role[]               @relation("UserRoles")
+  notifications      Notification[]
+}
+
+model VerificationToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+// ==========================================
+// 1. TENANCY, AUTH & USERS
+// ==========================================
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  sessionToken String   @unique
+  ipAddress    String?
+  userAgent    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Role {
+  id          String       @id @default(uuid())
+  name        String       // Owner, Admin, Manager, User
+  description String?
+  companyId   String?      // Null for global system roles
+  company     Company?     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  permissions Permission[]
+  users       User[]       @relation("UserRoles")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   // Read Campaigns, Edit SMTP, etc.
+  key         String   @unique // campaign:read, smtp:write
+  roles       Role[]
+}
+
+model ApiKey {
+  id          String    @id @default(uuid())
+  companyId   String
+  userId      String
+  name        String
+  keyHash     String    @unique
+  scopes      String    @default("read") // comma-separated scopes
+  isActive    Boolean   @default(true)
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// 2. SMTP MANAGEMENT
+// ==========================================
+
+enum SmtpStatus {
+  ACTIVE
+  PAUSED
+  INVALID_CREDENTIALS
+  RATE_LIMITED
+  BLOCKED
+}
+
+model SmtpAccount {
+  id                 String              @id @default(uuid())
+  companyId          String
+  host               String
+  port               Int
+  username           String
+  passwordEncrypted  String              // Encrypted using AES-256-GCM
+  secureType         String              // SSL, TLS, NONE
+  fromName           String
+  fromEmail          String
+  replyTo            String?
+  dailyLimit         Int                 @default(200)
+  hourlyLimit        Int                 @default(25)
+  currentDailyCount  Int                 @default(0)
+  currentHourlyCount Int                 @default(0)
+  status             SmtpStatus          @default(ACTIVE)
+  healthScore        Float               @default(100.0)
+  errorLog           String?             @db.Text
+  trackingDomain     String?
+  priority           Int                 @default(1)
+  rotationWeight     Int                 @default(1)
+  lastCheckedAt      DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  company            Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  smtpGroups         SmtpGroupAccount[]
+  campaignQueues     CampaignQueue[]
+  campaignLogs       CampaignLog[]
+  emailEvents        EmailEvent[]
+}
+
+model SmtpGroup {
+  id          String              @id @default(uuid())
+  companyId   String
+  name        String
+  description String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  company     Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  accounts    SmtpGroupAccount[]
+  campaigns   Campaign[]
+}
+
+model SmtpGroupAccount {
+  smtpGroupId   String
+  smtpAccountId String
+  smtpGroup     SmtpGroup   @relation(fields: [smtpGroupId], references: [id], onDelete: Cascade)
+  smtpAccount   SmtpAccount @relation(fields: [smtpAccountId], references: [id], onDelete: Cascade)
+
+  @@id([smtpGroupId, smtpAccountId])
+}
+
+// ==========================================
+// 3. LEAD MANAGEMENT
+// ==========================================
+
+enum LeadStatus {
+  ACTIVE
+  UNSUBSCRIBED
+  BOUNCED
+  COMPLETED
+}
+
+model LeadList {
+  id          String      @id @default(uuid())
+  companyId   String
+  name        String
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  leads       Lead[]
+  campaigns   Campaign[]  @relation("CampaignLeadLists")
+}
+
+model Lead {
+  id           String            @id @default(uuid())
+  companyId    String
+  listId       String
+  email        String
+  firstName    String?
+  lastName     String?
+  companyName  String?
+  title        String?
+  phone        String?
+  website      String?
+  linkedin     String?
+  location     String?
+  country      String?
+  status       LeadStatus        @default(ACTIVE)
+  customFields Json?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  company      Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  list         LeadList          @relation(fields: [listId], references: [id], onDelete: Cascade)
+  tags         LeadTagMapping[]
+  activities   LeadActivity[]
+  campaigns    CampaignLead[]
+  queues       CampaignQueue[]
+  logs         CampaignLog[]
+  emailEvents  EmailEvent[]
+  crmContact   CrmContact?
+
+  @@unique([listId, email])
+}
+
+model LeadTag {
+  id        String            @id @default(uuid())
+  companyId String
+  name      String
+  color     String            @default("#6366f1")
+  createdAt DateTime          @default(now())
+  company   Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  leads     LeadTagMapping[]
+
+  @@unique([companyId, name])
+}
+
+model LeadTagMapping {
+  leadId String
+  tagId  String
+  lead   Lead    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  tag    LeadTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([leadId, tagId])
+}
+
+model LeadActivity {
+  id        String   @id @default(uuid())
+  leadId    String
+  action    String
+  details   String?  @db.Text
+  createdAt DateTime @default(now())
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
+
+model SuppressionList {
+  id        String   @id @default(uuid())
+  companyId String
+  email     String
+  reason    String
+  createdAt DateTime @default(now())
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, email])
+}
+
+// ==========================================
+// 4. TEMPLATES
+// ==========================================
+
+model TemplateCategory {
+  id        String           @id @default(uuid())
+  companyId String
+  name      String
+  company   Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  templates EmailTemplate[]
+
+  @@unique([companyId, name])
+}
+
+model EmailTemplate {
+  id             String            @id @default(uuid())
+  companyId      String
+  categoryId     String?
+  name           String
+  subject        String
+  bodyHtml       String            @db.Text
+  bodyText       String?           @db.Text
+  variables      Json?
+  isDragDrop     Boolean           @default(false)
+  dragDropData   Json?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  company        Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  category       TemplateCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  campaignSteps  CampaignStep[]
+}
+
+// ==========================================
+// 5. CAMPAIGN MANAGEMENT
+// ==========================================
+
+enum CampaignStatus {
+  DRAFT
+  RUNNING
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+enum RotationType {
+  ROUND_ROBIN
+  WEIGHTED
+  PRIORITY
+  RANDOM
+}
+
+model Campaign {
+  id              String         @id @default(uuid())
+  companyId       String
+  name            String
+  status          CampaignStatus @default(DRAFT)
+  trackingOpens   Boolean        @default(true)
+  trackingClicks  Boolean        @default(true)
+  trackingReplies Boolean        @default(true)
+  trackingUnsub   Boolean        @default(true)
+  dailySendLimit  Int            @default(500)
+  delayMin        Int            @default(30)
+  delayMax        Int            @default(180)
+  rotationType    RotationType   @default(ROUND_ROBIN)
+  smtpGroupId     String?
+  timezone        String         @default("UTC")
+  weekendSending  Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  company         Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  smtpGroup       SmtpGroup?     @relation(fields: [smtpGroupId], references: [id], onDelete: SetNull)
+  steps           CampaignStep[]
+  leads           CampaignLead[]
+  leadLists       LeadList[]     @relation("CampaignLeadLists")
+  campaignTags    CampaignTagMapping[]
+  queues          CampaignQueue[]
+  logs            CampaignLog[]
+  emailEvents     EmailEvent[]
+  notes           CampaignNote[]
+}
+
+model CampaignStep {
+  id           String        @id @default(uuid())
+  campaignId   String
+  stepNumber   Int
+  templateId   String
+  delayDays    Int           @default(3)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  campaign     Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  template     EmailTemplate @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  queues       CampaignQueue[]
+  logs         CampaignLog[]
+  emailEvents  EmailEvent[]
+}
+
+enum CampaignLeadStatus {
+  PENDING
+  SENT
+  REPLIED
+  BOUNCED
+  UNSUBSCRIBED
+  FAILING
+  COMPLETED
+}
+
+model CampaignLead {
+  campaignId        String
+  leadId            String
+  status            CampaignLeadStatus @default(PENDING)
+  currentStepNumber Int                @default(1)
+  lastSentAt        DateTime?
+  nextSendAt        DateTime           @default(now())
+  campaign          Campaign           @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  lead              Lead               @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@id([campaignId, leadId])
+}
+
+enum QueueStatus {
+  QUEUED
+  PROCESSING
+  FAILED
+  SENT
+}
+
+model CampaignQueue {
+  id            String        @id @default(uuid())
+  campaignId    String
+  leadId        String
+  stepId        String
+  smtpAccountId String?
+  status        QueueStatus   @default(QUEUED)
+  errorMessage  String?       @db.Text
+  scheduledAt   DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  campaign      Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  lead          Lead          @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  step          CampaignStep  @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  smtpAccount   SmtpAccount?  @relation(fields: [smtpAccountId], references: [id], onDelete: SetNull)
+}
+
+model CampaignLog {
+  id            String        @id @default(uuid())
+  campaignId    String
+  leadId        String
+  stepId        String
+  smtpAccountId String?
+  action        String
+  status        String
+  message       String?       @db.Text
+  createdAt     DateTime      @default(now())
+  campaign      Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  lead          Lead          @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  step          CampaignStep  @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  smtpAccount   SmtpAccount?  @relation(fields: [smtpAccountId], references: [id], onDelete: SetNull)
+}
+
+model CampaignNote {
+  id         String   @id @default(uuid())
+  campaignId String
+  userId     String
+  note       String   @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CampaignTag {
+  id        String               @id @default(uuid())
+  companyId String
+  name      String
+  color     String               @default("#6366f1")
+  createdAt DateTime             @default(now())
+  company   Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  campaigns CampaignTagMapping[]
+
+  @@unique([companyId, name])
+}
+
+model CampaignTagMapping {
+  campaignId    String
+  campaignTagId String
+  campaign      Campaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  tag           CampaignTag @relation(fields: [campaignTagId], references: [id], onDelete: Cascade)
+
+  @@id([campaignId, campaignTagId])
+}
+
+// ==========================================
+// 6. EMAIL TRACKING & EVENTS
+// ==========================================
+
+enum EventType {
+  SENT
+  OPENED
+  CLICKED
+  REPLIED
+  BOUNCED
+  UNSUBSCRIBED
+}
+
+model EmailEvent {
+  id            String        @id @default(uuid())
+  campaignId    String
+  leadId        String
+  stepId        String
+  smtpAccountId String?
+  messageId     String        @unique
+  eventType     EventType
+  ipAddress     String?
+  userAgent     String?
+  country       String?
+  city          String?
+  device        String?
+  browser       String?
+  createdAt     DateTime      @default(now())
+  campaign      Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  lead          Lead          @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  step          CampaignStep  @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  smtpAccount   SmtpAccount?  @relation(fields: [smtpAccountId], references: [id], onDelete: SetNull)
+  opens         OpenTracking[]
+  clicks        ClickTracking[]
+  replies       ReplyLog[]
+  bounces       BounceLog[]
+}
+
+model OpenTracking {
+  id           String     @id @default(uuid())
+  emailEventId String
+  openedAt     DateTime   @default(now())
+  ipAddress    String?
+  userAgent    String?
+  emailEvent   EmailEvent @relation(fields: [emailEventId], references: [id], onDelete: Cascade)
+}
+
+model ClickTracking {
+  id           String     @id @default(uuid())
+  emailEventId String
+  url          String     @db.Text
+  clickedAt    DateTime   @default(now())
+  ipAddress    String?
+  userAgent    String?
+  emailEvent   EmailEvent @relation(fields: [emailEventId], references: [id], onDelete: Cascade)
+}
+
+model ReplyLog {
+  id           String     @id @default(uuid())
+  emailEventId String
+  subject      String?
+  bodyText     String?    @db.Text
+  repliedAt    DateTime   @default(now())
+  emailEvent   EmailEvent @relation(fields: [emailEventId], references: [id], onDelete: Cascade)
+}
+
+model BounceLog {
+  id           String     @id @default(uuid())
+  emailEventId String
+  bounceType   String
+  bounceReason String?    @db.Text
+  createdAt    DateTime   @default(now())
+  emailEvent   EmailEvent @relation(fields: [emailEventId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// 7. BILLING & SUBSCRIPTIONS
+// ==========================================
+
+model Subscription {
+  id                   String   @id @default(uuid())
+  companyId            String   @unique
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?  @unique
+  stripePriceId        String?
+  status               String
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  company              Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model Invoice {
+  id            String    @id @default(uuid())
+  companyId     String
+  invoiceNumber String    @unique
+  amount        Float
+  currency      String    @default("usd")
+  status        String
+  pdfUrl        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  payments      Payment[]
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  companyId     String
+  invoiceId     String
+  amount        Float
+  currency      String   @default("usd")
+  status        String
+  provider      String   @default("stripe")
+  transactionId String   @unique
+  createdAt     DateTime @default(now())
+  company       Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  invoice       Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// 8. CRM MODULE
+// ==========================================
+
+model CrmCompany {
+  id             String       @id @default(uuid())
+  companyId      String
+  name           String
+  domain         String?
+  industry       String?
+  employeesCount Int?
+  phone          String?
+  address        String?
+  customFields   Json?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  company        Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contacts       CrmContact[]
+}
+
+model CrmContact {
+  id            String      @id @default(uuid())
+  companyId     String
+  crmCompanyId  String?
+  leadId        String?     @unique
+  email         String
+  firstName     String?
+  lastName      String?
+  phone         String?
+  title         String?
+  status        String      @default("CONTACTED")
+  notes         String?     @db.Text
+  lastContactAt DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  company       Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  crmCompany    CrmCompany? @relation(fields: [crmCompanyId], references: [id], onDelete: SetNull)
+  lead          Lead?       @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  tasks         CrmTask[]
+}
+
+model CrmTask {
+  id        String    @id @default(uuid())
+  companyId String
+  userId    String
+  contactId String
+  task      String
+  dueDate   DateTime?
+  status    String    @default("PENDING")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contact   CrmContact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// 9. FILES & ATTACHMENTS
+// ==========================================
+
+model File {
+  id          String       @id @default(uuid())
+  companyId   String
+  name        String
+  size        Int
+  type        String
+  path        String
+  url         String
+  createdAt   DateTime     @default(now())
+  company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  attachments Attachment[]
+}
+
+model Attachment {
+  id         String   @id @default(uuid())
+  fileId     String
+  templateId String?
+  stepId     String?
+  file       File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+}
+
+// ==========================================
+// 10. SYSTEM UTILITIES, NOTIFICATIONS, LOGS
+// ==========================================
+
+model Notification {
+  id        String   @id @default(uuid())
+  companyId String
+  userId    String?
+  title     String
+  message   String   @db.Text
+  type      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Report {
+  id        String   @id @default(uuid())
+  companyId String
+  name      String
+  type      String
+  filters   Json?
+  data      Json?
+  fileUrl   String?
+  createdAt DateTime @default(now())
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model SystemLog {
+  id         String   @id @default(uuid())
+  level      String
+  service    String
+  message    String   @db.Text
+  errorStack String?  @db.Text
+  createdAt  DateTime @default(now())
+}
