@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { toast, confirmDialog } from "@/components/ui/feedback";
 import {
   Plus,
   Search,
@@ -22,11 +23,15 @@ import {
   Tag,
   Calendar,
   ChevronRight,
+  Copy,
+  Edit,
+  FolderSync,
 } from "lucide-react";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import CodeMirror from "@uiw/react-codemirror";
 import { html } from "@codemirror/lang-html";
 import { cn } from "@/lib/utils";
+import { getPlanLimits } from "@/lib/plans";
 
 interface TemplateItem {
   id: string;
@@ -34,7 +39,9 @@ interface TemplateItem {
   subject: string;
   bodyHtml: string;
   bodyText: string | null;
+  isDragDrop: boolean;
   createdAt: string;
+  updatedAt: string;
   category?: { name: string };
   categoryId: string | null;
 }
@@ -44,10 +51,74 @@ interface CategoryInfo {
   name: string;
 }
 
+const getPreviewHtml = (htmlContent: string) => {
+  if (!htmlContent) return "";
+  let content = htmlContent;
+  const mockValues: Record<string, string> = {
+    firstName: "John",
+    lastName: "Doe",
+    companyName: "Acme Corp",
+    email: "john.doe@acme.com",
+    website: "acme.com",
+    linkedin: "linkedin.com/in/johndoe",
+    location: "New York",
+    country: "United States",
+  };
+  
+  Object.entries(mockValues).forEach(([key, val]) => {
+    const regex = new RegExp(`{{\\s*${key}\\s*}}`, "gi");
+    content = content.replace(regex, val);
+  });
+  
+  const styleInject = `
+    <style>
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        -ms-overflow-style: none !important;
+        scrollbar-width: none !important;
+      }
+      ::-webkit-scrollbar {
+        display: none !important;
+      }
+    </style>
+  `;
+  
+  if (content.includes("</head>")) {
+    content = content.replace("</head>", `${styleInject}</head>`);
+  } else {
+    content = styleInject + content;
+  }
+  
+  return content;
+};
+
 export default function TemplatesPage() {
+  const router = useRouter();
   const [templates, setTemplates] = useState<TemplateItem[]>([]);
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategoryTab, setActiveCategoryTab] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("recent");
+  const [isCreatorModalOpen, setIsCreatorModalOpen] = useState(false);
+  const [canUseVisualBuilder, setCanUseVisualBuilder] = useState(false);
+
+  const handleCategoryClick = (categoryId: string) => {
+    if (activeCategoryTab === categoryId) {
+      setActiveCategoryTab("all");
+      setSortBy("recent");
+    } else {
+      setActiveCategoryTab(categoryId);
+    }
+  };
+
+  const handleSortChange = (val: string) => {
+    setSortBy(val);
+    if (val === "recent") {
+      setActiveCategoryTab("all");
+    }
+  };
 
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
   const [isComposerOpen, setIsComposerOpen] = useState(false);
@@ -123,6 +194,7 @@ export default function TemplatesPage() {
           setCurrentUserEmail(sessionData.user.email);
           setTestEmail(sessionData.user.email);
         }
+        setCanUseVisualBuilder(getPlanLimits(sessionData.user?.company?.subscriptionPlan).visualBuilder);
       }
 
       const smtpRes = await fetch("/api/smtp/accounts");
@@ -140,6 +212,15 @@ export default function TemplatesPage() {
     fetchCategories();
     fetchSessionAndSmtp();
   }, []);
+
+  // Visual Builder is gated by plan; otherwise go straight to the HTML editor.
+  const handleNewTemplate = () => {
+    if (canUseVisualBuilder) {
+      setIsCreatorModalOpen(true);
+    } else {
+      handleOpenCreateComposer();
+    }
+  };
 
   const handleGenerateAiTemplate = async () => {
     if (!aiPrompt.trim()) {
@@ -261,6 +342,14 @@ export default function TemplatesPage() {
     setIsComposerOpen(true);
   };
 
+  const handleEditClick = (template: TemplateItem) => {
+    if (template.isDragDrop) {
+      router.push(`/dashboard/templates/builder/${template.id}`);
+    } else {
+      handleOpenEditComposer(template);
+    }
+  };
+
   const handleSaveTemplate = async () => {
     if (!name.trim() || !subject.trim() || !bodyHtml.trim()) {
       toast.error("Please enter a name, subject, and email body.");
@@ -285,7 +374,10 @@ export default function TemplatesPage() {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Failed to save template");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to save template");
+      }
 
       toast.success(editingId ? "Template updated successfully" : "Created new email template");
       setIsComposerOpen(false);
@@ -298,16 +390,56 @@ export default function TemplatesPage() {
   };
 
   const handleDeleteTemplate = async (id: string, templateName: string) => {
-    if (!confirm(`Are you sure you want to delete template "${templateName}"?`)) return;
+    await confirmDialog({
+      title: "Delete template?",
+      description: `"${templateName}" will be permanently deleted. This cannot be undone.`,
+      confirmText: "Delete",
+      successTitle: "Deleted!",
+      successDescription: `"${templateName}" has been permanently deleted.`,
+      onConfirm: async () => {
+        const res = await fetch(`/api/templates/${id}`, { method: "DELETE" });
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.error || "Failed to delete template");
+        }
+        fetchTemplates();
+      },
+    });
+  };
 
+  const handleDuplicateTemplate = async (id: string, templateName: string) => {
     try {
-      const res = await fetch(`/api/templates/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete template");
-
-      toast.success(`Deleted template "${templateName}"`);
+      const res = await fetch(`/api/templates/${id}/duplicate`, { method: "POST" });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to duplicate template");
+      }
+      const data = await res.json();
+      toast.success(`Duplicated "${templateName}" as "${data.template.name}"`);
       fetchTemplates();
     } catch (err: any) {
-      toast.error(err.message || "Failed to delete template");
+      toast.error(err.message || "Failed to duplicate template");
+    }
+  };
+
+  const handleRenameTemplate = async (id: string, oldName: string) => {
+    const newName = window.prompt("Rename template to:", oldName);
+    if (!newName || !newName.trim() || newName === oldName) return;
+
+    try {
+      const res = await fetch(`/api/templates/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newName.trim() }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to rename template");
+      }
+      toast.success(`Renamed template to "${newName.trim()}"`);
+      fetchTemplates();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to rename template");
     }
   };
 
@@ -317,11 +449,32 @@ export default function TemplatesPage() {
     toast.info(`Inserted ${placeholder}`);
   };
 
-  const filteredTemplates = templates.filter(
-    (t) =>
-      t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.subject.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTemplates = templates
+    .filter((t) => {
+      const matchesSearch =
+        t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.subject.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory =
+        activeCategoryTab === "all" ||
+        t.categoryId === activeCategoryTab ||
+        (t.category?.name || "").toLowerCase() === activeCategoryTab.toLowerCase();
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => {
+      if (sortBy === "name") {
+        return a.name.localeCompare(b.name);
+      }
+      if (sortBy === "category") {
+        const catA = a.category?.name || "";
+        const catB = b.category?.name || "";
+        return catA.localeCompare(catB);
+      }
+      if (sortBy === "oldest") {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      }
+      // default: "recent"
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
 
   const variablesList = ["firstName", "lastName", "companyName", "email", "website", "linkedin", "location", "country"];
 
@@ -345,45 +498,81 @@ export default function TemplatesPage() {
               </p>
             </div>
             <div className="flex items-center gap-2.5">
+              {/* Shifted Search Bar */}
+              <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-3 py-1.5 w-60">
+                <Search className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Search templates..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-transparent border-0 outline-none text-xs text-zinc-800 placeholder-zinc-400 w-full font-medium"
+                />
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery("")} className="text-zinc-400 hover:text-zinc-600 cursor-pointer">
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+
               <button
                 onClick={() => setCreateCategoryOpen(true)}
-                className="h-9 px-4 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="h-9 px-4 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
               >
                 <Tag className="w-3.5 h-3.5" />
                 Add Category
               </button>
-              <ShimmerButton
-                onClick={handleOpenCreateComposer}
-                className="h-9 px-4 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-1.5"
-                shimmerColor="#818cf8"
+
+              <button
+                onClick={handleNewTemplate}
+                className="h-9 px-4 rounded-lg text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-white flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-colors border border-zinc-950"
               >
                 <Plus className="w-3.5 h-3.5" /> Create Template
-              </ShimmerButton>
+              </button>
             </div>
           </header>
 
-          {/* Search + Filter bar */}
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="flex items-center gap-2.5 bg-white border border-zinc-200 rounded-xl px-3.5 py-2 max-w-xs flex-1">
-              <Search className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-              <input
-                type="text"
-                placeholder="Search templates..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent border-0 outline-none text-xs text-zinc-800 placeholder-zinc-400 w-full font-medium"
-              />
-              {searchQuery && (
-                <button onClick={() => setSearchQuery("")} className="text-zinc-400 hover:text-zinc-600 cursor-pointer">
-                  <X className="w-3 h-3" />
+          {/* Category Filter + Sort Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shrink-0 border-b border-zinc-150 pb-4">
+            {/* Category tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 shrink-0 select-none no-scrollbar flex-1">
+              {categories.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => handleCategoryClick(c.id)}
+                  className={cn(
+                    "px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer transition-all",
+                    activeCategoryTab === c.id
+                      ? "bg-zinc-900 text-white shadow-sm"
+                      : "bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50"
+                  )}
+                >
+                  {c.name}
                 </button>
-              )}
+              ))}
             </div>
-            {filteredTemplates.length > 0 && (
-              <span className="text-xs text-zinc-400 font-medium shrink-0">
-                {filteredTemplates.length} template{filteredTemplates.length !== 1 ? "s" : ""}
-              </span>
-            )}
+
+            {/* Sort options */}
+            <div className="flex items-center gap-3 shrink-0">
+              {filteredTemplates.length > 0 && (
+                <span className="text-xs text-zinc-400 font-medium shrink-0">
+                  {filteredTemplates.length} template{filteredTemplates.length !== 1 ? "s" : ""}
+                </span>
+              )}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-zinc-400 font-semibold">Sort by:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => handleSortChange(e.target.value)}
+                  className="h-9 px-3 rounded-lg border border-zinc-200 bg-white text-zinc-700 text-xs font-semibold focus:outline-none cursor-pointer"
+                >
+                  <option value="recent">All Templates</option>
+                  <option value="oldest">Oldest Created</option>
+                  <option value="name">Name (A-Z)</option>
+                  <option value="category">Category</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           {/* Grid listing */}
@@ -399,15 +588,80 @@ export default function TemplatesPage() {
               {filteredTemplates.map((t) => (
                 <div
                   key={t.id}
-                  className="group relative bg-white border border-zinc-200 rounded-2xl flex flex-col overflow-hidden transition-all duration-200 hover:border-indigo-200"
+                  className="group relative bg-white border border-zinc-200 rounded-2xl flex flex-col overflow-hidden transition-all duration-200 hover:border-indigo-200 hover:shadow-sm"
                 >
-                  <div className="p-4 flex flex-col h-full gap-3">
+                  {/* Thumbnail area */}
+                  <div className="p-3 pb-0">
+                    <div 
+                      onClick={() => handleEditClick(t)}
+                      className="relative aspect-video rounded-xl bg-zinc-50 border border-zinc-150 flex flex-col justify-between overflow-hidden select-none cursor-pointer group-hover:bg-zinc-100/50 transition-all duration-200 p-3.5"
+                    >
+                      {/* Scaled Iframe Preview */}
+                      <div className="absolute inset-0 w-full h-full overflow-hidden bg-white z-0 pointer-events-none">
+                        <iframe
+                          srcDoc={getPreviewHtml(t.bodyHtml)}
+                          title={`Preview Thumbnail ${t.id}`}
+                          className="absolute top-0 left-0 border-0 pointer-events-none origin-top-left"
+                          style={{
+                            width: "400%",
+                            height: "400%",
+                            transform: "scale(0.25)",
+                          }}
+                          sandbox="allow-same-origin"
+                        />
+                      </div>
+
+                      {/* Foreground Overlay Content */}
+                      <div className="relative z-10 flex flex-col h-full justify-between pointer-events-none w-full">
+                        <div /> {/* Spacer */}
+                        
+                        <div className="mt-auto flex items-center justify-between">
+                          <span className={cn(
+                            "px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase border shadow-sm backdrop-blur-md",
+                            t.isDragDrop 
+                              ? "bg-indigo-50/90 border-indigo-200 text-indigo-700" 
+                              : "bg-amber-50/90 border-amber-200 text-amber-700"
+                          )}>
+                            {t.isDragDrop ? "Visual Builder" : "HTML Code"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Hover action overlay */}
+                      <div className="absolute inset-0 bg-zinc-950/20 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-20">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditClick(t);
+                          }}
+                          className="h-8 px-3 rounded-lg bg-white hover:bg-zinc-50 text-zinc-900 shadow text-xs font-semibold flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all"
+                          title="Open Template"
+                        >
+                          <Pencil className="w-3.5 h-3.5 text-zinc-600" />
+                          Open
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPreviewModalTemplate(t);
+                            setPreviewModalMode("desktop");
+                          }}
+                          className="h-8 w-8 rounded-full bg-white hover:bg-zinc-50 text-zinc-950 shadow flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
+                          title="Preview"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-zinc-600" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 pt-3 flex flex-col h-full gap-3">
                     {/* Header */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <h3
                           className="font-bold text-zinc-900 text-sm truncate cursor-pointer hover:text-indigo-600 transition-colors leading-snug"
-                          onClick={() => handleOpenEditComposer(t)}
+                          onClick={() => handleEditClick(t)}
                         >
                           {t.name}
                         </h3>
@@ -423,44 +677,36 @@ export default function TemplatesPage() {
                       )}
                     </div>
 
-                    {/* Body preview */}
-                    <div className="flex-1 p-3 bg-zinc-50 border border-zinc-100 rounded-xl text-[11px] text-zinc-500 font-normal leading-relaxed overflow-hidden line-clamp-3 select-none min-h-[56px]">
-                      {t.bodyHtml.replace(/<[^>]*>/g, "").trim().slice(0, 160) || "No body content"}
-                    </div>
-
-                    {/* Footer */}
-                    <div className="flex items-center justify-between pt-1 mt-auto">
+                    {/* Footer actions bar */}
+                    <div className="flex items-center justify-between pt-2 border-t border-zinc-100 mt-auto">
                       <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-medium">
                         <Calendar className="w-3 h-3" />
                         {formatDate(t.createdAt)}
                       </div>
 
                       <div className="flex items-center gap-1">
-                        {/* View preview icon */}
+                        {/* Duplicate */}
                         <button
-                          onClick={() => {
-                            setPreviewModalTemplate(t);
-                            setPreviewModalMode("desktop");
-                          }}
-                          title="Preview template"
-                          className="p-1.5 rounded-lg border border-transparent hover:border-indigo-200 hover:bg-indigo-50 text-zinc-400 hover:text-indigo-600 transition-all cursor-pointer"
+                          onClick={() => handleDuplicateTemplate(t.id, t.name)}
+                          title="Duplicate Template"
+                          className="p-1.5 rounded-lg border border-transparent hover:border-zinc-200 hover:bg-zinc-50 text-zinc-400 hover:text-zinc-700 transition-all cursor-pointer"
                         >
-                          <Eye className="w-3.5 h-3.5" />
+                          <Copy className="w-3.5 h-3.5" />
                         </button>
 
-                        {/* Edit icon */}
+                        {/* Rename */}
                         <button
-                          onClick={() => handleOpenEditComposer(t)}
-                          title="Edit template"
-                          className="p-1.5 rounded-lg border border-transparent hover:border-zinc-300 hover:bg-zinc-50 text-zinc-400 hover:text-zinc-700 transition-all cursor-pointer"
+                          onClick={() => handleRenameTemplate(t.id, t.name)}
+                          title="Rename Template"
+                          className="p-1.5 rounded-lg border border-transparent hover:border-zinc-200 hover:bg-zinc-50 text-zinc-400 hover:text-zinc-700 transition-all cursor-pointer"
                         >
-                          <Pencil className="w-3.5 h-3.5" />
+                          <FolderSync className="w-3.5 h-3.5" />
                         </button>
 
-                        {/* Delete icon */}
+                        {/* Delete */}
                         <button
                           onClick={() => handleDeleteTemplate(t.id, t.name)}
-                          title="Delete template"
+                          title="Delete Template"
                           className="p-1.5 rounded-lg border border-transparent hover:border-red-200 hover:bg-red-50 text-zinc-400 hover:text-red-600 transition-all cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -488,8 +734,8 @@ export default function TemplatesPage() {
               </div>
               {!searchQuery && (
                 <button
-                  onClick={handleOpenCreateComposer}
-                  className="h-9 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition-colors cursor-pointer flex items-center gap-1.5"
+                  onClick={handleNewTemplate}
+                  className="h-9 px-5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-white transition-colors cursor-pointer flex items-center gap-1.5 border border-zinc-950"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Create your first template
@@ -810,7 +1056,7 @@ export default function TemplatesPage() {
                 )}
               >
                 <iframe
-                  srcDoc={previewModalTemplate.bodyHtml}
+                  srcDoc={getPreviewHtml(previewModalTemplate.bodyHtml)}
                   title={`Preview: ${previewModalTemplate.name}`}
                   className="w-full border-0"
                   style={{ minHeight: "400px", height: "500px" }}
@@ -1003,6 +1249,66 @@ export default function TemplatesPage() {
               </button>
             </div>
           </form>
+        </div>,
+        document.body
+      )}
+
+      {/* ─── CREATOR CHOICE MODAL (portal → renders on document.body) ─── */}
+      {mounted && isCreatorModalOpen && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setIsCreatorModalOpen(false)}>
+          <div
+            className="w-full max-w-md bg-white border border-zinc-200 rounded-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
+              <h3 className="font-bold text-zinc-900 text-sm">Create New Template</h3>
+              <button type="button" onClick={() => setIsCreatorModalOpen(false)} className="p-1.5 rounded-lg border border-zinc-200 hover:bg-zinc-50 text-zinc-400 hover:text-zinc-700 cursor-pointer transition-colors">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className={cn("p-6 grid grid-cols-1 gap-4", canUseVisualBuilder && "sm:grid-cols-2")}>
+              {/* Visual Builder Option */}
+              {canUseVisualBuilder && (
+              <button
+                onClick={() => {
+                  setIsCreatorModalOpen(false);
+                  router.push("/dashboard/templates/builder/new");
+                }}
+                className="group p-5 rounded-2xl border border-zinc-200 hover:border-indigo-500 bg-white hover:bg-indigo-50/20 text-left transition-all duration-200 cursor-pointer flex flex-col items-start gap-3.5"
+              >
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-100/80 transition-colors">
+                  <Sparkles className="w-5 h-5 text-indigo-500 animate-pulse" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-zinc-900 text-sm leading-snug">Visual Builder</h4>
+                  <p className="text-[11px] text-zinc-500 font-medium mt-1 leading-normal">
+                    Create professional, responsive templates visually without writing HTML.
+                  </p>
+                </div>
+              </button>
+              )}
+
+              {/* Code Editor Option */}
+              <button
+                onClick={() => {
+                  setIsCreatorModalOpen(false);
+                  handleOpenCreateComposer();
+                }}
+                className="group p-5 rounded-2xl border border-zinc-200 hover:border-amber-500 bg-white hover:bg-amber-50/20 text-left transition-all duration-200 cursor-pointer flex flex-col items-start gap-3.5"
+              >
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:bg-amber-100/80 transition-colors">
+                  <Code className="w-5 h-5 text-amber-500" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-zinc-900 text-sm leading-snug">HTML Code Editor</h4>
+                  <p className="text-[11px] text-zinc-500 font-medium mt-1 leading-normal">
+                    Write raw HTML code directly with autocomplete syntax highlighting.
+                  </p>
+                </div>
+              </button>
+            </div>
+          </div>
         </div>,
         document.body
       )}

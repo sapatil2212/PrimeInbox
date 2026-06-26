@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from"react";
-import { toast } from"sonner";
+import { useState, useEffect, useRef } from"react";
+import { useRouter } from"next/navigation";
+import { toast } from "@/components/ui/feedback";
 import { 
  User, 
  Settings, 
@@ -15,7 +16,8 @@ import {
  Check, 
  Trash2,
  Lock,
- Plus
+ Plus,
+ Upload
 } from"lucide-react";
 import { GlowCard } from"@/components/ui/glow-card";
 import { ShimmerButton } from"@/components/ui/shimmer-button";
@@ -35,6 +37,7 @@ interface UserProfile {
 }
 
 export default function SettingsPage() {
+ const router = useRouter();
  const [activeTab, setActiveTab] = useState<"profile" | "company">("profile");
  const [profile, setProfile] = useState<UserProfile | null>(null);
  const [isLoading, setIsLoading] = useState(true);
@@ -45,6 +48,8 @@ export default function SettingsPage() {
  const [language, setLanguage] = useState("en");
  const [theme, setTheme] = useState("light");
  const [profileImage, setProfileImage] = useState("");
+ const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+ const avatarInputRef = useRef<HTMLInputElement>(null);
  const [contactNo, setContactNo] = useState("");
  const [whatsappNo, setWhatsappNo] = useState("");
  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
@@ -81,6 +86,39 @@ export default function SettingsPage() {
  fetchSettings();
  }, []);
 
+ const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+ const file = e.target.files?.[0];
+ if (!file) return;
+
+ if (!file.type.startsWith("image/")) {
+ toast.error("Please select an image file.");
+ return;
+ }
+ if (file.size > 5 * 1024 * 1024) {
+ toast.error("Image must be 5MB or smaller.");
+ return;
+ }
+
+ setIsUploadingAvatar(true);
+ try {
+ const formData = new FormData();
+ formData.append("file", file);
+ formData.append("category", "avatars");
+
+ const res = await fetch("/api/media/upload", { method: "POST", body: formData });
+ const data = await res.json();
+ if (!res.ok) throw new Error(data.error || "Upload failed");
+
+ setProfileImage(data.url);
+ toast.success("Avatar uploaded. Save your profile to apply it.");
+ } catch (err: any) {
+ toast.error(err.message || "Failed to upload avatar");
+ } finally {
+ setIsUploadingAvatar(false);
+ if (avatarInputRef.current) avatarInputRef.current.value = "";
+ }
+ };
+
  const handleUpdateProfile = async (e: React.FormEvent) => {
  e.preventDefault();
  setIsUpdatingProfile(true);
@@ -106,6 +144,7 @@ export default function SettingsPage() {
 
  toast.success("Profile settings updated successfully!");
  fetchSettings();
+ router.refresh(); // Revalidate server components (sidebar/header avatar)
  } catch (err: any) {
  toast.error(err.message || "Failed to update profile");
  } finally {
@@ -153,64 +192,91 @@ export default function SettingsPage() {
  }
 
  return (
-  <div className="flex-1 flex flex-col gap-6">
-  
+  <div className="flex-1 flex flex-col items-center w-full">
+  <div className="w-full max-w-2xl flex flex-col gap-6">
+
   {/* Header */}
-  <header className="shrink-0 pb-2">
-  <h1 className="text-xl font-bold tracking-tight text-zinc-800">
+  <header className="text-center pt-2">
+  <h1 className="text-2xl font-black tracking-tight text-zinc-900">
   Settings
   </h1>
-  <p className="text-xs text-zinc-500 font-medium">Manage your personal profile, company details, and preferences.</p>
+  <p className="text-sm text-zinc-500 font-medium mt-1">Manage your personal profile, company details, and preferences.</p>
   </header>
 
   {/* Tabs */}
-  <div className="flex border-b border-zinc-100 gap-6 select-none shrink-0">
+  <div className="flex items-center justify-center gap-1 bg-zinc-100/70 p-1 rounded-xl mx-auto select-none">
   <button 
   onClick={() => setActiveTab("profile")}
   className={cn(
- "pb-3 text-xs font-bold transition-all border-b-2 cursor-pointer",
-  activeTab ==="profile" ?"border-indigo-600 text-indigo-600" :"border-transparent text-zinc-500 hover:text-zinc-750"
+ "px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5",
+  activeTab ==="profile" ?"bg-white text-indigo-600 shadow-sm" :"text-zinc-500 hover:text-zinc-800"
   )}
   >
-  <span className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> User Profile</span>
+  <User className="w-3.5 h-3.5" /> User Profile
   </button>
   <button 
   onClick={() => setActiveTab("company")}
   className={cn(
- "pb-3 text-xs font-bold transition-all border-b-2 cursor-pointer",
-  activeTab ==="company" ?"border-indigo-600 text-indigo-600" :"border-transparent text-zinc-500 hover:text-zinc-750"
+ "px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5",
+  activeTab ==="company" ?"bg-white text-indigo-600 shadow-sm" :"text-zinc-500 hover:text-zinc-800"
   )}
   >
-  <span className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5" /> Workspace Settings</span>
+  <Globe className="w-3.5 h-3.5" /> Workspace
   </button>
   </div>
 
   {/* Tabs Contents */}
-  <div className="flex-1 max-w-2xl">
+  <div className="w-full">
   
   {/* PROFILE TAB */}
   {activeTab ==="profile" && (
-  <div className="space-y-8">
-    <form onSubmit={handleUpdateProfile} className="space-y-5">
+  <div className="space-y-6">
+    <form onSubmit={handleUpdateProfile} className="bg-white border border-zinc-200/70 rounded-2xl p-6 space-y-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
     
-    {/* Profile Picture / Avatar URL */}
+    <div>
+      <h2 className="text-sm font-extrabold text-zinc-900 flex items-center gap-2"><User className="w-4 h-4 text-indigo-500" /> Profile Information</h2>
+      <p className="text-xs text-zinc-500 font-medium mt-0.5">Update your personal details and avatar.</p>
+    </div>
+
+    {/* Profile Picture / Avatar Upload */}
     <div className="flex items-center gap-4 border-b border-zinc-100 pb-5">
-      <div className="w-14 h-14 rounded-full border border-zinc-200 bg-zinc-50 flex items-center justify-center font-bold text-zinc-550 text-base overflow-hidden shrink-0">
+      <div className="w-16 h-16 rounded-full border border-zinc-200 bg-zinc-50 flex items-center justify-center font-bold text-zinc-550 text-base overflow-hidden shrink-0">
         {profileImage ? (
           <img src={profileImage} alt="" className="w-full h-full object-cover" />
         ) : (
           name.split(" ").map(n => n[0]).join("")
         )}
       </div>
-      <div className="flex-1 space-y-1">
-        <label className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider">Avatar Image URL</label>
-        <input 
-          type="text" 
-          placeholder="https://images.unsplash.com/photo-..." 
-          value={profileImage}
-          onChange={(e) => setProfileImage(e.target.value)}
-          className="w-full h-8 px-2.5 rounded-lg bg-zinc-50 border border-zinc-200 focus:border-indigo-300 focus:bg-white focus:outline-none text-xs text-zinc-700 font-semibold placeholder-zinc-400"
-        />
+      <div className="flex-1 space-y-2">
+        <label className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider block">Profile Avatar</label>
+        <div className="flex items-center gap-2">
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarUpload}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => avatarInputRef.current?.click()}
+            disabled={isUploadingAvatar}
+            className="h-9 px-4 rounded-lg bg-white border border-zinc-200 hover:bg-zinc-50 text-xs font-bold text-zinc-700 flex items-center gap-2 transition-all disabled:opacity-60 cursor-pointer"
+          >
+            {isUploadingAvatar ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+            {profileImage ? "Change photo" : "Upload photo"}
+          </button>
+          {profileImage && !isUploadingAvatar && (
+            <button
+              type="button"
+              onClick={() => setProfileImage("")}
+              className="h-9 px-3 rounded-lg border border-transparent hover:border-red-200 hover:bg-red-50 text-xs font-bold text-zinc-500 hover:text-red-600 transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> Remove
+            </button>
+          )}
+        </div>
+        <p className="text-[10px] text-zinc-400 font-medium">JPG, PNG or GIF, up to 5MB. Saved to your workspace storage.</p>
       </div>
     </div>
 
@@ -223,7 +289,7 @@ export default function SettingsPage() {
           type="text" 
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full h-8 px-2.5 rounded-lg bg-zinc-50 border border-zinc-200 focus:border-indigo-300 focus:bg-white focus:outline-none text-xs text-zinc-700 font-semibold"
+          className="w-full h-9 px-3 rounded-lg bg-zinc-50 border border-zinc-200 focus:border-indigo-300 focus:bg-white focus:outline-none text-xs text-zinc-700 font-semibold"
           required
         />
       </div>
@@ -233,7 +299,7 @@ export default function SettingsPage() {
           type="email" 
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full h-8 px-2.5 rounded-lg bg-zinc-50 border border-zinc-200 focus:border-indigo-300 focus:bg-white focus:outline-none text-xs text-zinc-700 font-semibold"
+          className="w-full h-9 px-3 rounded-lg bg-zinc-50 border border-zinc-200 focus:border-indigo-300 focus:bg-white focus:outline-none text-xs text-zinc-700 font-semibold"
           required
         />
       </div>
@@ -248,7 +314,7 @@ export default function SettingsPage() {
           placeholder="+1 (555) 000-0000"
           value={contactNo}
           onChange={(e) => setContactNo(e.target.value)}
-          className="w-full h-8 px-2.5 rounded-lg bg-zinc-50 border border-zinc-200 focus:border-indigo-300 focus:bg-white focus:outline-none text-xs text-zinc-700 font-semibold placeholder-zinc-400"
+          className="w-full h-9 px-3 rounded-lg bg-zinc-50 border border-zinc-200 focus:border-indigo-300 focus:bg-white focus:outline-none text-xs text-zinc-700 font-semibold placeholder-zinc-400"
         />
       </div>
       <div className="space-y-1">
@@ -258,47 +324,33 @@ export default function SettingsPage() {
           placeholder="+1 (555) 000-0000"
           value={whatsappNo}
           onChange={(e) => setWhatsappNo(e.target.value)}
-          className="w-full h-8 px-2.5 rounded-lg bg-zinc-50 border border-zinc-200 focus:border-indigo-300 focus:bg-white focus:outline-none text-xs text-zinc-700 font-semibold placeholder-zinc-400"
+          className="w-full h-9 px-3 rounded-lg bg-zinc-50 border border-zinc-200 focus:border-indigo-300 focus:bg-white focus:outline-none text-xs text-zinc-700 font-semibold placeholder-zinc-400"
         />
       </div>
     </div>
-
-    {/* Row 3: Language */}
-    <div className="grid grid-cols-1 gap-4">
-      <div className="space-y-1">
-        <label className="text-[9px] font-bold text-zinc-555 uppercase tracking-wider">Language</label>
-        <select 
-          value={language}
-          onChange={(e) => setLanguage(e.target.value)}
-          className="w-full h-8 px-2.5 rounded-lg bg-zinc-50 border border-zinc-200 focus:border-indigo-300 focus:bg-white focus:outline-none text-xs text-zinc-700 font-semibold"
-        >
-          <option value="en">English (US)</option>
-          <option value="es">Español</option>
-          <option value="fr">Français</option>
-        </select>
-      </div>
-    </div>
     </div>
 
+    <div className="flex justify-end pt-1">
     <ShimmerButton 
     type="submit"
     disabled={isUpdatingProfile}
-    className="h-9 px-4 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-1.5 cursor-pointer select-none"
+    className="h-9 px-5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-1.5 cursor-pointer select-none"
     shimmerColor="#818cf8"
     >
     {isUpdatingProfile ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
     Save Profile Settings
     </ShimmerButton>
+    </div>
     </form>
 
-    {/* Change Password Sub-section */}
-    <div className="border-t border-zinc-100 pt-6 mt-8 space-y-4">
+    {/* Change Password Card */}
+    <form onSubmit={handlePasswordChange} className="bg-white border border-zinc-200/70 rounded-2xl p-6 space-y-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
       <div>
-        <h3 className="text-sm font-bold text-zinc-700 flex items-center gap-1.5"><Lock className="w-4 h-4 text-indigo-650" /> Change Password</h3>
-        <p className="text-[10px] text-zinc-450 mt-0.5">Ensure your account is using a long, random password to stay secure.</p>
+        <h2 className="text-sm font-extrabold text-zinc-900 flex items-center gap-2"><Lock className="w-4 h-4 text-indigo-500" /> Change Password</h2>
+        <p className="text-xs text-zinc-500 font-medium mt-0.5">Use a long, random password to keep your account secure.</p>
       </div>
 
-      <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
+      <div className="space-y-4">
         <div className="space-y-1">
           <label className="text-[9px] font-bold text-zinc-555 uppercase tracking-wider">Current Password</label>
           <input 
@@ -306,7 +358,7 @@ export default function SettingsPage() {
             placeholder="••••••••"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
-            className="w-full h-8 px-2.5 rounded-lg bg-zinc-50 border border-zinc-200 focus:border-indigo-300 focus:bg-white focus:outline-none text-xs text-zinc-700 font-semibold"
+            className="w-full h-9 px-3 rounded-lg bg-zinc-50 border border-zinc-200 focus:border-indigo-300 focus:bg-white focus:outline-none text-xs text-zinc-700 font-semibold"
             required
           />
         </div>
@@ -318,7 +370,7 @@ export default function SettingsPage() {
               placeholder="••••••••"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full h-8 px-2.5 rounded-lg bg-zinc-50 border border-zinc-200 focus:border-indigo-300 focus:bg-white focus:outline-none text-xs text-zinc-700 font-semibold"
+              className="w-full h-9 px-3 rounded-lg bg-zinc-50 border border-zinc-200 focus:border-indigo-300 focus:bg-white focus:outline-none text-xs text-zinc-700 font-semibold"
               required
             />
           </div>
@@ -329,59 +381,61 @@ export default function SettingsPage() {
               placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full h-8 px-2.5 rounded-lg bg-zinc-50 border border-zinc-200 focus:border-indigo-300 focus:bg-white focus:outline-none text-xs text-zinc-700 font-semibold"
+              className="w-full h-9 px-3 rounded-lg bg-zinc-50 border border-zinc-200 focus:border-indigo-300 focus:bg-white focus:outline-none text-xs text-zinc-700 font-semibold"
               required
             />
           </div>
         </div>
+        <div className="flex justify-end pt-1">
         <button 
           type="submit"
           disabled={isChangingPassword || !currentPassword || !newPassword || !confirmPassword}
-          className="h-8 px-4 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-xs font-bold text-white transition-colors cursor-pointer flex items-center gap-1.5"
+          className="h-9 px-5 rounded-xl bg-zinc-900 hover:bg-zinc-800 disabled:opacity-40 text-xs font-bold text-white transition-colors cursor-pointer flex items-center gap-1.5"
         >
           {isChangingPassword ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
           Update Password
         </button>
-      </form>
-    </div>
+        </div>
+      </div>
+    </form>
   </div>
   )}
 
   {/* WORKSPACE TAB */}
   {activeTab ==="company" && profile && (
-  <div className="space-y-6">
-  <GlowCard className="border border-zinc-200 bg-white" glowColor="rgba(99, 102, 241, 0.02)">
-  <div className="p-4 space-y-4">
-  <h3 className="text-sm font-bold text-zinc-800 flex items-center gap-1.5"><Shield className="w-4 h-4 text-indigo-600" /> Tenant Information</h3>
+  <div className="bg-white border border-zinc-200/70 rounded-2xl p-6 space-y-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+  <div>
+  <h2 className="text-sm font-extrabold text-zinc-900 flex items-center gap-2"><Shield className="w-4 h-4 text-indigo-500" /> Tenant Information</h2>
+  <p className="text-xs text-zinc-500 font-medium mt-0.5">Read-only details about your workspace.</p>
+  </div>
   
-  <div className="space-y-3 text-xs divide-y divide-zinc-100">
-  <div className="flex justify-between items-center py-2">
+  <div className="text-xs divide-y divide-zinc-100 border-t border-zinc-100">
+  <div className="flex justify-between items-center py-3">
   <span className="text-zinc-500 font-semibold">Tenant ID</span>
   <span className="font-mono text-zinc-600 text-[10px] select-all">{(profile as any).company?.id}</span>
   </div>
   
-  <div className="flex justify-between items-center py-2 pt-2">
+  <div className="flex justify-between items-center py-3">
   <span className="text-zinc-500 font-semibold">Workspace Name</span>
   <span className="font-bold text-zinc-700">{(profile as any).company?.name}</span>
   </div>
 
-  <div className="flex justify-between items-center py-2 pt-2">
+  <div className="flex justify-between items-center py-3">
   <span className="text-zinc-500 font-semibold">Workspace URL Slug</span>
   <span className="font-mono text-zinc-600">{(profile as any).company?.workspaceSlug}</span>
   </div>
 
-  <div className="flex justify-between items-center py-2 pt-2">
+  <div className="flex justify-between items-center py-3">
   <span className="text-zinc-500 font-semibold">Subscription Plan</span>
   <span className="font-bold text-indigo-600 uppercase">{(profile as any).company?.subscriptionPlan}</span>
   </div>
   </div>
   </div>
-  </GlowCard>
-  </div>
   )}
 
   </div>
 
+  </div>
   </div>
   );
 }

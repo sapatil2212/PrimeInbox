@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/feedback";
 import { 
   Send, 
   BarChart3, 
@@ -90,16 +90,66 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex flex-col gap-6 animate-pulse">
-        <div className="h-10 w-48 bg-zinc-900 rounded-xl" />
+      <div className="flex-1 flex flex-col gap-6 animate-pulse select-none">
+        {/* Header Skeleton */}
+        <div className="flex flex-col gap-1.5 pb-2">
+          <div className="h-7 w-40 bg-zinc-200 rounded-lg" />
+          <div className="h-4 w-72 bg-zinc-100 rounded-md" />
+        </div>
+
+        {/* Stats Cards Grid Skeleton */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-24 bg-zinc-900 rounded-xl" />
+            <div key={i} className="border border-zinc-200/80 bg-white rounded-xl p-4 space-y-3">
+              <div className="flex justify-between items-center">
+                <div className="h-3 w-16 bg-zinc-200 rounded" />
+                <div className="h-4 w-4 bg-zinc-100 rounded" />
+              </div>
+              <div className="h-8 w-14 bg-zinc-200 rounded-md" />
+              <div className="h-3.5 w-24 bg-zinc-100 rounded" />
+            </div>
           ))}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="h-80 lg:col-span-2 bg-zinc-900 rounded-xl" />
-          <div className="h-80 bg-zinc-900 rounded-xl" />
+
+        {/* Charts Section Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Left Chart Card */}
+          <div className="lg:col-span-2 border border-zinc-200 bg-white rounded-xl p-5 flex flex-col gap-4">
+            <div className="flex justify-between items-center">
+              <div className="h-4 w-28 bg-zinc-200 rounded" />
+              <div className="h-3.5 w-16 bg-zinc-100 rounded" />
+            </div>
+            <div className="h-64 bg-zinc-50/50 border border-dashed border-zinc-200 rounded-lg flex flex-col justify-end p-4 gap-2">
+              <div className="flex justify-between items-end h-full px-2 gap-4">
+                {[...Array(7)].map((_, i) => (
+                  <div 
+                    key={i} 
+                    className="w-full bg-zinc-200 rounded-t" 
+                    style={{ height: `${[35, 60, 45, 80, 50, 70, 90][i]}%`, opacity: 0.4 }} 
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          {/* Right Chart Card */}
+          <div className="border border-zinc-200 bg-white rounded-xl p-5 flex flex-col gap-4">
+            <div className="flex justify-between items-center">
+              <div className="h-4 w-32 bg-zinc-200 rounded" />
+              <div className="h-3.5 w-16 bg-zinc-100 rounded" />
+            </div>
+            <div className="h-64 bg-zinc-50/50 border border-dashed border-zinc-200 rounded-lg flex flex-col justify-end p-4 gap-2">
+              <div className="flex justify-between items-end h-full px-2 gap-4">
+                {[...Array(5)].map((_, i) => (
+                  <div 
+                    key={i} 
+                    className="w-full bg-zinc-200 rounded-t" 
+                    style={{ height: `${[50, 75, 40, 65, 85][i]}%`, opacity: 0.4 }} 
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );

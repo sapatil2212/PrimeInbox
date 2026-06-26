@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { Container } from "@/components/layout/container";
@@ -8,11 +8,47 @@ import Link from "next/link";
 import { SlideUp } from "@/components/animations/slide-up";
 import {
   LayoutDashboard, Send, Users, BarChart3,
-  Settings, LifeBuoy, Bell, Search, CheckCircle2,
+  Settings, LifeBuoy, Search, CheckCircle2,
   TrendingUp, Sparkles, ArrowRight, Zap
 } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
+
+// Lazy-load recharts — it's ~200kb and only visible below the fold in the dashboard mockup
+const LazyChart = lazy(() => import("recharts").then((mod) => ({
+  default: function HeroChart() {
+    const { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } = mod;
+    return (
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={chartData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
+          <defs>
+            <linearGradient id="chartOpens" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#2563EB" stopOpacity={0.2} />
+              <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="chartClicks" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#06B6D4" stopOpacity={0.2} />
+              <stop offset="95%" stopColor="#06B6D4" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0, 0, 0, 0.04)" />
+          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#64748B' }} />
+          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#64748B' }} />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "white",
+              border: "1px solid #e2e8f0",
+              borderRadius: "8px",
+              fontSize: "11px",
+              padding: "8px 12px",
+            }}
+          />
+          <Area type="monotone" dataKey="opens" stroke="#2563EB" strokeWidth={3} fill="url(#chartOpens)" />
+          <Area type="monotone" dataKey="clicks" stroke="#06B6D4" strokeWidth={3} fill="url(#chartClicks)" />
+        </AreaChart>
+      </ResponsiveContainer>
+    );
+  }
+})));
 
 const chartData = [
   { name: "Jan", opens: 1200, clicks: 800 },
@@ -37,7 +73,7 @@ export function HeroSection() {
   const opacity = useTransform(scrollYProgress, [0, 0.35], [0.4, 1]);
 
   return (
-    <section className="relative pt-28 pb-16 md:pt-44 lg:pt-48 overflow-hidden bg-transparent z-10">
+    <section className="relative pt-24 pb-16 md:pt-36 lg:pt-40 overflow-hidden bg-transparent z-10">
 
       {/* ===== Modern flowing gradient background ===== */}
       <div className="absolute inset-0 z-0 overflow-hidden">
@@ -177,19 +213,13 @@ export function HeroSection() {
             }}
           >
 
-            {/* Dashboard Inner Container - Non-interactive, scales down on mobile to show full desktop layout */}
+            {/* Dashboard Inner Container - Non-interactive, responsive layout */}
             <div 
-              className="flex-1 flex overflow-hidden rounded-xl md:rounded-[1.6rem] bg-white relative select-none origin-top-left"
-              style={{
-                transform: 'scale(0.85)',
-                transformOrigin: 'top left',
-                width: '117.65%',
-                height: '117.65%',
-              }}
+              className="flex-1 flex overflow-hidden rounded-xl md:rounded-[1.6rem] bg-white relative select-none w-full h-full"
             >
 
-              {/* Sidebar: Interactive Gradient Sidebar - Always visible */}
-              <div className="w-[220px] flex flex-col bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 text-white p-5 shrink-0 relative overflow-hidden">
+              {/* Sidebar: Interactive Gradient Sidebar - Hidden on mobile for app-like feel */}
+              <div className="hidden md:flex w-[220px] flex-col bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 text-white p-5 shrink-0 relative overflow-hidden">
                 {/* Animated background pattern */}
                 <div
                   className="absolute inset-0 opacity-10"
@@ -246,8 +276,8 @@ export function HeroSection() {
               {/* Main Content Area */}
               <div className="flex-1 flex flex-col bg-[#FAFBFD]">
                 {/* Header - Non-interactive */}
-                <header className="h-16 bg-white px-6 flex items-center justify-between shrink-0">
-                  <div className="flex items-center gap-2 text-zinc-700 bg-gradient-to-r from-emerald-50 to-green-50 px-3 py-1.5 rounded-lg text-xs font-semibold">
+                <header className="h-14 md:h-16 bg-white px-4 md:px-6 flex items-center justify-between shrink-0 border-b border-zinc-100 md:border-none">
+                  <div className="flex items-center gap-1.5 md:gap-2 text-zinc-700 bg-gradient-to-r from-emerald-50 to-green-50 px-2 md:px-3 py-1 md:py-1.5 rounded-lg text-[10px] md:text-xs font-semibold">
                     <div>
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                     </div>
@@ -257,10 +287,7 @@ export function HeroSection() {
                     <div className="text-zinc-500 p-1.5 rounded-lg">
                       <Search className="w-4.5 h-4.5" />
                     </div>
-                    <div className="text-zinc-500 relative p-1.5 rounded-lg">
-                      <Bell className="w-4.5 h-4.5" />
-                      <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-indigo-600" />
-                    </div>
+
                     <div
                       className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 overflow-hidden"
                     >
@@ -270,16 +297,16 @@ export function HeroSection() {
                 </header>
 
                 {/* Dashboard Content - Non-scrollable */}
-                <div className="p-6 md:p-8 flex-1 overflow-hidden">
-                  <div className="flex items-center justify-between mb-6">
+                <div className="p-4 md:p-8 flex-1 overflow-hidden flex flex-col">
+                  <div className="flex items-center justify-between mb-4 md:mb-6">
                     <div>
-                      <h2 className="text-xl md:text-2xl font-bold text-zinc-900 tracking-tight">Welcome back, Sarah!</h2>
-                      <p className="text-xs text-zinc-500 font-medium">Your AI automated sequences are performing 18% above target.</p>
+                      <h2 className="text-lg md:text-2xl font-bold text-zinc-900 tracking-tight">Welcome back, Sarah!</h2>
+                      <p className="text-[10px] md:text-xs text-zinc-500">Your AI sequences are 18% above target.</p>
                     </div>
                   </div>
 
-                  {/* Metric Panels - Interactive Cards - Always 3 columns */}
-                  <div className="grid grid-cols-3 gap-4 mb-6">
+                  {/* Metric Panels - Interactive Cards - Compact 3 cols on mobile */}
+                  <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4 md:mb-6 shrink-0">
                     {[
                       {
                         icon: CheckCircle2,
@@ -311,25 +338,25 @@ export function HeroSection() {
                     ].map((metric, i) => (
                       <div
                         key={i}
-                        className={`bg-gradient-to-br ${metric.bgGradient} p-4.5 rounded-xl flex flex-col`}
+                        className={`bg-gradient-to-br ${metric.bgGradient} p-2.5 md:p-4.5 rounded-xl flex flex-col justify-center`}
                       >
-                        <div className="flex items-center gap-2 mb-2 text-zinc-500">
+                        <div className="flex items-center gap-1.5 md:gap-2 mb-1 md:mb-2 text-zinc-500">
                           <div>
-                            <metric.icon className={`w-4 h-4 ${metric.iconColor}`} />
+                            <metric.icon className={`w-3.5 h-3.5 md:w-4 md:h-4 ${metric.iconColor}`} />
                           </div>
-                          <span className="text-[10px] font-bold tracking-wide uppercase">{metric.label}</span>
+                          <span className="text-[8px] md:text-[10px] font-bold tracking-wide uppercase hidden sm:block">{metric.label}</span>
                         </div>
-                        <div className="text-2xl font-extrabold text-zinc-900">
+                        <div className="text-base sm:text-lg md:text-2xl font-extrabold text-zinc-900">
                           {metric.value}
                         </div>
-                        <div className="text-[10px] text-zinc-500 mt-1 font-semibold">{metric.subtitle}</div>
+                        <div className="text-[8px] md:text-[10px] text-zinc-500 mt-0.5 md:mt-1 font-semibold leading-tight">{metric.subtitle}</div>
                       </div>
                     ))}
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5 flex-1 min-h-0">
                     {/* Chart */}
-                    <div className="lg:col-span-2 bg-white p-5 rounded-xl flex flex-col">
+                    <div className="lg:col-span-2 bg-white p-4 md:p-5 rounded-xl flex flex-col h-full hidden sm:flex">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-bold text-zinc-900">Outreach Performance</h3>
                         <div className="text-[10px] bg-gradient-to-r from-green-50 to-emerald-50 rounded-full px-3 py-1 text-green-700 font-bold flex items-center gap-1.5">
@@ -338,34 +365,13 @@ export function HeroSection() {
                         </div>
                       </div>
                       <div className="h-[160px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={chartData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
-                            <defs>
-                              <linearGradient id="chartOpens" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#2563EB" stopOpacity={0.2} />
-                                <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
-                              </linearGradient>
-                              <linearGradient id="chartClicks" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#06B6D4" stopOpacity={0.2} />
-                                <stop offset="95%" stopColor="#06B6D4" stopOpacity={0} />
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0, 0, 0, 0.04)" />
-                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#64748B' }} />
-                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#64748B' }} />
-                            <Tooltip
-                              contentStyle={{
-                                backgroundColor: "white",
-                                border: "1px solid #e2e8f0",
-                                borderRadius: "8px",
-                                fontSize: "11px",
-                                padding: "8px 12px",
-                              }}
-                            />
-                            <Area type="monotone" dataKey="opens" stroke="#2563EB" strokeWidth={3} fill="url(#chartOpens)" />
-                            <Area type="monotone" dataKey="clicks" stroke="#06B6D4" strokeWidth={3} fill="url(#chartClicks)" />
-                          </AreaChart>
-                        </ResponsiveContainer>
+                        <Suspense fallback={
+                          <div className="h-full w-full flex items-center justify-center">
+                            <div className="h-[140px] w-full rounded-lg bg-gradient-to-t from-blue-50/50 to-transparent animate-pulse" />
+                          </div>
+                        }>
+                          <LazyChart />
+                        </Suspense>
                       </div>
                       <div className="flex gap-6 mt-3 justify-center text-[10px] font-semibold">
                         <div className="flex items-center gap-1.5">
@@ -379,10 +385,10 @@ export function HeroSection() {
                       </div>
                     </div>
 
-                    {/* Activity List */}
-                    <div className="bg-white p-5 rounded-xl flex flex-col justify-between">
-                      <h3 className="text-sm font-bold text-zinc-900 mb-4">Recent Activity</h3>
-                      <div className="space-y-3.5 flex-1">
+                    {/* Activity List - Takes full height on mobile */}
+                    <div className="bg-white p-4 md:p-5 rounded-xl flex flex-col justify-between flex-1 overflow-hidden">
+                      <h3 className="text-sm font-bold text-zinc-900 mb-2 md:mb-4 shrink-0">Recent Activity</h3>
+                      <div className="space-y-2 md:space-y-3.5 flex-1 overflow-y-auto pr-1">
                         {[
                           { title: "Campaign Launched", desc: "Q3 DevRel Outreach", val: "+340", color: "text-blue-600" },
                           { title: "New Integration", desc: "GitHub Webhook Sync", val: "Active", color: "text-green-600" },
@@ -393,13 +399,13 @@ export function HeroSection() {
                             key={i}
                             className="flex items-center justify-between text-xs font-semibold p-2.5 rounded-lg group"
                           >
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 md:gap-3">
                               <div
-                                className={`w-2 h-2 rounded-full ${item.color.replace("text-", "bg-")}`}
+                                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${item.color.replace("text-", "bg-")}`}
                               />
                               <div>
-                                <p className="text-zinc-800 group-hover:text-zinc-900 transition-colors">{item.title}</p>
-                                <p className="text-[10px] text-zinc-400 font-medium">{item.desc}</p>
+                                <p className="text-zinc-800 group-hover:text-zinc-900 transition-colors text-[11px] md:text-xs">{item.title}</p>
+                                <p className="text-[9px] md:text-[10px] text-zinc-400">{item.desc}</p>
                               </div>
                             </div>
                             <span className={`${item.color} font-bold`}>{item.val}</span>

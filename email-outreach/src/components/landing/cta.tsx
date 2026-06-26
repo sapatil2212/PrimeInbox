@@ -23,7 +23,7 @@ export function CtaSection() {
           <h2 className="max-w-4xl mx-auto text-4xl md:text-6xl font-extrabold tracking-tight text-zinc-900 mb-6 leading-tight">
             Start scaling your outreach today
           </h2>
-          <p className="max-w-2xl mx-auto text-base md:text-lg text-zinc-500 mb-10 leading-relaxed font-semibold">
+          <p className="max-w-2xl mx-auto text-base md:text-lg text-zinc-500 mb-10 leading-relaxed">
             Join developer relations and growth engineering teams using PrimeInbox to land in developer inboxes, build relationships, and grow pipeline.
           </p>
           

@@ -38,7 +38,7 @@ export function AnalyticsSection() {
               <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6 text-zinc-900 leading-tight">
                 Insights that drive DevRel revenue
               </h2>
-              <p className="text-base md:text-lg text-zinc-500 mb-8 leading-relaxed font-semibold">
+              <p className="text-base md:text-lg text-zinc-500 mb-8 leading-relaxed">
                 Go beyond vanity metrics. Track exactly what's working and what's not with real-time, actionable analytics that map developer engagement to sales conversions.
               </p>
               
@@ -77,7 +77,7 @@ export function AnalyticsSection() {
                   <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-1.5">
                     <TrendingUp className="w-4 h-4 text-primary" /> Active Campaign Conversion
                   </h3>
-                  <p className="text-[10px] text-zinc-500 font-semibold">Opens vs Clicks over the last 7 days</p>
+                  <p className="text-[10px] text-zinc-500">Opens vs Clicks over the last 7 days</p>
                 </div>
                 <div className="flex items-center gap-1.5 text-[9px] bg-zinc-50 border border-zinc-200 px-2.5 py-1 rounded-full text-zinc-600 font-bold uppercase tracking-wider">
                   Live Feed <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping inline-block" />

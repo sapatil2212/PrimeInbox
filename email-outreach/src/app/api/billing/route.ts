@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
+import { getTrialState } from "@/lib/access";
 
 export async function GET(req: NextRequest) {
   try {
@@ -29,12 +30,8 @@ export async function GET(req: NextRequest) {
           stripePriceId: "free_tier",
         },
       });
-
-      // Update the main company model plan
-      await db.company.update({
-        where: { id: companyId },
-        data: { subscriptionPlan: "FREE" },
-      });
+      // Note: do NOT reset company.subscriptionPlan here — it would wipe the
+      // plan the user selected at registration.
     }
 
     // 2. Fetch invoices and payments
@@ -78,14 +75,23 @@ export async function GET(req: NextRequest) {
 
     const company = await db.company.findUnique({
       where: { id: companyId },
-      select: { subscriptionPlan: true, name: true },
+      select: { subscriptionPlan: true, name: true, subscriptionStatus: true, trialEndsAt: true },
     });
+
+    const trial = company
+      ? getTrialState({
+          subscriptionStatus: company.subscriptionStatus,
+          subscriptionPlan: company.subscriptionPlan,
+          trialEndsAt: company.trialEndsAt,
+        })
+      : null;
 
     return NextResponse.json({
       success: true,
       subscription,
       invoices,
       plan: company?.subscriptionPlan || "FREE",
+      trial,
     });
   } catch (error) {
     console.error("GET /api/billing error:", error);

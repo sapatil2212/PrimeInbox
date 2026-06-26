@@ -6,12 +6,20 @@ import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/feedback";
 import { GlowCard } from "@/components/ui/glow-card";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { Lock, User, Briefcase, ArrowLeft, Eye, EyeOff, Loader2, CheckCircle2, XCircle, Phone, PhoneCall, Building2 } from "lucide-react";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { businessTypes } from "@/lib/business-types";
+import { cn } from "@/lib/utils";
+
+// Selectable subscription plans (mirrors the pricing page)
+const SIGNUP_PLANS = [
+  { id: "SILVER", name: "Silver", price: "₹499", emails: "20,000 emails/mo" },
+  { id: "GOLD", name: "Gold", price: "₹999", emails: "100,000 emails/mo", popular: true },
+  { id: "PLATINUM", name: "Platinum", price: "₹1999", emails: "250,000 emails/mo" },
+];
 
 // Password validation regex rules
 const minLength = 8;
@@ -28,6 +36,7 @@ const signupSchema = z.object({
   email: z.string().email("Please enter a valid business email"),
   companyName: z.string().min(2, "Company name must be at least 2 characters"),
   businessType: z.string().min(1, "Please select a business type"),
+  plan: z.enum(["SILVER", "GOLD", "PLATINUM"], { message: "Please select a plan" }),
   contactNo: z.string().min(6, "Contact number must be at least 6 characters"),
   whatsappNo: z.string().optional(),
   password: z
@@ -180,6 +189,7 @@ export default function SignupPage() {
     watch,
     control,
     setError,
+    setValue,
     formState: { errors },
   } = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -188,6 +198,7 @@ export default function SignupPage() {
       email: "",
       companyName: "",
       businessType: "",
+      plan: "GOLD",
       contactNo: "",
       whatsappNo: "",
       password: "",
@@ -197,6 +208,14 @@ export default function SignupPage() {
   });
 
   const passwordVal = watch("password", "");
+
+  // Preselect plan from ?plan= query param (e.g. coming from the pricing page)
+  useEffect(() => {
+    const param = new URLSearchParams(window.location.search).get("plan")?.toUpperCase();
+    if (param === "SILVER" || param === "GOLD" || param === "PLATINUM") {
+      setValue("plan", param);
+    }
+  }, [setValue]);
 
   // Real-time password criteria verification
   const criteria = {
@@ -230,6 +249,7 @@ export default function SignupPage() {
           email: data.email,
           companyName: data.companyName,
           businessType: data.businessType,
+          plan: data.plan,
           contactNo: data.contactNo,
           whatsappNo: data.whatsappNo || null,
           password: data.password,
@@ -294,6 +314,52 @@ export default function SignupPage() {
                   {generalError}
                 </div>
               )}
+
+              {/* Plan selector */}
+              <Controller
+                name="plan"
+                control={control}
+                render={({ field }) => (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-bold text-zinc-500">Choose your plan</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {SIGNUP_PLANS.map((p) => {
+                        const selected = field.value === p.id;
+                        return (
+                          <button
+                            type="button"
+                            key={p.id}
+                            onClick={() => field.onChange(p.id)}
+                            className={cn(
+                              "relative text-left rounded-xl border p-2.5 transition-all",
+                              selected
+                                ? "border-blue-500 bg-blue-50/50 ring-1 ring-blue-500/30"
+                                : "border-zinc-200/80 bg-white hover:border-zinc-300"
+                            )}
+                          >
+                            {p.popular && (
+                              <span className="absolute -top-1.5 right-2 px-1.5 py-0.5 bg-blue-600 text-white text-[7px] font-bold uppercase tracking-wide rounded-full">
+                                Popular
+                              </span>
+                            )}
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-extrabold text-zinc-900">{p.name}</span>
+                              {selected && <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />}
+                            </div>
+                            <div className="text-sm font-black text-zinc-900 mt-0.5">
+                              {p.price}
+                              <span className="text-[9px] font-semibold text-zinc-400">/mo</span>
+                            </div>
+                            <div className="text-[9px] text-zinc-500 font-semibold mt-0.5">{p.emails}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {errors.plan && <p className="text-[10px] font-bold text-red-500 mt-0.5">{errors.plan.message}</p>}
+                  </div>
+                )}
+              />
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                 {/* Name */}
                 <div className="flex flex-col gap-1">

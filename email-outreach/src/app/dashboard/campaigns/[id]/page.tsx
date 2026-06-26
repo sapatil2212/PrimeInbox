@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from"react";
 import { useRouter } from"next/navigation";
 import Link from"next/link";
-import { toast } from"sonner";
+import { toast, confirmDialog } from "@/components/ui/feedback";
 import { 
  ArrowLeft, 
  Play, 
@@ -18,8 +18,9 @@ import {
  Trash2,
  BookOpen,
  History,
- FileText
-} from"lucide-react";
+ FileText,
+ FlaskConical
+}from"lucide-react";
 import { GlowCard } from"@/components/ui/glow-card";
 import { ShimmerButton } from"@/components/ui/shimmer-button";
 import { cn } from"@/lib/utils";
@@ -109,6 +110,8 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
  // Notes state
  const [newNote, setNewNote] = useState("");
  const [isSavingNote, setIsSavingNote] = useState(false);
+ const [isSending, setIsSending] = useState(false);
+ const [isTesting, setIsTesting] = useState(false);
 
  const fetchCampaignDetail = async () => {
  try {
@@ -150,6 +153,64 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
  }
  };
 
+ const handleSendNow = async () => {
+  if (!campaign) return;
+  if (campaign.status !== "RUNNING") {
+    toast.error("Campaign must be RUNNING to send emails.");
+    return;
+  }
+  
+  setIsSending(true);
+  try {
+    const res = await fetch(`/api/campaigns/${id}/send`, {
+      method: "POST",
+    });
+    
+    const data = await res.json();
+    
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to process campaign queue");
+    }
+    
+    toast.success(data.message || `Processed ${data.processed} leads successfully.`);
+    // Refresh the details
+    fetchCampaignDetail();
+  } catch (err: any) {
+    toast.error(err.message || "Failed to send emails");
+  } finally {
+    setIsSending(false);
+  }
+ };
+
+ const handleSendTest = async () => {
+  const to = window.prompt(
+    "Send a test email to (e.g. your inbox or a mail-tester.com address):"
+  );
+  if (to === null) return; // cancelled
+  if (!to.trim()) {
+    toast.error("Please enter a recipient email.");
+    return;
+  }
+
+  setIsTesting(true);
+  try {
+    const res = await fetch(`/api/campaigns/${id}/test`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to: to.trim() }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.details || data.error || "Failed to send test email");
+    }
+    toast.success(data.message || "Test email sent.");
+  } catch (err: any) {
+    toast.error(err.message || "Failed to send test email");
+  } finally {
+    setIsTesting(false);
+  }
+ };
+
  const handleAddNote = async (e: React.FormEvent) => {
  e.preventDefault();
  if (!newNote.trim()) return;
@@ -178,7 +239,12 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
 
  const handleDeleteCampaign = async () => {
  if (!campaign) return;
- if (!confirm(`Are you sure you want to delete campaign"${campaign.name}"? This will delete all sent metrics, logs, and progression data.`)) {
+ const ok = await confirmDialog({
+ title: "Delete campaign?",
+ description: `"${campaign.name}" and all sent metrics, logs, and progression data will be permanently deleted. This cannot be undone.`,
+ confirmText: "Delete",
+ });
+ if (!ok) {
  return;
  }
 
@@ -223,12 +289,61 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
  </button>
  </Link>
  <div>
- <h1 className="text-xl font-black text-zinc-800">{campaign.name}</h1>
+ <h1 className="text-xl font-black text-zinc-800 flex items-center gap-2.5">
+ {campaign.name}
+ <span className={cn(
+ "px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border",
+ campaign.status === "RUNNING" ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+ : campaign.status === "PAUSED" ? "bg-amber-50 text-amber-700 border-amber-200"
+ : campaign.status === "COMPLETED" ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+ : "bg-zinc-100 text-zinc-600 border-zinc-200"
+ )}>
+ {campaign.status}
+ </span>
+ </h1>
  <p className="text-xs text-zinc-500 font-semibold mt-0.5">Timezone: {campaign.timezone} • Limits: {campaign.dailySendLimit}/day</p>
  </div>
  </div>
 
  <div className="flex items-center gap-3 select-none">
+ <button 
+ onClick={handleSendTest}
+ disabled={isTesting}
+ className="h-10 px-4 rounded-xl bg-white hover:bg-zinc-50 disabled:opacity-50 text-xs font-bold text-zinc-700 transition-all flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed border border-zinc-200 shadow-sm"
+ title="Send a test email (e.g. to mail-tester.com) to check deliverability"
+ >
+ {isTesting ? (
+ <>
+ <Loader2 className="w-3.5 h-3.5 animate-spin" /> Testing...
+ </>
+ ) : (
+ <>
+ <FlaskConical className="w-3.5 h-3.5" /> Send Test
+ </>
+ )}
+ </button>
+
+ <button 
+ onClick={handleSendNow}
+ disabled={isSending || campaign.status !== "RUNNING"}
+ className={cn(
+ "h-10 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-xs font-bold text-white transition-all flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed border border-transparent shadow-sm",
+ (campaign.status === "COMPLETED" || campaign.status === "ARCHIVED") && "hidden"
+ )}
+ title="Process Queue & Send Emails"
+ >
+ {isSending ? (
+ <>
+ <Loader2 className="w-3.5 h-3.5 animate-spin" /> Sending...
+ </>
+ ) : (
+ <>
+ <Send className="w-3.5 h-3.5" /> Send Emails Now
+ </>
+ )}
+ </button>
+
+ {campaign.status !== "COMPLETED" && campaign.status !== "ARCHIVED" && (
  <button 
  onClick={handleToggleStatus}
  className={cn(
@@ -244,10 +359,11 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
  </>
  ) : (
  <>
- <Play className="w-3.5 h-3.5" /> Resume Campaign
+ <Play className="w-3.5 h-3.5" /> {campaign.status === "DRAFT" ? "Start Campaign" : "Resume Campaign"}
  </>
  )}
  </button>
+ )}
 
  <button 
  onClick={handleDeleteCampaign}
@@ -258,6 +374,23 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
  </button>
  </div>
  </header>
+
+ {/* Completion report banner */}
+ {campaign.status === "COMPLETED" && (
+ <section className="bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-100 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+ <div className="flex items-center gap-3">
+ <span className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
+ <BarChart3 className="w-5 h-5" />
+ </span>
+ <div>
+ <h2 className="text-sm font-black text-zinc-900">Campaign completed</h2>
+ <p className="text-xs text-zinc-600 font-semibold mt-0.5">
+ All leads processed — {stats.sent} sent · {stats.openRate}% opened · {stats.replyRate}% replied · {stats.bounceRate}% bounced.
+ </p>
+ </div>
+ </div>
+ </section>
+ )}
 
  {/* Quick stats panel */}
  <section className="grid grid-cols-2 sm:grid-cols-4 gap-4">

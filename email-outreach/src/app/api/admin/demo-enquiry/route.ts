@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/session";
+import { requireAdmin } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 
 const VALID_STATUSES = ["NEW", "CONTACTED", "SCHEDULED", "COMPLETED", "CLOSED"] as const;
@@ -8,10 +8,8 @@ const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export async function GET(_req: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session || session.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Access Denied. Super Admin only." }, { status: 403 });
-    }
+    const admin = await requireAdmin();
+    if (admin instanceof NextResponse) return admin;
 
     const enquiries = await db.demoEnquiry.findMany({
       orderBy: { createdAt: "desc" },
@@ -36,10 +34,8 @@ export async function GET(_req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session || session.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Access Denied" }, { status: 403 });
-    }
+    const admin = await requireAdmin();
+    if (admin instanceof NextResponse) return admin;
 
     const body = await req.json();
     const id = String(body.id || "").trim();
@@ -111,10 +107,8 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session || session.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Access Denied" }, { status: 403 });
-    }
+    const admin = await requireAdmin();
+    if (admin instanceof NextResponse) return admin;
 
     // Bulk delete via JSON body
     if (req.headers.get("content-type")?.includes("application/json")) {

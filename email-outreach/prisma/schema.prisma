@@ -32,6 +32,7 @@ model Company {
   workspaceSlug      String             @unique
   subscriptionPlan   String             @default("FREE")
   subscriptionStatus String             @default("ACTIVE")
+  trialEndsAt        DateTime?
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   users              User[]
@@ -195,6 +196,9 @@ model SmtpAccount {
   healthScore        Float               @default(100.0)
   errorLog           String?             @db.Text
   trackingDomain     String?
+  dkimDomain         String?             // Optional app-level DKIM signing domain
+  dkimSelector       String?             // DKIM selector (e.g. "primeinbox")
+  dkimPrivateKey     String?             @db.Text // AES-256-GCM encrypted PEM private key
   priority           Int                 @default(1)
   rotationWeight     Int                 @default(1)
   lastCheckedAt      DateTime?
@@ -390,6 +394,7 @@ model Campaign {
   rotationType    RotationType   @default(ROUND_ROBIN)
   smtpGroupId     String?
   smtpAccountId   String?
+  smtpAccountIds  Json?          // Explicit list of SMTP account IDs for an ad-hoc rotational pool
   timezone        String         @default("UTC")
   weekendSending  Boolean        @default(false)
   createdAt       DateTime       @default(now())

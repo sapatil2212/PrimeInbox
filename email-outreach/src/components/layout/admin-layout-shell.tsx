@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/feedback";
 import {
   ShieldAlert,
   LogOut,
@@ -15,7 +15,6 @@ import {
   BarChart3,
   RefreshCw,
   Search,
-  Bell,
   Menu,
   ChevronLeft,
   ChevronRight,
@@ -43,7 +42,6 @@ export function AdminLayoutShell({ children, user }: AdminLayoutShellProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -60,10 +58,10 @@ export function AdminLayoutShell({ children, user }: AdminLayoutShellProps) {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("/api/auth/logout", { method: "POST" });
+      const response = await fetch("/api/auth/superadmin/logout", { method: "POST" });
       if (!response.ok) throw new Error("Logout failed");
-      toast.success("Logged out successfully");
-      router.push("/login");
+      toast.success("Logged out of admin panel");
+      router.push("/superadmin/login");
       router.refresh();
     } catch (err: any) {
       toast.error(err.message || "Failed to log out.");
@@ -341,46 +339,7 @@ export function AdminLayoutShell({ children, user }: AdminLayoutShellProps) {
               </kbd>
             </button>
 
-            {/* Notifications */}
-            <div className="relative">
-              <button
-                onClick={() => setNotificationsOpen(!notificationsOpen)}
-                className="p-2 rounded-lg bg-white border border-zinc-200 hover:border-zinc-300 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer"
-              >
-                <Bell className="w-3.5 h-3.5" />
-                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-zinc-400 rounded-full" />
-              </button>
 
-              {notificationsOpen && (
-                <>
-                  <div className="fixed inset-0 z-30" onClick={() => setNotificationsOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-72 bg-white border border-zinc-200 rounded-xl z-40 p-4 space-y-3">
-                    <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
-                      <span className="font-bold text-[11px] text-zinc-900">System Alerts</span>
-                      <button className="text-[10px] text-zinc-500 font-bold hover:underline">
-                        Mark all read
-                      </button>
-                    </div>
-                    <div className="space-y-2 text-[11px] divide-y divide-zinc-100 max-h-60 overflow-y-auto pr-1">
-                      <div className="pt-2 flex gap-2.5 items-start">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                        <div>
-                          <p className="font-semibold text-zinc-800">System health check passed</p>
-                          <p className="text-[10px] text-zinc-400">All services operating normally.</p>
-                        </div>
-                      </div>
-                      <div className="pt-2 flex gap-2.5 items-start">
-                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0" />
-                        <div>
-                          <p className="font-semibold text-zinc-800">High queue backlog detected</p>
-                          <p className="text-[10px] text-zinc-400">Consider flushing the send queue.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
 
             {/* Profile Dropdown */}
             <div className="relative">

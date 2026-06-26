@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/feedback";
 import { GlowCard } from "@/components/ui/glow-card";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { Mail, ArrowLeft, Loader2, CheckCircle2 } from "lucide-react";

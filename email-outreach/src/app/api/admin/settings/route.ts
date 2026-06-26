@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/session";
+import { requireAdmin } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 
 export async function GET(_req: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session || session.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Access Denied. Super Admin only." }, { status: 403 });
-    }
+    const admin = await requireAdmin();
+    if (admin instanceof NextResponse) return admin;
 
-    const admin = await db.user.findUnique({
-      where: { id: session.userId },
+    const adminUser = await db.user.findUnique({
+      where: { id: admin.userId },
       select: {
         id: true,
         name: true,
@@ -35,7 +33,7 @@ export async function GET(_req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      admin,
+      admin: adminUser,
       platform: {
         environment: process.env.NODE_ENV || "development",
         nodeVersion: process.version,

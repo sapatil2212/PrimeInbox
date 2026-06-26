@@ -94,7 +94,7 @@ export function FeaturesSection() {
                     <h3 className="text-lg font-bold mb-2 text-zinc-900 group-hover:text-primary transition-colors">
                       {feature.title}
                     </h3>
-                    <p className="text-xs md:text-sm text-zinc-500 leading-relaxed font-semibold">
+                    <p className="text-xs md:text-sm text-zinc-500 leading-relaxed">
                       {feature.description}
                     </p>
                   </div>

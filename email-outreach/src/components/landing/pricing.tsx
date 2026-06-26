@@ -6,45 +6,44 @@ import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 const PLANS = [
   {
     name: "Silver",
-    price: "$99",
+    price: "₹499",
     description: "Perfect for startups and small developer relations teams.",
     features: [
-      "50,000 emails/month",
-      "Up to 5 SMTP sender domains",
-      "AI Cold Email Generator",
+      "20,000 emails/month",
+      "Up to 2 SMTP sender domains",
+      "HTML Based Email Generator",
       "Basic Conversion Analytics",
       "Community Slack Support"
     ]
   },
   {
     name: "Gold",
-    price: "$299",
+    price: "₹999",
     description: "For scaling developer platforms and dedicated agencies.",
     popular: true,
     features: [
-      "250,000 emails/month",
-      "Up to 20 SMTP sender domains",
+      "100,000 emails/month",
+      "Up to 5 SMTP sender domains",
       "Advanced Sentiment Analytics",
-      "Visual Campaign Pipeline Builder",
-      "Priority Discord & Email Support",
-      "A/B Sequence Testing"
+      "AI Based Email Builder",
+      "Priority Discord & Support"
     ]
   },
   {
     name: "Platinum",
-    price: "$899",
+    price: "₹1999",
     description: "Enterprise sending infrastructure with complete API access.",
     features: [
-      "500,000 emails/month",
-      "Unlimited SMTP sender domains",
-      "Full API Hook Access",
-      "White Label Custom Portal",
-      "Dedicated DevRel Success Lead",
-      "Custom CRM Sync Integrations"
+      "250,000 emails/month",
+      "Up to 10 SMTP sender domains",
+      "Advanced Sentiment Analytics",
+      "AI Based Email Builder",
+      "Priority Discord & Support"
     ]
   }
 ];
@@ -96,7 +95,7 @@ export function PricingSection() {
                   
                   <div className="mb-6">
                     <h3 className="text-xl font-bold text-zinc-900 mb-2">{plan.name}</h3>
-                    <p className="text-xs text-zinc-500 leading-relaxed min-h-[40px] font-semibold">{plan.description}</p>
+                    <p className="text-xs text-zinc-500 leading-relaxed min-h-[40px]">{plan.description}</p>
                   </div>
                   
                   <div className="mb-8 flex items-baseline gap-1">
@@ -116,19 +115,23 @@ export function PricingSection() {
                   </ul>
                   
                   {isPopular ? (
-                    <ShimmerButton 
-                      className="w-full h-12 rounded-xl text-xs font-bold bg-zinc-950 hover:bg-black"
-                      shimmerColor="#3B82F6"
-                    >
-                      Get Started Gold
-                    </ShimmerButton>
+                    <Link href={`/signup?plan=${plan.name.toUpperCase()}`} className="block">
+                      <ShimmerButton 
+                        className="w-full h-12 rounded-xl text-xs font-bold bg-zinc-950 hover:bg-black"
+                        shimmerColor="#3B82F6"
+                      >
+                        Get Started {plan.name}
+                      </ShimmerButton>
+                    </Link>
                   ) : (
-                    <Button 
-                      className="w-full h-12 rounded-xl text-xs font-bold text-zinc-600 hover:text-zinc-950 border border-zinc-200/80 hover:border-zinc-300 hover:bg-zinc-50 transition-all bg-white" 
-                      variant="outline"
-                    >
-                      Get Started
-                    </Button>
+                    <Link href={`/signup?plan=${plan.name.toUpperCase()}`} className="block">
+                      <Button 
+                        className="w-full h-12 rounded-xl text-xs font-bold text-zinc-600 hover:text-zinc-950 border border-zinc-200/80 hover:border-zinc-300 hover:bg-zinc-50 transition-all bg-white" 
+                        variant="outline"
+                      >
+                        Get Started
+                      </Button>
+                    </Link>
                   )}
                 </div>
               </FadeIn>

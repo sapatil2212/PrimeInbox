@@ -1,5 +1,4 @@
 import { Navbar } from "@/components/layout/navbar";
-import { AnnouncementBar } from "@/components/landing/announcement-bar";
 import { Footer } from "@/components/layout/footer";
 import { Container } from "@/components/layout/container";
 import { GlowCard } from "@/components/ui/glow-card";
@@ -9,7 +8,6 @@ import { Shield, Rocket, Target } from "lucide-react";
 export default function AboutPage() {
   return (
     <main className="flex min-h-screen flex-col">
-      <AnnouncementBar />
       <Navbar />
       
       <section className="relative pt-36 pb-20 overflow-hidden bg-transparent z-10">

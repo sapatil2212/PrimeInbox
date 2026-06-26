@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
-import { decrypt } from "@/lib/encryption";
-import nodemailer from "nodemailer";
+import { buildTransport } from "@/lib/campaign-sender";
 
 export async function POST(
   req: NextRequest,
@@ -16,6 +15,10 @@ export async function POST(
 
     const { id } = await params;
 
+    // Optional custom recipient (e.g. a mail-tester.com address). Defaults to the user.
+    const body = await req.json().catch(() => ({}));
+    const recipient: string = (body?.to && String(body.to).trim()) || session.email;
+
     // Fetch SMTP account details
     const account = await db.smtpAccount.findUnique({
       where: { id, companyId: session.companyId },
@@ -25,23 +28,7 @@ export async function POST(
       return NextResponse.json({ error: "SMTP Account not found" }, { status: 404 });
     }
 
-    const password = decrypt(account.passwordEncrypted);
-    const secure = account.secureType === "SSL" || account.port === 465;
-
-    // 1. Initialize transporter
-    const transporter = nodemailer.createTransport({
-      host: account.host,
-      port: account.port,
-      secure: secure,
-      auth: {
-        user: account.username,
-        pass: password,
-      },
-      tls: {
-        rejectUnauthorized: false,
-      },
-      connectionTimeout: 10000, // 10 seconds limit
-    });
+    const transporter = buildTransport(account);
 
     // 2. Perform connection verify handshake
     try {
@@ -67,22 +54,23 @@ export async function POST(
       }, { status: 400 });
     }
 
-    // 3. Send test email to the user
+    // 3. Send test email to the chosen recipient
     try {
       await transporter.sendMail({
         from: `"${account.fromName}" <${account.fromEmail}>`,
-        to: session.email,
+        to: recipient,
         subject: "PrimeInbox — SMTP Account Verification Successful",
         html: `
           <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #e4e4e7; border-radius: 12px;">
             <h2 style="color: #6366f1; margin-top: 0;">Connection Success!</h2>
-            <p>Hello ${session.name},</p>
+            <p>Hello,</p>
             <p>This is a test email confirming that your SMTP connection settings for <strong>${account.fromEmail}</strong> are correct.</p>
             <p>Your outreach engine is ready to start dispatching automated campaign sequences securely.</p>
             <hr style="border: 0; border-top: 1px solid #e4e4e7; margin: 20px 0;" />
             <p style="font-size: 11px; color: #71717a;">Sent via PrimeInbox SMTP Diagnostics tool.</p>
           </div>
         `,
+        text: `Connection success! Your SMTP settings for ${account.fromEmail} are correct. Sent via PrimeInbox SMTP Diagnostics.`,
       });
 
       // Update account status back to active if it was paused/invalid
@@ -97,7 +85,7 @@ export async function POST(
 
       return NextResponse.json({
         success: true,
-        message: `SMTP Handshake succeeded and verification email sent to ${session.email}`,
+        message: `SMTP handshake succeeded and verification email sent to ${recipient}`,
       });
 
     } catch (sendErr: any) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/feedback";
 import { Loader2, CheckCircle2, XCircle, Plug, UserCog, Server } from "lucide-react";
 import { cn } from "@/lib/utils";
 

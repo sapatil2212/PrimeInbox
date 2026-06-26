@@ -13,29 +13,29 @@ export function SmtpRotation() {
           
           {/* SMTP Rotation visual diagram */}
           <div className="order-2 lg:order-1 relative">
-            <div className="relative w-full max-w-lg mx-auto bg-white/60 p-8 rounded-2xl border border-zinc-200/80 backdrop-blur-xl overflow-hidden shadow-xl">
+            <div className="relative w-full max-w-lg mx-auto bg-white/60 p-6 sm:p-8 rounded-2xl border border-zinc-200/40 backdrop-blur-xl overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-transparent pointer-events-none" />
               
-              {/* Outer SVG Grid Connection Line Paths */}
+              {/* Outer SVG Grid Connection Line Paths - Percentage-based for responsive alignment */}
               <div className="absolute inset-0 z-0 pointer-events-none">
                 <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
                   {/* Glowing Connection Paths */}
-                  <motion.path
-                    d="M 280,100 L 380,165"
+                  <motion.line
+                    x1="57%" y1="22%" x2="68%" y2="50%"
                     stroke="rgba(37, 99, 235, 0.15)"
                     strokeWidth="2"
                     strokeDasharray="4,4"
                     fill="none"
                   />
-                  <motion.path
-                    d="M 280,170 L 380,170"
+                  <motion.line
+                    x1="57%" y1="50%" x2="68%" y2="50%"
                     stroke="rgba(6, 182, 212, 0.15)"
                     strokeWidth="2"
                     strokeDasharray="4,4"
                     fill="none"
                   />
-                  <motion.path
-                    d="M 280,240 L 380,175"
+                  <motion.line
+                    x1="57%" y1="78%" x2="68%" y2="50%"
                     stroke="rgba(16, 185, 129, 0.15)"
                     strokeWidth="2"
                     strokeDasharray="4,4"
@@ -48,8 +48,8 @@ export function SmtpRotation() {
                     fill="#2563EB"
                     initial={{ offset: 0 }}
                     animate={{
-                      cx: [280, 380],
-                      cy: [100, 165],
+                      cx: ["57%", "68%"],
+                      cy: ["22%", "50%"],
                     }}
                     transition={{
                       duration: 3,
@@ -62,8 +62,8 @@ export function SmtpRotation() {
                     fill="#06B6D4"
                     initial={{ offset: 0 }}
                     animate={{
-                      cx: [280, 380],
-                      cy: [170, 170],
+                      cx: ["57%", "68%"],
+                      cy: ["50%", "50%"],
                     }}
                     transition={{
                       duration: 2.5,
@@ -77,8 +77,8 @@ export function SmtpRotation() {
                     fill="#10B981"
                     initial={{ offset: 0 }}
                     animate={{
-                      cx: [280, 380],
-                      cy: [240, 175],
+                      cx: ["57%", "68%"],
+                      cy: ["78%", "50%"],
                     }}
                     transition={{
                       duration: 3.5,
@@ -150,10 +150,10 @@ export function SmtpRotation() {
               <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6 text-zinc-900">
                 Never land in spam again
               </h2>
-              <p className="text-base md:text-lg text-zinc-500 mb-6 leading-relaxed font-semibold">
+              <p className="text-base md:text-lg text-zinc-500 mb-6 leading-relaxed">
                 Our intelligent SMTP rotation engine automatically distributes your sending volume across multiple domains and custom mailboxes.
               </p>
-              <p className="text-base md:text-lg text-zinc-500 mb-8 leading-relaxed font-semibold">
+              <p className="text-base md:text-lg text-zinc-500 mb-8 leading-relaxed">
                 By monitoring reputation in real-time, the platform instantly pauses mailboxes that show signs of rate-limiting, ensuring your sequences consistently hit the primary tab.
               </p>
               

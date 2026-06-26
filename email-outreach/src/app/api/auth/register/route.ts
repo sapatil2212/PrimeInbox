@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import crypto from "crypto";
 import { sendVerificationEmail } from "@/lib/mail";
+import { TRIAL_DAYS } from "@/lib/plans";
 
 const IST_OFFSET = 5.5 * 60 * 60 * 1000; // 5 hours 30 mins
 const getIstDate = (offsetMs = 0) => new Date(Date.now() + IST_OFFSET + offsetMs);
@@ -11,10 +12,11 @@ const getIstDate = (offsetMs = 0) => new Date(Date.now() + IST_OFFSET + offsetMs
 const registerSchema = z.object({
   companyName: z.string().min(2, "Company name must be at least 2 characters"),
   businessType: z.string().min(1, "Please select a business type"),
+  plan: z.enum(["SILVER", "GOLD", "PLATINUM"]).optional(),
   name: z.string().min(2, "Full name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   contactNo: z.string().min(6, "Contact number must be at least 6 characters"),
-  whatsappNo: z.string().optional(),
+  whatsappNo: z.string().nullable().optional(),
   password: z
     .string()
     .min(8, "Password must be at least 8 characters")
@@ -36,7 +38,9 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    const { companyName, businessType, name, email, contactNo, whatsappNo, password } = result.data;
+    const { companyName, businessType, plan, name, email, contactNo, whatsappNo, password } = result.data;
+    const selectedPlan = plan || "SILVER";
+    const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
     
     // Check if user already exists
     let existingUser = await db.user.findUnique({
@@ -99,6 +103,9 @@ export async function POST(req: NextRequest) {
             data: {
               name: companyName,
               businessType,
+              subscriptionPlan: selectedPlan,
+              subscriptionStatus: "TRIALING",
+              trialEndsAt,
             },
           });
         }
@@ -186,6 +193,9 @@ export async function POST(req: NextRequest) {
           name: companyName,
           workspaceSlug,
           businessType,
+          subscriptionPlan: selectedPlan,
+          subscriptionStatus: "TRIALING",
+          trialEndsAt,
         },
       });
       

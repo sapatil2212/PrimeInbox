@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/session";
+import { requireAdmin } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 
 export async function GET(_req: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session || session.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Access Denied. Super Admin only." }, { status: 403 });
-    }
+    const admin = await requireAdmin();
+    if (admin instanceof NextResponse) return admin;
 
     const users = await db.user.findMany({
       select: {
@@ -38,7 +36,7 @@ export async function GET(_req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      currentUserId: session.userId,
+      currentUserId: admin.userId,
       users: users.map((u) => ({
         id: u.id,
         name: u.name,
@@ -70,10 +68,8 @@ const VALID_USER_STATUS = ["ACTIVE", "INACTIVE", "PENDING_VERIFICATION"] as cons
 
 export async function PATCH(req: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session || session.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Access Denied" }, { status: 403 });
-    }
+    const admin = await requireAdmin();
+    if (admin instanceof NextResponse) return admin;
 
     const body = await req.json();
     const id = String(body.id || "").trim();
@@ -116,7 +112,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Prevent demoting/locking yourself out
-    if (id === session.userId && (data.role && data.role !== "SUPER_ADMIN")) {
+    if (id === admin.userId && (data.role && data.role !== "SUPER_ADMIN")) {
       return NextResponse.json({ error: "You cannot change your own role." }, { status: 400 });
     }
 
@@ -159,10 +155,8 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session || session.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Access Denied" }, { status: 403 });
-    }
+    const admin = await requireAdmin();
+    if (admin instanceof NextResponse) return admin;
 
     let ids: string[] = [];
     if (req.headers.get("content-type")?.includes("application/json")) {
@@ -179,7 +173,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Never allow deleting your own account
-    if (ids.includes(session.userId)) {
+    if (ids.includes(admin.userId)) {
       return NextResponse.json({ error: "You cannot delete your own account." }, { status: 400 });
     }
 

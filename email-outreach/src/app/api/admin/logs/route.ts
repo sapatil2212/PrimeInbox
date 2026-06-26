@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/session";
+import { requireAdmin } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session || session.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Access Denied" }, { status: 403 });
-    }
+    const admin = await requireAdmin();
+    if (admin instanceof NextResponse) return admin;
 
     let logs = await db.systemLog.findMany({
       take: 40,
@@ -52,10 +50,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session || session.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Access Denied" }, { status: 403 });
-    }
+    const admin = await requireAdmin();
+    if (admin instanceof NextResponse) return admin;
 
     const body = await req.json();
     const { action } = body;

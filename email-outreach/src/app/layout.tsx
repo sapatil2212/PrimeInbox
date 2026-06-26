@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Raleway, JetBrains_Mono, Inter } from "next/font/google";
-import { Toaster } from "sonner";
 import "./globals.css";
 import { GlowBg } from "@/components/ui/glow-bg";
 import { CookieConsent } from "@/components/layout/cookie-consent";
+import { FeedbackRoot } from "@/components/ui/feedback";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -24,7 +24,9 @@ export const metadata: Metadata = {
   title: "PrimeInbox | Turn Your DevRel Program Into Revenue Growth",
   description: "AI-powered Email Outreach Automation SaaS platform. Convert developer engagement into qualified leads and sales opportunities.",
   icons: {
-    icon: "/favicon.png",
+    icon: [{ url: "/favicon.png", type: "image/png" }],
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
   },
 };
 
@@ -48,7 +50,7 @@ export default function RootLayout({
         <div className="relative z-10 flex flex-col min-h-screen">
           {children}
         </div>
-        <Toaster />
+        <FeedbackRoot />
         <CookieConsent />
       </body>
     </html>

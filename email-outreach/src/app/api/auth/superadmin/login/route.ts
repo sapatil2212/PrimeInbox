@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { setSessionCookie } from "@/lib/session";
+import { setAdminSessionCookie } from "@/lib/session";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -104,14 +104,16 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 7. Establish Session (companyId is null for super admin)
-    await setSessionCookie({
-      userId: user.id,
-      companyId: null,
-      role: "SUPER_ADMIN",
-      email: user.email,
-      name: user.name,
-    }, rememberMe);
+    // 7. Establish a DEDICATED admin session (isolated from regular user sessions).
+    // This cookie is the ONLY thing that grants access to /admin.
+    await setAdminSessionCookie(
+      {
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+      },
+      rememberMe
+    );
 
     return NextResponse.json({
       success: true,

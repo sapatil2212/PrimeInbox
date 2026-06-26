@@ -101,7 +101,7 @@ export function CampaignBuilder() {
                     }`}>
                       {step.title}
                     </h4>
-                    <p className="text-[11px] text-zinc-500 px-2 font-semibold">
+                    <p className="text-[11px] text-zinc-500 px-2">
                       {step.description}
                     </p>
                   </div>

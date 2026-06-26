@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/session";
+import { requireAdmin } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import net from "net";
 
@@ -30,10 +30,8 @@ function checkRedisPort(host = "127.0.0.1", port = 6379): Promise<boolean> {
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session || session.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Access Denied. Super Admin only." }, { status: 403 });
-    }
+    const admin = await requireAdmin();
+    if (admin instanceof NextResponse) return admin;
 
     // 1. Core platform metrics
     const [companiesCount, usersCount, campaignsCount, smtpCount] = await Promise.all([

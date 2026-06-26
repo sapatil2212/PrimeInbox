@@ -44,7 +44,7 @@ export function FaqSection() {
             <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-zinc-900 mb-4">
               Frequently asked questions
             </h2>
-            <p className="text-sm md:text-base text-zinc-500 font-semibold">
+            <p className="text-sm md:text-base text-zinc-500">
               Clear, transparent answers to help you configure your DevRel campaign channels.
             </p>
           </FadeIn>

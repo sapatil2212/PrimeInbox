@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { toast } from "sonner";
+import { toast, confirmDialog } from "@/components/ui/feedback";
 import { 
  Plus, 
  Search, 
@@ -139,7 +139,12 @@ export default function LeadsPage() {
  };
 
  const handleDeleteList = async (list: ListInfo) => {
- if (!confirm(`Are you sure you want to delete"${list.name}"? This deletes all associated leads and progress.`)) {
+ const ok = await confirmDialog({
+ title: "Delete lead list?",
+ description: `"${list.name}" and all associated leads and campaign progress will be permanently deleted.`,
+ confirmText: "Delete",
+ });
+ if (!ok) {
  return;
  }
  try {

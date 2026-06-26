@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/feedback";
 import { cn } from "@/lib/utils";
 import {
   Loader2,

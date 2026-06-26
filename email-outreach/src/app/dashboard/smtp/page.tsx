@@ -1,29 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
-import { toast } from"sonner";
+import { toast, confirmDialog } from "@/components/ui/feedback";
 import { 
- Plus, 
- Search, 
- Key, 
- Trash2, 
- CheckCircle, 
- Loader2,
- RefreshCw,
- Sliders,
- AlertTriangle,
- Play,
- Pause,
- Server,
- Layers,
- Activity,
- Heart,
- Sparkles
-} from"lucide-react";
+  Plus, 
+  Search, 
+  Key, 
+  Trash2, 
+  CheckCircle, 
+  Loader2,
+  RefreshCw,
+  Sliders,
+  AlertTriangle,
+  Play,
+  Pause,
+  Server,
+  Layers,
+  Activity,
+  Heart,
+  Sparkles,
+  X
+} from "lucide-react";
 import { GlowCard } from"@/components/ui/glow-card";
 import { ShimmerButton } from"@/components/ui/shimmer-button";
 import { cn } from"@/lib/utils";
+import { getPlanLimits } from"@/lib/plans";
 
 interface SmtpAccountItem {
  id: string;
@@ -55,6 +58,7 @@ interface SmtpGroupItem {
 }
 
 export default function SmtpPage() {
+  const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
     setIsMounted(true);
@@ -62,6 +66,7 @@ export default function SmtpPage() {
 
   const [accounts, setAccounts] = useState<SmtpAccountItem[]>([]);
   const [groups, setGroups] = useState<SmtpGroupItem[]>([]);
+  const [smtpLimit, setSmtpLimit] = useState<number | null>(null);
  const [searchQuery, setSearchQuery] = useState("");
  const [activeView, setActiveView] = useState<"accounts" |"groups">("accounts");
  
@@ -83,6 +88,11 @@ export default function SmtpPage() {
  const [hourlyLimit, setHourlyLimit] = useState(25);
  const [priority, setPriority] = useState(1);
  const [rotationWeight, setRotationWeight] = useState(1);
+
+ // Optional app-level DKIM signing (advanced)
+ const [dkimDomain, setDkimDomain] = useState("");
+ const [dkimSelector, setDkimSelector] = useState("");
+ const [dkimPrivateKey, setDkimPrivateKey] = useState("");
 
  // Add Group dialog
  const [addGroupOpen, setAddGroupOpen] = useState(false);
@@ -121,6 +131,17 @@ export default function SmtpPage() {
  useEffect(() => {
  fetchAccounts();
  fetchGroups();
+ (async () => {
+ try {
+ const res = await fetch("/api/auth/session");
+ if (res.ok) {
+ const data = await res.json();
+ setSmtpLimit(getPlanLimits(data.user?.company?.subscriptionPlan).smtpLimit);
+ }
+ } catch {
+ /* ignore */
+ }
+ })();
  }, []);
 
  const handleAddAccount = async (e: React.FormEvent) => {
@@ -147,6 +168,9 @@ export default function SmtpPage() {
  hourlyLimit: Number(hourlyLimit),
  priority: Number(priority),
  rotationWeight: Number(rotationWeight),
+ dkimDomain: dkimDomain.trim() || null,
+ dkimSelector: dkimSelector.trim() || null,
+ dkimPrivateKey: dkimPrivateKey.trim() || null,
  }),
  });
 
@@ -165,6 +189,9 @@ export default function SmtpPage() {
  setFromName("");
  setFromEmail("");
  setReplyTo("");
+ setDkimDomain("");
+ setDkimSelector("");
+ setDkimPrivateKey("");
  
  fetchAccounts();
  } catch (err: any) {
@@ -196,21 +223,25 @@ export default function SmtpPage() {
  }
  };
 
- const handleDeleteAccount = async (id: string, email: string) => {
- if (!confirm(`Are you sure you want to delete SMTP account ${email}?`)) return;
-
- try {
- const res = await fetch(`/api/smtp/accounts/${id}`, {
- method:"DELETE",
- });
- if (!res.ok) throw new Error("Failed to delete SMTP account");
-
- toast.success(`Removed SMTP account: ${email}`);
- fetchAccounts();
- } catch (err: any) {
- toast.error(err.message ||"Failed to delete SMTP account");
- }
- };
+  const handleDeleteAccount = async (id: string, email: string) => {
+    await confirmDialog({
+      title: "Delete SMTP account?",
+      description: `${email} will be removed and can no longer send campaigns.`,
+      confirmText: "Delete",
+      successTitle: "Deleted!",
+      successDescription: `SMTP account ${email} has been removed.`,
+      onConfirm: async () => {
+        const res = await fetch(`/api/smtp/accounts/${id}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.error || "Failed to delete SMTP account");
+        }
+        fetchAccounts();
+      },
+    });
+  };
 
  const handleToggleStatus = async (id: string, currentStatus: string, email: string) => {
  const nextStatus = currentStatus ==="ACTIVE" ?"PAUSED" :"ACTIVE";
@@ -272,77 +303,86 @@ export default function SmtpPage() {
  return (
  <div className="flex-1 flex flex-col gap-8">
  
- {/* Header */}
- <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
- <div>
- <h1 className="text-2xl font-black tracking-tight text-zinc-800">
- SMTP Manager
- </h1>
- <p className="text-sm text-zinc-500 font-medium">Add, pools group, and verify cold outreach outbound email credentials.</p>
- </div>
- <div className="flex items-center gap-3">
- {activeView ==="accounts" ? (
- <ShimmerButton 
- onClick={() => setAddAccountOpen(true)}
- className="h-10 px-5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-1.5"
- shimmerColor="#818cf8"
- >
- <Plus className="w-4 h-4" /> Add SMTP Account
- </ShimmerButton>
- ) : (
- <ShimmerButton 
- onClick={() => setAddGroupOpen(true)}
- className="h-10 px-5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-1.5"
- shimmerColor="#818cf8"
- >
- <Plus className="w-4 h-4" /> Create SMTP Pool
- </ShimmerButton>
- )}
- </div>
- </header>
+  {/* Header */}
+  <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shrink-0">
+    <div>
+      <h1 className="text-2xl font-black tracking-tight text-zinc-900">
+        SMTP Manager
+      </h1>
+      <p className="text-sm text-zinc-500 font-medium mt-0.5">
+        Add, pools group, and verify cold outreach outbound email credentials.
+      </p>
+    </div>
+    <div className="flex items-center gap-2.5">
+      {/* Shifted Search Input */}
+      {activeView === "accounts" && (
+        <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-3 py-1.5 w-60">
+          <Search className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+          <input 
+            type="text" 
+            placeholder="Filter by email or host..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="bg-transparent border-0 outline-none text-xs text-zinc-800 placeholder-zinc-400 w-full font-medium"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery("")} className="text-zinc-400 hover:text-zinc-600 cursor-pointer">
+              <X className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+      )}
 
- {/* Tabs */}
- <div className="flex border-b border-zinc-200 gap-6 select-none shrink-0">
- <button 
- onClick={() => setActiveView("accounts")}
- className={cn(
-"pb-3 text-xs font-bold transition-all border-b-2 cursor-pointer",
- activeView ==="accounts" ?"border-indigo-650 text-indigo-650 font-black" :"border-transparent text-zinc-550 hover:text-zinc-800"
- )}
- >
- <span className="flex items-center gap-1.5"><Server className="w-3.5 h-3.5" /> SMTP Accounts ({accounts.length})</span>
- </button>
- <button 
- onClick={() => setActiveView("groups")}
- className={cn(
-"pb-3 text-xs font-bold transition-all border-b-2 cursor-pointer",
- activeView ==="groups" ?"border-indigo-650 text-indigo-650 font-black" :"border-transparent text-zinc-550 hover:text-zinc-800"
- )}
- >
- <span className="flex items-center gap-1.5"><Layers className="w-3.5 h-3.5" /> Rotational Pools ({groups.length})</span>
- </button>
- </div>
+      {activeView === "accounts" ? (
+        <button 
+          onClick={() => setAddAccountOpen(true)}
+          className="h-9 px-4 rounded-lg text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-white flex items-center gap-1.5 border border-zinc-950 cursor-pointer transition-colors"
+        >
+          <Plus className="w-3.5 h-3.5" /> Add SMTP Account
+        </button>
+      ) : (
+        <button 
+          onClick={() => setAddGroupOpen(true)}
+          className="h-9 px-4 rounded-lg text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-white flex items-center gap-1.5 border border-zinc-950 cursor-pointer transition-colors"
+        >
+          <Plus className="w-3.5 h-3.5" /> Create SMTP Pool
+        </button>
+      )}
+    </div>
+  </header>
 
- {/* Search Filter Bar */}
- {activeView ==="accounts" && (
- <div className="flex items-center gap-3 bg-white border border-zinc-200 rounded-xl px-4 py-2 max-w-sm shrink-0">
- <Search className="w-4 h-4 text-zinc-400" />
- <input 
- type="text" 
- placeholder="Filter by email or host..."
- value={searchQuery}
- onChange={(e) => setSearchQuery(e.target.value)}
- className="bg-transparent border-0 outline-none text-sm text-zinc-800 placeholder-zinc-450 w-full font-semibold"
- />
- </div>
- )}
+  {/* Tabs */}
+  <div className="flex border-b border-zinc-200 gap-6 select-none shrink-0">
+    <button 
+      onClick={() => setActiveView("accounts")}
+      className={cn(
+        "pb-3 text-xs font-bold transition-all border-b-2 cursor-pointer",
+        activeView === "accounts" 
+          ? "border-zinc-900 text-zinc-900 font-black" 
+          : "border-transparent text-zinc-500 hover:text-zinc-800"
+      )}
+    >
+      <span className="flex items-center gap-1.5"><Server className="w-3.5 h-3.5" /> SMTP Accounts ({accounts.length})</span>
+    </button>
+    <button 
+      onClick={() => setActiveView("groups")}
+      className={cn(
+        "pb-3 text-xs font-bold transition-all border-b-2 cursor-pointer",
+        activeView === "groups" 
+          ? "border-zinc-900 text-zinc-900 font-black" 
+          : "border-transparent text-zinc-500 hover:text-zinc-800"
+      )}
+    >
+      <span className="flex items-center gap-1.5"><Layers className="w-3.5 h-3.5" /> Rotational Pools ({groups.length})</span>
+    </button>
+  </div>
 
- {/* View Contents */}
- {activeView ==="accounts" ? (
- isLoadingAccounts ? (
- <div className="flex-1 flex items-center justify-center min-h-[30vh]">
- <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
- </div>
+  {/* View Contents */}
+  {activeView === "accounts" ? (
+    isLoadingAccounts ? (
+      <div className="flex-1 flex items-center justify-center min-h-[30vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-zinc-700" />
+      </div>
  ) : filteredAccounts.length > 0 ? (
  <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
  {filteredAccounts.map((acc) => {
@@ -380,7 +420,7 @@ export default function SmtpPage() {
  </div>
  <div className="w-full h-1 bg-zinc-100 rounded-full overflow-hidden">
  <div 
- className="bg-indigo-500 h-full transition-all duration-300"
+ className="bg-zinc-900 h-full transition-all duration-300"
  style={{ width: `${Math.min((acc.currentDailyCount / acc.dailyLimit) * 100, 100)}%` }}
  />
  </div>
@@ -451,18 +491,18 @@ export default function SmtpPage() {
  Before launching outreach campaigns, configure SMTP credentials to enable automated rotational sending pools.
  </p>
  </div>
- <button 
- onClick={() => setAddAccountOpen(true)}
- className="h-10 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition-colors cursor-pointer"
- >
- Add SMTP Account
- </button>
+  <button 
+  onClick={() => setAddAccountOpen(true)}
+  className="h-10 px-5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-950 text-xs font-bold text-white transition-colors cursor-pointer"
+  >
+  Add SMTP Account
+  </button>
  </section>
  )
  ) : (
  isLoadingGroups ? (
  <div className="flex-1 flex items-center justify-center min-h-[30vh]">
- <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+ <Loader2 className="w-8 h-8 animate-spin text-zinc-700" />
  </div>
  ) : groups.length > 0 ? (
  <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -493,12 +533,12 @@ export default function SmtpPage() {
  Group multiple email addresses together in rotational send pools to divide outbound sending limits.
  </p>
  </div>
- <button 
- onClick={() => setAddGroupOpen(true)}
- className="h-10 px-5 rounded-xl bg-indigo-650 hover:bg-indigo-550 text-xs font-bold text-white transition-colors cursor-pointer"
- >
- Create SMTP Pool
- </button>
+  <button 
+  onClick={() => setAddGroupOpen(true)}
+  className="h-10 px-5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-950 text-xs font-bold text-white transition-colors cursor-pointer"
+  >
+  Create SMTP Pool
+  </button>
  </section>
  )
  )}
@@ -515,6 +555,15 @@ export default function SmtpPage() {
   <h3 className="font-bold text-zinc-700 text-sm flex items-center gap-1.5"><Key className="w-4 h-4 text-indigo-600" /> Connect SMTP Account</h3>
   <button type="button" onClick={() => setAddAccountOpen(false)} className="text-zinc-400 hover:text-zinc-600 cursor-pointer"><X className="w-4 h-4" /></button>
   </div>
+
+  {smtpLimit !== null && accounts.length >= smtpLimit && (
+  <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 shrink-0">
+  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+  <p className="text-[11px] font-semibold text-amber-700 leading-relaxed">
+  Your plan allows up to {smtpLimit} SMTP sender {smtpLimit === 1 ? "account" : "accounts"}. Upgrade your plan to add more.
+  </p>
+  </div>
+  )}
 
   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
   <div className="space-y-1">
@@ -657,6 +706,52 @@ export default function SmtpPage() {
   </div>
   </div>
 
+  {/* Optional: App-level DKIM signing (advanced) */}
+  <details className="border border-zinc-200 rounded-xl bg-zinc-50/50 group">
+  <summary className="cursor-pointer list-none px-3 py-2.5 text-[10px] font-bold text-zinc-600 uppercase tracking-wider flex items-center justify-between">
+  <span>Advanced: DKIM signing (optional)</span>
+  <span className="text-zinc-400 group-open:rotate-180 transition-transform">▾</span>
+  </summary>
+  <div className="px-3 pb-3 pt-1 space-y-3">
+  <p className="text-[10px] text-zinc-500 leading-relaxed">
+  Only needed for raw SMTP servers that don't sign mail themselves. Managed providers (Gmail, SES, SendGrid, Mailgun) already sign — leave blank for those. Requires a matching DNS TXT record at <code className="text-indigo-600">selector._domainkey.domain</code>.
+  </p>
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+  <div className="space-y-1">
+  <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">DKIM Domain</label>
+  <input
+  type="text"
+  placeholder="yourdomain.com"
+  value={dkimDomain}
+  onChange={(e) => setDkimDomain(e.target.value)}
+  className="w-full h-8 px-2.5 rounded-lg bg-white border border-zinc-200 text-[11px] text-zinc-700 focus:outline-none focus:border-indigo-300 focus:ring-1 focus:ring-indigo-100 font-medium"
+  />
+  </div>
+  <div className="space-y-1">
+  <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">DKIM Selector</label>
+  <input
+  type="text"
+  placeholder="primeinbox"
+  value={dkimSelector}
+  onChange={(e) => setDkimSelector(e.target.value)}
+  className="w-full h-8 px-2.5 rounded-lg bg-white border border-zinc-200 text-[11px] text-zinc-700 focus:outline-none focus:border-indigo-300 focus:ring-1 focus:ring-indigo-100 font-medium"
+  />
+  </div>
+  </div>
+  <div className="space-y-1">
+  <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">DKIM Private Key (PEM)</label>
+  <textarea
+  placeholder={"-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"}
+  value={dkimPrivateKey}
+  onChange={(e) => setDkimPrivateKey(e.target.value)}
+  rows={3}
+  className="w-full p-2.5 rounded-lg bg-white border border-zinc-200 text-[11px] text-zinc-700 font-mono focus:outline-none focus:border-indigo-300 focus:ring-1 focus:ring-indigo-100"
+  />
+  <p className="text-[9px] text-zinc-400">Stored encrypted (AES-256-GCM). Never returned to the browser.</p>
+  </div>
+  </div>
+  </details>
+
   <div className="border-t border-zinc-100 pt-4 flex items-center justify-end gap-3 shrink-0 select-none">
   <button 
   type="button" 
@@ -665,12 +760,22 @@ export default function SmtpPage() {
   >
   Cancel
   </button>
+  {smtpLimit !== null && accounts.length >= smtpLimit ? (
+  <button 
+  type="button"
+  onClick={() => { setAddAccountOpen(false); router.push("/dashboard/billing"); }}
+  className="h-9 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 border border-indigo-700 text-xs font-bold text-white transition-colors cursor-pointer"
+  >
+  Upgrade Plan
+  </button>
+  ) : (
   <button 
   type="submit"
-  className="h-9 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition-colors cursor-pointer"
+  className="h-9 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-950 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold text-white transition-colors cursor-pointer"
   >
   Connect SMTPS
   </button>
+  )}
   </div>
   </form>
   </div>, document.body
@@ -756,7 +861,7 @@ export default function SmtpPage() {
   <button 
   type="submit"
   disabled={!groupName.trim() || selectedAccountIds.length === 0}
-  className="h-9 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-xs font-bold text-white transition-colors cursor-pointer"
+  className="h-9 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 disabled:opacity-40 border border-zinc-950 text-xs font-bold text-white transition-colors cursor-pointer"
   >
   Create Pool
   </button>
@@ -769,23 +874,4 @@ export default function SmtpPage() {
  );
 }
 
-// Simple close icon wrapper
-function X(props: any) {
- return (
- <svg
- {...props}
- xmlns="http://www.w3.org/2000/svg"
- width="24"
- height="24"
- viewBox="0 0 24 24"
- fill="none"
- stroke="currentColor"
- strokeWidth="2"
- strokeLinecap="round"
- strokeLinejoin="round"
- >
- <path d="M18 6 6 18" />
- <path d="m6 6 12 12" />
- </svg>
- );
-}
+// Custom X component removed

@@ -103,31 +103,60 @@ export async function POST(req: NextRequest) {
 
     // Call Google Gemini API
     const systemPrompt = buildSystemPrompt(type, tone, prompt, companyContext, recipientContext);
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [{ text: systemPrompt }],
-            },
-          ],
-        }),
-      }
-    );
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("Gemini API call failed:", errText);
-      throw new Error("Failed to contact Gemini API");
+    const endpoints = [
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
+    ];
+
+    let lastError = "No endpoints attempted";
+    let responseText = "";
+    let success = false;
+
+    for (const url of endpoints) {
+      try {
+        console.log(`[AI-Generator] Probing Gemini endpoint: ${url.replace(apiKey, "HIDDEN_KEY")}`);
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [{ text: systemPrompt }],
+              },
+            ],
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+          success = true;
+          break;
+        } else {
+          const errText = await response.text();
+          console.warn(`[AI-Generator] Endpoint ${url.split("/models/")[1]?.split(":")[0]} failed:`, errText);
+          lastError = errText;
+        }
+      } catch (err: any) {
+        console.warn(`[AI-Generator] Fetch error on endpoint:`, err.message);
+        lastError = err.message;
+      }
     }
 
-    const data = await response.json();
-    const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text || "AI Generation failed.";
+    if (!success) {
+      console.error("[AI-Generator] All Gemini models failed. Last error:", lastError);
+      throw new Error(`Failed to contact Gemini API. Details: ${lastError}`);
+    }
 
-    return NextResponse.json({ success: true, text: resultText.trim() });
+    return NextResponse.json({ success: true, text: responseText.trim() });
   } catch (error: any) {
     console.error("POST /api/ai/generate error:", error);
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });

@@ -102,7 +102,7 @@ export function AISection() {
               <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6 text-zinc-900">
                 Write perfect cold emails in <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-primary">seconds</span>
               </h2>
-              <p className="text-base md:text-lg text-zinc-500 mb-8 leading-relaxed font-semibold">
+              <p className="text-base md:text-lg text-zinc-500 mb-8 leading-relaxed">
                 Say goodbye to writer's block. Provide a simple prompt, and our AI will generate highly personalized, conversion-optimized email sequences that sound exactly like you.
               </p>
               
@@ -191,7 +191,7 @@ export function AISection() {
                         </span>
                       </div>
                       <div className="w-full h-px bg-zinc-200/60 mb-3" />
-                      <p className="text-xs text-zinc-650 leading-relaxed font-semibold whitespace-pre-line">
+                      <p className="text-xs text-zinc-650 leading-relaxed whitespace-pre-line">
                         {OUTPUTS[activeIdx].body}
                       </p>
                     </motion.div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from"react";
-import { toast } from"sonner";
+import { toast, confirmDialog } from "@/components/ui/feedback";
 import { 
  Building, 
  UserPlus, 
@@ -109,7 +109,12 @@ export default function CrmPage() {
  };
 
  const handleDeleteContact = async (id: string, name: string) => {
- if (!confirm(`Are you sure you want to delete CRM contact ${name}?`)) return;
+ const ok = await confirmDialog({
+ title: "Delete CRM contact?",
+ description: `${name} will be permanently removed from your CRM.`,
+ confirmText: "Delete",
+ });
+ if (!ok) return;
 
  try {
  const res = await fetch(`/api/crm/contacts?id=${id}`, {

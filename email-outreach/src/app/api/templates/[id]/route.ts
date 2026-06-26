@@ -101,6 +101,18 @@ export async function DELETE(
       return NextResponse.json({ error: "Template not found" }, { status: 404 });
     }
 
+    // Check if template is used by any campaign steps
+    const campaignStepsCount = await db.campaignStep.count({
+      where: { templateId: id },
+    });
+
+    if (campaignStepsCount > 0) {
+      return NextResponse.json(
+        { error: "This template is in use by one or more campaigns. Please remove it from the campaign steps first." },
+        { status: 400 }
+      );
+    }
+
     await db.emailTemplate.delete({
       where: { id },
     });

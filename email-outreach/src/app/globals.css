@@ -92,6 +92,27 @@
       transform: scale(1.15) translate(30px, -20px);
     }
   }
+
+  @keyframes glow-drift-left {
+    0%, 100% {
+      transform: translate(-30px, -25px) scale(1);
+    }
+    50% {
+      transform: translate(20px, 25px) scale(1.15);
+    }
+  }
+
+  @keyframes glow-drift-right {
+    0%, 100% {
+      transform: translate(20px, 15px) scale(1);
+    }
+    50% {
+      transform: translate(-30px, -20px) scale(0.95);
+    }
+  }
+
+  --animate-glow-drift-left: glow-drift-left 15s ease-in-out infinite;
+  --animate-glow-drift-right: glow-drift-right 18s ease-in-out infinite;
 }
 
 :root {

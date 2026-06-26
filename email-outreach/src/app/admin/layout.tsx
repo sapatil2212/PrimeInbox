@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
+import { getAdminSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import { AdminLayoutShell } from "@/components/layout/admin-layout-shell";
 
@@ -8,14 +8,19 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getSession();
+  // The admin area is gated by a DEDICATED admin session cookie that is only
+  // issued through the Super Admin login portal. A regular user session —
+  // even one with the SUPER_ADMIN role — cannot access this area.
+  const admin = await getAdminSession();
 
-  if (!session || session.role !== "SUPER_ADMIN") {
-    redirect("/unauthorized");
+  if (!admin) {
+    redirect("/superadmin/login");
   }
 
+  // Re-validate against the database to ensure the account still exists and
+  // is still a SUPER_ADMIN (defense in depth).
   const user = await db.user.findUnique({
-    where: { id: session.userId },
+    where: { id: admin.userId },
     select: {
       id: true,
       name: true,
@@ -25,8 +30,8 @@ export default async function AdminLayout({
     },
   });
 
-  if (!user) {
-    redirect("/login");
+  if (!user || user.role !== "SUPER_ADMIN") {
+    redirect("/superadmin/login");
   }
 
   return (

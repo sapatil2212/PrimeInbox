@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/feedback";
 import { 
   Mail, 
   LogOut, 
@@ -16,9 +16,7 @@ import {
   Key, 
   ShieldAlert, 
   LayoutDashboard,
-  Sparkles,
   Search,
-  Bell,
   Menu,
   ChevronLeft,
   ChevronRight,
@@ -46,16 +44,19 @@ interface DashboardLayoutShellProps {
     subscriptionPlan: string;
     subscriptionStatus: string;
   };
+  trial?: {
+    onTrial: boolean;
+    daysLeft: number;
+  };
 }
 
-export function DashboardLayoutShell({ children, user, company }: DashboardLayoutShellProps) {
+export function DashboardLayoutShell({ children, user, company, trial }: DashboardLayoutShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   // Reduce root font size for the dashboard to make elements more compact and professional
@@ -103,12 +104,8 @@ export function DashboardLayoutShell({ children, user, company }: DashboardLayou
     { label: "Leads", href: "/dashboard/leads", icon: Users },
     { label: "Templates", href: "/dashboard/templates", icon: BookOpen },
     { label: "SMTP Accounts", href: "/dashboard/smtp", icon: Key },
-    { label: "AI Studio", href: "/dashboard/ai-studio", icon: Sparkles },
-    { label: "CRM", href: "/dashboard/crm", icon: Building },
     { label: "Reports", href: "/dashboard/reports", icon: BarChart3 },
     { label: "Billing", href: "/dashboard/billing", icon: CreditCard },
-    { label: "Team", href: "/dashboard/team", icon: UserPlus },
-    { label: "Settings", href: "/dashboard/settings", icon: Settings },
   ];
 
   // Commands for command palette
@@ -117,7 +114,6 @@ export function DashboardLayoutShell({ children, user, company }: DashboardLayou
     { name: "Import Leads", desc: "Upload CSV or list leads", href: "/dashboard/leads" },
     { name: "Connect SMTP", desc: "Add email sending accounts", href: "/dashboard/smtp" },
     { name: "Compose Template", desc: "Design outreach template", href: "/dashboard/templates" },
-    { name: "AI Studio sequence", desc: "Generate sequence using Gemini", href: "/dashboard/ai-studio" },
     { name: "CRM Contacts", desc: "View managed CRM pipeline", href: "/dashboard/crm" },
     { name: "Workspace Settings", desc: "Adjust timezone or company profile", href: "/dashboard/settings" },
   ];
@@ -165,7 +161,9 @@ export function DashboardLayoutShell({ children, user, company }: DashboardLayou
         {/* Navigation Items */}
         <nav className="flex-1 space-y-1 overflow-y-auto pr-1 select-none">
           {navLinks.map((link) => {
-            const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
+            const isActive = link.href === "/dashboard" 
+              ? pathname === "/dashboard" 
+              : pathname === link.href || pathname.startsWith(link.href + "/");
             const Icon = link.icon;
 
             return (
@@ -269,7 +267,9 @@ export function DashboardLayoutShell({ children, user, company }: DashboardLayou
 
             <nav className="flex-1 space-y-1.5 overflow-y-auto">
               {navLinks.map((link) => {
-                const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
+                const isActive = link.href === "/dashboard" 
+                  ? pathname === "/dashboard" 
+                  : pathname === link.href || pathname.startsWith(link.href + "/");
                 const Icon = link.icon;
                 return (
                   <Link
@@ -357,44 +357,7 @@ export function DashboardLayoutShell({ children, user, company }: DashboardLayou
               <kbd className="hidden sm:inline-block px-1.5 py-0.5 bg-zinc-50 border border-zinc-200 rounded font-mono text-[9px]">Ctrl K</kbd>
             </button>
 
-            {/* Notifications Center */}
-            <div className="relative">
-              <button 
-                onClick={() => setNotificationsOpen(!notificationsOpen)}
-                className="p-2 rounded-xl bg-zinc-100 border border-zinc-200 hover:border-zinc-300 text-zinc-500 hover:text-zinc-800 transition-colors cursor-pointer"
-              >
-                <Bell className="w-4 h-4" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-600 rounded-full animate-pulse" />
-              </button>
-              
-              {notificationsOpen && (
-                <>
-                  <div className="fixed inset-0 z-30" onClick={() => setNotificationsOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-80 bg-white border border-zinc-200 rounded-2xl shadow-xl z-40 p-4 space-y-3">
-                    <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
-                      <span className="font-bold text-xs text-zinc-900">Notifications</span>
-                      <button className="text-[10px] text-indigo-600 font-bold hover:underline">Mark all read</button>
-                    </div>
-                    <div className="space-y-2 text-xs divide-y divide-zinc-100 max-h-60 overflow-y-auto pr-1">
-                      <div className="pt-2 flex gap-2.5 items-start">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                        <div>
-                          <p className="font-semibold text-zinc-800">SMTP limits reset completed</p>
-                          <p className="text-[10px] text-zinc-450">All SMTP accounts hourly limit resets processed.</p>
-                        </div>
-                      </div>
-                      <div className="pt-2 flex gap-2.5 items-start">
-                        <div className="w-2 h-2 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
-                        <div>
-                          <p className="font-semibold text-zinc-800">AI campaign generated</p>
-                          <p className="text-[10px] text-zinc-450">Your AI sequence is ready for review.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
+
 
             {/* Profile Dropdown */}
             <div className="relative">
@@ -453,7 +416,22 @@ export function DashboardLayoutShell({ children, user, company }: DashboardLayou
         </header>
 
         {/* Dynamic Nested Content */}
-        <main className="flex-1 overflow-y-auto relative p-6 md:p-8 flex flex-col">
+        <main className={cn("flex-1 overflow-y-auto relative flex flex-col", pathname?.includes("/builder/") ? "p-0 overflow-hidden" : "p-6 md:p-8")}>
+          {trial?.onTrial && !pathname?.includes("/builder/") && pathname !== "/dashboard/billing" && (
+            <Link
+              href="/dashboard/billing"
+              className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-indigo-200 bg-indigo-50/70 px-4 py-2.5 hover:bg-indigo-50 transition-colors"
+            >
+              <span className="text-xs font-bold text-indigo-700">
+                {trial.daysLeft > 0
+                  ? `You're on a free trial — ${trial.daysLeft} day${trial.daysLeft === 1 ? "" : "s"} left.`
+                  : "Your free trial ends today."}
+              </span>
+              <span className="text-[11px] font-extrabold text-white bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded-lg transition-colors">
+                Upgrade now
+              </span>
+            </Link>
+          )}
           {children}
         </main>
       </div>

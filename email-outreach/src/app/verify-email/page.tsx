@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/feedback";
 import { GlowCard } from "@/components/ui/glow-card";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { Mail, CheckCircle2, XCircle, Loader2, ArrowRight } from "lucide-react";

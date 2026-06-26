@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from"react";
-import { toast } from"sonner";
+import { toast, confirmDialog } from "@/components/ui/feedback";
 import { 
  Users, 
  UserPlus, 
@@ -80,7 +80,12 @@ export default function TeamPage() {
  };
 
  const handleRemoveMember = async (id: string, name: string) => {
- if (!confirm(`Are you sure you want to remove ${name} from the team?`)) return;
+ const ok = await confirmDialog({
+ title: "Remove team member?",
+ description: `${name} will lose access to this workspace.`,
+ confirmText: "Remove",
+ });
+ if (!ok) return;
 
  try {
  const res = await fetch(`/api/team/members?id=${id}`, {

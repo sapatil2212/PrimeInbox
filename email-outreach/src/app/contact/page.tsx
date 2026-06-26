@@ -4,9 +4,8 @@ import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/feedback";
 import { Navbar } from "@/components/layout/navbar";
-import { AnnouncementBar } from "@/components/landing/announcement-bar";
 import { Footer } from "@/components/layout/footer";
 import { Container } from "@/components/layout/container";
 import { GlowCard } from "@/components/ui/glow-card";
@@ -17,7 +16,6 @@ import { SlideUp } from "@/components/animations/slide-up";
 import { businessTypes } from "@/lib/business-types";
 import {
   Mail,
-  MessageSquare,
   Globe,
   User,
   Briefcase,
@@ -104,7 +102,6 @@ export default function ContactPage() {
 
   return (
     <main className="flex min-h-screen flex-col">
-      <AnnouncementBar />
       <Navbar />
 
       <section className="relative pt-36 pb-20 overflow-hidden bg-transparent z-10">
@@ -133,21 +130,21 @@ export default function ContactPage() {
                     <div className="flex flex-col gap-6">
                       <div className="flex items-start gap-4">
                         <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-primary shrink-0">
-                          <Mail className="w-4 h-4" />
+                          <Phone className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-zinc-400">Email Sales</p>
-                          <p className="text-sm font-semibold text-zinc-800">sales@primeinbox.dev</p>
+                          <p className="text-xs font-bold text-zinc-400">Contact</p>
+                          <a href="tel:+919168081355" className="text-sm font-semibold text-zinc-800 hover:text-primary transition-colors">+91 9168 08 1355</a>
                         </div>
                       </div>
 
                       <div className="flex items-start gap-4">
                         <div className="w-10 h-10 rounded-lg bg-cyan-50 border border-cyan-100 flex items-center justify-center text-cyan-600 shrink-0">
-                          <MessageSquare className="w-4 h-4" />
+                          <Mail className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-zinc-400">Developer Support</p>
-                          <p className="text-sm font-semibold text-zinc-800">support@primeinbox.dev</p>
+                          <p className="text-xs font-bold text-zinc-400">Email</p>
+                          <a href="mailto:contact.primeinbox@gmail.com" className="text-sm font-semibold text-zinc-800 hover:text-primary transition-colors break-all">contact.primeinbox@gmail.com</a>
                         </div>
                       </div>
 
@@ -156,16 +153,14 @@ export default function ContactPage() {
                           <Globe className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-zinc-400">Headquarters</p>
-                          <p className="text-sm font-semibold text-zinc-800">San Francisco, CA</p>
+                          <p className="text-xs font-bold text-zinc-400">Location</p>
+                          <p className="text-sm font-semibold text-zinc-800">Pune, Maharashtra, India</p>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-8 pt-6 border-t border-zinc-100 text-xs text-zinc-500 font-semibold leading-relaxed">
-                    Looking for standard API documentation? Check our Developer Portal or Star us on GitHub.
-                  </div>
+
                 </div>
               </GlowCard>
             </div>

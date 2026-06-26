@@ -9,17 +9,18 @@ import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
+import { AnnouncementBar } from "@/components/landing/announcement-bar";
+
 const NAV_LINKS = [
   { name: "Home", href: "/" },
   { name: "Pricing", href: "/pricing" },
   { name: "About", href: "/about" },
   { name: "Contact", href: "/contact" },
 ];
-
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [announcementVisible, setAnnouncementVisible] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -28,48 +29,48 @@ export function Navbar() {
   }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 pointer-events-none px-4 md:px-0">
+    <header className="fixed top-0 left-0 right-0 z-50 pointer-events-none flex flex-col items-center w-full">
+      {announcementVisible && !isScrolled && (
+        <AnnouncementBar onClose={() => setAnnouncementVisible(false)} />
+      )}
+      
       {/* Visual Spring-based Navbar Container - Constant Width to prevent layout snapping */}
       <motion.div
         animate={{
-          y: isScrolled ? 16 : 0,
+          y: isScrolled ? 6 : 0,
           borderRadius: isScrolled ? "9999px" : "0px",
           backgroundColor: isScrolled ? "rgba(255, 255, 255, 0.82)" : "rgba(255, 255, 255, 0)",
           borderColor: isScrolled ? "rgba(9, 9, 11, 0.06)" : "rgba(9, 9, 11, 0)",
           boxShadow: isScrolled ? "0 10px 30px -10px rgba(0,0,0,0.06)" : "0 0px 0px rgba(0,0,0,0)",
-          paddingTop: isScrolled ? "10px" : "20px",
-          paddingBottom: isScrolled ? "10px" : "20px",
+          paddingTop: isScrolled ? "5px" : "0px",
+          paddingBottom: isScrolled ? "5px" : "0px",
         }}
         transition={{
           type: "spring",
           stiffness: 140,
           damping: 22,
         }}
-        className="mx-auto w-[calc(100%-2rem)] max-w-6xl border-b backdrop-blur-xl pointer-events-auto flex items-center justify-between z-50 relative"
+        className={cn(
+          "mx-auto pointer-events-auto flex items-center justify-between z-50 relative transition-all duration-300",
+          isScrolled
+            ? "w-[calc(100%-2rem)] max-w-6xl border-b border-zinc-200/50 backdrop-blur-xl"
+            : "w-full max-w-6xl border-b border-transparent backdrop-blur-none"
+        )}
       >
         <Container className="flex items-center justify-between !px-6 max-w-full">
           <div className="flex items-center gap-2">
             <Link href="/" className="flex items-center gap-2 group">
-              <img src="/logo/primeinbox-logo.png" alt="PrimeInbox Logo" className="h-9 w-auto group-hover:scale-105 transition-all" />
+              <img src="/logo/primeinbox-logo.png" alt="PrimeInbox Logo" className="h-7 w-auto group-hover:scale-105 transition-all" />
             </Link>
           </div>
 
-          <nav className="hidden md:flex items-center gap-1 bg-white p-1.5 rounded-full border border-blue-200/50">
-            {NAV_LINKS.map((link, idx) => (
+          <nav className="hidden md:flex items-center gap-0.5 bg-white p-1 rounded-full border border-blue-200/50">
+            {NAV_LINKS.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
-                className="relative text-sm font-medium px-4 py-2 text-zinc-600 hover:text-zinc-950 transition-colors rounded-full"
-                onMouseEnter={() => setHoveredIndex(idx)}
-                onMouseLeave={() => setHoveredIndex(null)}
+                className="relative text-sm font-medium px-3.5 py-1.5 text-zinc-600 hover:text-zinc-950 transition-colors rounded-full"
               >
-                {hoveredIndex === idx && (
-                  <motion.span
-                    layoutId="nav-hover-pill"
-                    className="absolute inset-0 bg-blue-50/70 rounded-full border border-blue-100/40"
-                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                  />
-                )}
                 <span className="relative z-10">{link.name}</span>
               </Link>
             ))}
@@ -78,13 +79,13 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-4">
             <Link
               href="/login"
-              className="text-sm font-medium text-zinc-600 hover:text-zinc-950 transition-colors px-4 py-2 hover:bg-zinc-100 rounded-full border border-transparent hover:border-zinc-200/30"
+              className="text-sm font-medium text-zinc-600 hover:text-zinc-950 transition-colors px-3.5 py-1.5 hover:bg-zinc-100 rounded-full border border-transparent hover:border-zinc-200/30"
             >
               Log in
             </Link>
             <Link href="/signup">
               <ShimmerButton 
-                className="h-10 px-5 rounded-full text-xs font-semibold bg-black hover:bg-zinc-900"
+                className="h-9 px-5 rounded-full text-xs font-semibold bg-black hover:bg-zinc-900"
                 shimmerColor="#3B82F6"
               >
                 14 days free trial
@@ -112,7 +113,7 @@ export function Navbar() {
             transition={{ duration: 0.2 }}
             className={cn(
               "md:hidden absolute left-4 right-4 bg-white border border-zinc-200 p-5 shadow-xl flex flex-col gap-5 rounded-2xl pointer-events-auto z-40",
-              isScrolled ? "top-[78px]" : "top-[86px]"
+              isScrolled ? "top-[64px]" : announcementVisible ? "top-[106px]" : "top-[68px]"
             )}
           >
             <nav className="flex flex-col gap-1">

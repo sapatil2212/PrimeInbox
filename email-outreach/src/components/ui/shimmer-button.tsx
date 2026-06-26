@@ -57,9 +57,6 @@ export const ShimmerButton = React.forwardRef<HTMLButtonElement, ShimmerButtonPr
           />
         </div>
 
-        {/* Ambient Glow behind the button */}
-        <div className="absolute inset-0 z-0 opacity-0 group-hover:opacity-15 group-hover:scale-105 bg-primary/20 blur-md transition-all duration-500" />
-
         {/* Content */}
         <span className="relative z-10 flex items-center gap-2">{children}</span>
       </button>

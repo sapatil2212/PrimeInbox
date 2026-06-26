@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast, confirmDialog } from "@/components/ui/feedback";
 import { cn } from "@/lib/utils";
 import {
   Building,
@@ -86,7 +86,14 @@ export function AdminPanelClient() {
   }, []);
 
   const handleAction = async (actionType: "flush_queue" | "trigger_health") => {
-    if (actionType === "flush_queue" && !confirm("Flush queue?")) return;
+    if (actionType === "flush_queue") {
+      const ok = await confirmDialog({
+        title: "Flush the queue?",
+        description: "All pending jobs in the queue will be cleared.",
+        confirmText: "Flush",
+      });
+      if (!ok) return;
+    }
 
     try {
       const res = await fetch("/api/admin/logs", {

@@ -38,7 +38,7 @@ export function TestimonialsSection() {
             <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-zinc-900 mb-4">
               Loved by DevRel leaders
             </h2>
-            <p className="text-sm md:text-base text-zinc-500 font-semibold">
+            <p className="text-sm md:text-base text-zinc-500">
               See how developer relations and growth engineering teams use PrimeInbox to grow pipelines.
             </p>
           </FadeIn>
@@ -56,7 +56,7 @@ export function TestimonialsSection() {
                       <Star key={star} className="w-4 h-4 fill-current text-amber-500 group-hover:scale-110 transition-transform duration-300" />
                     ))}
                   </div>
-                  <p className="text-sm md:text-base text-zinc-700 mb-8 leading-relaxed italic font-semibold">
+                  <p className="text-sm md:text-base text-zinc-700 mb-8 leading-relaxed italic">
                     "{testimonial.quote}"
                   </p>
                 </div>
@@ -67,7 +67,7 @@ export function TestimonialsSection() {
                   </div>
                   <div>
                     <h4 className="font-bold text-zinc-900 text-sm">{testimonial.author}</h4>
-                    <p className="text-xs text-zinc-500 font-semibold">{testimonial.title}, {testimonial.company}</p>
+                    <p className="text-xs text-zinc-500">{testimonial.title}, {testimonial.company}</p>
                   </div>
                 </div>
               </div>
