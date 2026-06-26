@@ -1,3 +1,19 @@
 {
-  "name": "email-outreach-saas"
+  "name": "primeinbox",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PrimeInbox — Advanced Email Outreach SaaS Platform",
+  "scripts": {
+    "install:all": "cd email-outreach && npm install && cd ../backend && npm install",
+    "prisma:push": "cd email-outreach && npx prisma db push",
+    "prisma:generate": "cd email-outreach && npx prisma generate && cd ../backend && npm run prisma:generate",
+    "build:frontend": "cd email-outreach && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "build:all": "npm run prisma:generate && npm run build:frontend && npm run build:backend",
+    "dev:frontend": "cd email-outreach && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "start:prod": "pm2 start ecosystem.config.js",
+    "stop:prod": "pm2 stop ecosystem.config.js",
+    "deploy": "npm run install:all && npm run build:all"
+  }
 }
