@@ -75,67 +75,14 @@ export function HeroSection() {
   return (
     <section className="relative pt-24 pb-16 md:pt-36 lg:pt-40 overflow-hidden bg-transparent z-10">
 
-      {/* ===== Modern flowing gradient background ===== */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        {/* Animated color-shifting base wash */}
-        <motion.div
-          aria-hidden
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "linear-gradient(120deg, #eef2ff 0%, #ffffff 35%, #faf5ff 60%, #ffffff 100%)",
-            backgroundSize: "300% 300%",
-          }}
-          animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-        />
-
-        {/* Slowly rotating + breathing conic aurora */}
-        <motion.div
-          aria-hidden
-          className="absolute left-1/2 top-[-30%] h-[120vh] w-[120vh] -translate-x-1/2 rounded-full blur-[70px]"
-          style={{
-            background:
-              "conic-gradient(from 0deg, #6366f1, #22d3ee, #a855f7, #ec4899, #6366f1)",
-          }}
-          animate={{
-            rotate: 360,
-            opacity: [0.06, 0.12, 0.06],
-            scale: [1, 1.08, 1],
-          }}
-          transition={{
-            rotate: { duration: 40, repeat: Infinity, ease: "linear" },
-            opacity: { duration: 10, repeat: Infinity, ease: "easeInOut" },
-            scale: { duration: 14, repeat: Infinity, ease: "easeInOut" },
-          }}
-        />
-
-        {/* Flowing color orbs */}
-        <motion.div
-          aria-hidden
-          className="absolute -left-24 top-10 h-[20rem] w-[20rem] md:h-[28rem] md:w-[28rem] rounded-full bg-gradient-to-br from-blue-300/25 to-indigo-400/25 blur-3xl"
-          animate={{ x: [0, 120, 0], y: [0, 60, 0], scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          aria-hidden
-          className="absolute -right-24 top-0 h-[18rem] w-[18rem] md:h-[26rem] md:w-[26rem] rounded-full bg-gradient-to-br from-fuchsia-300/20 to-purple-400/20 blur-3xl"
-          animate={{ x: [0, -100, 0], y: [0, 80, 0], scale: [1, 1.2, 1], opacity: [0.45, 0.75, 0.45] }}
-          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          aria-hidden
-          className="absolute left-1/3 top-1/2 h-[16rem] w-[16rem] md:h-[24rem] md:w-[24rem] rounded-full bg-gradient-to-br from-cyan-200/20 to-teal-300/20 blur-3xl"
-          animate={{ x: [0, 80, 0], y: [0, -70, 0], scale: [1, 1.1, 1], opacity: [0.5, 0.75, 0.5] }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-        />
-
-        {/* Grid lines, brightest at center and fading out to all edges */}
+      {/* ===== Clean, lightweight background ===== */}
+      <div className="absolute inset-0 z-0 overflow-hidden bg-white">
+        {/* Subtle neutral grid, faded out to all edges */}
         <div
-          className="absolute inset-0 opacity-70"
+          className="absolute inset-0 opacity-60"
           style={{
             backgroundImage:
-              "linear-gradient(to right, rgba(99,102,241,0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(99,102,241,0.12) 1px, transparent 1px)",
+              "linear-gradient(to right, rgba(15,23,42,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(15,23,42,0.04) 1px, transparent 1px)",
             backgroundSize: "44px 44px",
             WebkitMaskImage:
               "radial-gradient(ellipse 45% 45% at 50% 45%, black 0%, rgba(0,0,0,0.4) 45%, transparent 75%)",
