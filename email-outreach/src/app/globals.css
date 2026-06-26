@@ -2,6 +2,11 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Explicitly define source paths for Tailwind v4 scanner to prevent CSS dropping in VPS/Docker builds */
+@source "../components";
+@source "../app";
+@source "../../src";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
