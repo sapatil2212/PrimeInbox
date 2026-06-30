@@ -163,7 +163,7 @@ export function AnalyticsSection() {
                         fontSize: "11px",
                         boxShadow: "none",
                       }}
-                      formatter={(value: number) => [`${value}%`]}
+                      formatter={(value) => [`${value}%`]}
                     />
 
                     {/* All 4 areas — inactive ones fade out via strokeOpacity/fillOpacity */}
