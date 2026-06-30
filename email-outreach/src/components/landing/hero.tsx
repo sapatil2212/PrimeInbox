@@ -7,11 +7,27 @@ import { Container } from "@/components/layout/container";
 import Link from "next/link";
 import { SlideUp } from "@/components/animations/slide-up";
 import {
-  LayoutDashboard, Send, Users, BarChart3,
-  Settings, LifeBuoy, Search, CheckCircle2,
-  TrendingUp, Sparkles, ArrowRight, Zap
+  LayoutDashboard, Send, Users, BarChart3, BookOpen,
+  Key, CreditCard, Search, Plus,
+  TrendingUp, Clock, HeartPulse, Activity, ArrowRight, ArrowUpRight,
+  Wand2, Repeat, Download, LayoutTemplate, Mail
 } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
+
+const HERO_MARQUEE_ITEMS_RAW = [
+  { label: "AI Copywriter & Sequencer", icon: Wand2 },
+  { label: "SMTP Rotation Engine", icon: Repeat },
+  { label: "CSV Header Mapper", icon: Download },
+  { label: "Drag-and-Drop Editor", icon: LayoutTemplate },
+  { label: "Recharts Analytics", icon: BarChart3 },
+  { label: "Collaborative Workspaces", icon: Users },
+  { label: "Domain DKIM Security", icon: Key },
+  { label: "Reply Suppression Sync", icon: Mail },
+  { label: "AI Sentiment Analysis", icon: Activity },
+  { label: "Real-time Send Queue", icon: Clock },
+];
+
+const HERO_MARQUEE_ITEMS = [...HERO_MARQUEE_ITEMS_RAW, ...HERO_MARQUEE_ITEMS_RAW];
 
 // Lazy-load recharts — it's ~200kb and only visible below the fold in the dashboard mockup
 const LazyChart = lazy(() => import("recharts").then((mod) => ({
@@ -19,31 +35,23 @@ const LazyChart = lazy(() => import("recharts").then((mod) => ({
     const { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } = mod;
     return (
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={chartData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
+        <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
           <defs>
-            <linearGradient id="chartOpens" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#2563EB" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="chartClicks" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#06B6D4" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="#06B6D4" stopOpacity={0} />
+            <linearGradient id="colorSends" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#6366f1" stopOpacity={0.15} />
+              <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0, 0, 0, 0.04)" />
-          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#64748B' }} />
-          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#64748B' }} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#f4f4f5" vertical={false} />
+          <XAxis dataKey="date" stroke="#71717a" fontSize={10} tickLine={false} axisLine={false} />
+          <YAxis stroke="#71717a" fontSize={10} tickLine={false} axisLine={false} />
           <Tooltip
-            contentStyle={{
-              backgroundColor: "white",
-              border: "1px solid #e2e8f0",
-              borderRadius: "8px",
-              fontSize: "11px",
-              padding: "8px 12px",
-            }}
+            cursor={false}
+            contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e4e4e7", borderRadius: "8px", fontSize: "11px" }}
+            labelStyle={{ color: "#18181b", fontSize: "11px", fontWeight: "bold" }}
+            itemStyle={{ color: "#4f46e5", fontSize: "11px" }}
           />
-          <Area type="monotone" dataKey="opens" stroke="#2563EB" strokeWidth={3} fill="url(#chartOpens)" />
-          <Area type="monotone" dataKey="clicks" stroke="#06B6D4" strokeWidth={3} fill="url(#chartClicks)" />
+          <Area type="monotone" dataKey="sends" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorSends)" name="Emails Sent" activeDot={false} />
         </AreaChart>
       </ResponsiveContainer>
     );
@@ -51,12 +59,36 @@ const LazyChart = lazy(() => import("recharts").then((mod) => ({
 })));
 
 const chartData = [
-  { name: "Jan", opens: 1200, clicks: 800 },
-  { name: "Feb", opens: 2100, clicks: 1200 },
-  { name: "Mar", opens: 1800, clicks: 1000 },
-  { name: "Apr", opens: 3200, clicks: 1900 },
-  { name: "May", opens: 2800, clicks: 1600 },
-  { name: "Jun", opens: 4100, clicks: 2400 },
+  { date: "Mon", sends: 1200, opens: 820, replies: 180 },
+  { date: "Tue", sends: 2100, opens: 1240, replies: 290 },
+  { date: "Wed", sends: 1800, opens: 1010, replies: 240 },
+  { date: "Thu", sends: 3200, opens: 1980, replies: 420 },
+  { date: "Fri", sends: 2800, opens: 1640, replies: 360 },
+  { date: "Sat", sends: 4100, opens: 2440, replies: 510 },
+];
+
+const navLinks = [
+  { label: "Dashboard", icon: LayoutDashboard, active: true },
+  { label: "Campaigns", icon: Send },
+  { label: "Leads", icon: Users },
+  { label: "Templates", icon: BookOpen },
+  { label: "SMTP Accounts", icon: Key },
+  { label: "Reports", icon: BarChart3 },
+  { label: "Billing", icon: CreditCard },
+];
+
+const statCards = [
+  { icon: Send, iconColor: "text-indigo-500", label: "Total Sent", value: "15,200", sub: "Outbound emails dispatched", subIcon: TrendingUp, subIconColor: "text-emerald-600" },
+  { icon: BarChart3, iconColor: "text-emerald-500", label: "Open Rate", value: "68.4%", sub: "Reply rate: 21.3%" },
+  { icon: Key, iconColor: "text-amber-500", label: "Active Senders", value: "8", sub: "Health avg: 99.2%", subIcon: HeartPulse, subIconColor: "text-emerald-600" },
+  { icon: Clock, iconColor: "text-indigo-500", label: "Today's Queue", value: "1,240", sub: "Active campaigns: 4" },
+];
+
+const recentActivity = [
+  { campaign: "Q3 Outreach", lead: "alex@acme.io", message: "Email delivered", status: "SUCCESS", time: "10:24" },
+  { campaign: "SaaS Founders", lead: "mia@scale.dev", message: "Opened email", status: "SUCCESS", time: "10:18" },
+  { campaign: "Follow-up #2", lead: "ben@hubly.co", message: "Reply detected", status: "SUCCESS", time: "09:57" },
+  { campaign: "Cold List A", lead: "noah@vex.app", message: "Bounced — invalid", status: "FAILED", time: "09:41" },
 ];
 
 export function HeroSection() {
@@ -73,21 +105,21 @@ export function HeroSection() {
   const opacity = useTransform(scrollYProgress, [0, 0.35], [0.4, 1]);
 
   return (
-    <section className="relative pt-24 pb-16 md:pt-36 lg:pt-40 overflow-hidden bg-transparent z-10">
+    <section className="relative pt-24 pb-16 md:pt-36 lg:pt-52 overflow-hidden bg-transparent z-10">
 
       {/* ===== Clean, lightweight background ===== */}
       <div className="absolute inset-0 z-0 overflow-hidden bg-white">
         {/* Subtle neutral grid, faded out to all edges */}
         <div
-          className="absolute inset-0 opacity-60"
+          className="absolute inset-0 opacity-100"
           style={{
             backgroundImage:
-              "linear-gradient(to right, rgba(15,23,42,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(15,23,42,0.04) 1px, transparent 1px)",
+              "linear-gradient(to right, rgba(15,23,42,0.07) 1px, transparent 1px), linear-gradient(to bottom, rgba(15,23,42,0.07) 1px, transparent 1px)",
             backgroundSize: "44px 44px",
             WebkitMaskImage:
-              "radial-gradient(ellipse 45% 45% at 50% 45%, black 0%, rgba(0,0,0,0.4) 45%, transparent 75%)",
+              "radial-gradient(ellipse 70% 65% at 50% 40%, black 0%, rgba(0,0,0,0.6) 55%, transparent 90%)",
             maskImage:
-              "radial-gradient(ellipse 45% 45% at 50% 45%, black 0%, rgba(0,0,0,0.4) 45%, transparent 75%)",
+              "radial-gradient(ellipse 70% 65% at 50% 40%, black 0%, rgba(0,0,0,0.6) 55%, transparent 90%)",
           }}
         />
 
@@ -99,14 +131,14 @@ export function HeroSection() {
         {/* Hero Title */}
         <SlideUp delay={0.2} yOffset={30}>
           <h1 className="max-w-5xl mx-auto text-3xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-6xl leading-[1.1] md:leading-[1.05] font-extrabold tracking-tight text-zinc-900 mb-4 md:mb-6 px-2">
-            Turn Your DevRel Program <br className="hidden sm:block" /> Into <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-650 font-extrabold">Revenue Growth.</span>
+            Send Cold Emails That <br className="hidden sm:block" /> Actually <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-650 font-extrabold">Land &amp; Convert.</span>
           </h1>
         </SlideUp>
 
         {/* Subtitle */}
         <SlideUp delay={0.3} yOffset={20}>
           <p className="max-w-2xl mx-auto text-sm md:text-lg text-zinc-500 mb-7 md:mb-8 leading-relaxed px-4">
-            From engagement tracking to pipeline acceleration, PrimeInbox keeps your developer relations organized in one platform.
+            PrimeInbox helps you launch personalized email campaigns, rotate SMTP senders for top deliverability, and track opens, clicks, and replies — all from one platform.
           </p>
         </SlideUp>
 
@@ -114,10 +146,10 @@ export function HeroSection() {
         <SlideUp delay={0.4} yOffset={10} className="flex flex-row items-center justify-center gap-2 sm:gap-4 mb-8 md:mb-10 relative z-20 w-full px-4 sm:px-0">
           <Link href="/signup" className="flex-1 sm:flex-none max-w-[180px] sm:max-w-none">
             <ShimmerButton 
-              className="w-full sm:w-auto h-10 sm:h-12 px-4 sm:px-8 rounded-full text-xs sm:text-sm font-bold bg-zinc-900 text-white hover:bg-black whitespace-nowrap" 
+              className="w-full sm:w-auto h-9 sm:h-10 px-4 sm:px-8 rounded-full text-xs sm:text-sm font-bold bg-zinc-900 text-white hover:bg-black whitespace-nowrap" 
               shimmerColor="#3B82F6"
             >
-              14 days free trial
+              Get Started
             </ShimmerButton>
           </Link>
           
@@ -125,7 +157,7 @@ export function HeroSection() {
             <Button 
               size="lg" 
               variant="outline" 
-              className="w-full sm:w-auto h-10 sm:h-12 px-4 sm:px-6 rounded-full text-xs sm:text-sm font-semibold text-zinc-700 hover:text-zinc-950 hover:bg-zinc-50 border border-zinc-200/80 backdrop-blur-sm transition-all whitespace-nowrap"
+              className="w-full sm:w-auto h-9 sm:h-10 px-4 sm:px-6 rounded-full text-xs sm:text-sm font-semibold text-zinc-700 hover:text-zinc-950 hover:bg-zinc-50 border border-zinc-200/80 backdrop-blur-sm transition-all whitespace-nowrap"
             >
               Log in <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2 text-zinc-500 hover:text-zinc-950" />
             </Button>
@@ -160,210 +192,186 @@ export function HeroSection() {
             }}
           >
 
-            {/* Dashboard Inner Container - Non-interactive, responsive layout */}
-            <div 
-              className="flex-1 flex overflow-hidden rounded-xl md:rounded-[1.6rem] bg-white relative select-none w-full h-full"
-            >
+            {/* Dashboard Inner Container - mirrors the real /dashboard layout */}
+            <div className="flex-1 flex overflow-hidden rounded-xl md:rounded-[1.6rem] bg-zinc-50 relative select-none w-full h-full">
 
-              {/* Sidebar: Interactive Gradient Sidebar - Hidden on mobile for app-like feel */}
-              <div className="hidden md:flex w-[220px] flex-col bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 text-white p-5 shrink-0 relative overflow-hidden">
-                {/* Animated background pattern */}
-                <div
-                  className="absolute inset-0 opacity-10"
-                  style={{
-                    backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
-                    backgroundSize: "20px 20px",
-                  }}
-                />
-                
-                <div className="flex items-center gap-2 mb-10 relative z-10">
-                  <div 
-                    className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center text-white"
-                  >
-                    <Sparkles className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="font-bold text-lg tracking-tight text-white drop-shadow-sm">PrimeInbox</span>
+              {/* Sidebar - white, matching dashboard-layout-shell */}
+              <div className="hidden md:flex w-64 flex-col bg-white border-r border-zinc-200/80 p-6 shrink-0">
+                {/* Logo */}
+                <div className="flex items-center mb-8">
+                  <img src="/logo/primeinbox-logo.png" alt="PrimeInbox" className="h-9 w-auto object-contain" />
                 </div>
 
-                <nav className="flex flex-col gap-1.5 flex-1 relative z-10">
-                  {[
-                    { icon: LayoutDashboard, label: "Dashboard", active: true },
-                    { icon: Send, label: "Campaigns" },
-                    { icon: Users, label: "Prospects" },
-                    { icon: BarChart3, label: "Reports" },
-                  ].map((item, i) => (
+                {/* Nav */}
+                <nav className="flex-1 space-y-1">
+                  {navLinks.map((item) => (
                     <div
                       key={item.label}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-semibold text-xs ${
+                      className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold border ${
                         item.active
-                          ? "bg-white/20 backdrop-blur-sm text-white"
-                          : "text-white/70"
+                          ? "bg-indigo-50 text-indigo-650 border-indigo-100/50"
+                          : "text-zinc-650 border-transparent"
                       }`}
                     >
-                      <item.icon className="w-4 h-4" /> {item.label}
+                      <item.icon className={`w-4 h-4 shrink-0 ${item.active ? "text-indigo-600" : "text-zinc-450"}`} />
+                      <span>{item.label}</span>
                     </div>
                   ))}
-                  
-                  <div className="mt-auto space-y-1.5">
-                    {[
-                      { icon: Settings, label: "Settings" },
-                      { icon: LifeBuoy, label: "Support" },
-                    ].map((item, i) => (
-                      <div
-                        key={item.label}
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 font-semibold text-xs w-full"
-                      >
-                        <item.icon className="w-4 h-4" /> {item.label}
-                      </div>
-                    ))}
-                  </div>
                 </nav>
+
+                {/* Workspace widget */}
+                <div className="mt-4 p-3 bg-zinc-50 border border-zinc-200/80 rounded-xl shadow-inner">
+                  <div className="text-[9px] uppercase font-bold tracking-wider text-zinc-400">Workspace</div>
+                  <div className="font-bold text-sm text-zinc-850 truncate mt-0.5">Acme Inc.</div>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-[10px] text-zinc-500 truncate">Plan: PRO</span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 bg-indigo-500/10 text-indigo-650 rounded-md uppercase border border-indigo-500/10">Active</span>
+                  </div>
+                </div>
+
+                {/* User footer */}
+                <div className="border-t border-zinc-200/80 pt-4 mt-4 flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg overflow-hidden border border-zinc-200/80 shrink-0">
+                    <img src="https://i.pravatar.cc/100?img=1" alt="Sarah" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-zinc-800 truncate">Sarah Lin</div>
+                    <div className="text-[10px] text-zinc-500 truncate">sarah@acme.io</div>
+                  </div>
+                </div>
               </div>
 
               {/* Main Content Area */}
-              <div className="flex-1 flex flex-col bg-[#FAFBFD]">
-                {/* Header - Non-interactive */}
-                <header className="h-14 md:h-16 bg-white px-4 md:px-6 flex items-center justify-between shrink-0 border-b border-zinc-100 md:border-none">
-                  <div className="flex items-center gap-1.5 md:gap-2 text-zinc-700 bg-gradient-to-r from-emerald-50 to-green-50 px-2 md:px-3 py-1 md:py-1.5 rounded-lg text-[10px] md:text-xs font-semibold">
-                    <div>
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                    </div>
-                    System Active
+              <div className="flex-1 flex flex-col min-w-0">
+                {/* Top Navbar */}
+                <header className="h-14 md:h-16 bg-white/60 border-b border-zinc-200/80 backdrop-blur-md px-4 md:px-6 flex items-center justify-between shrink-0">
+                  <div className="hidden md:flex items-center gap-1.5 text-xs text-zinc-400 font-bold">
+                    <span>PrimeInbox</span>
+                    <span>/</span>
+                    <span className="text-zinc-800">Overview</span>
                   </div>
-                  <div className="flex items-center gap-3.5">
-                    <div className="text-zinc-500 p-1.5 rounded-lg">
-                      <Search className="w-4.5 h-4.5" />
+                  <div className="flex items-center gap-3 ml-auto">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-100 border border-zinc-200 text-[10px] md:text-xs text-zinc-650 font-semibold">
+                      <Search className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Search outreach...</span>
+                      <kbd className="hidden md:inline-block px-1.5 py-0.5 bg-zinc-50 border border-zinc-200 rounded font-mono text-[9px]">Ctrl K</kbd>
                     </div>
-
-                    <div
-                      className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 overflow-hidden"
-                    >
+                    <div className="w-8 h-8 rounded-full border border-zinc-200 overflow-hidden shrink-0">
                       <img src="https://i.pravatar.cc/100?img=1" alt="Sarah" className="w-full h-full object-cover" />
                     </div>
                   </div>
                 </header>
 
-                {/* Dashboard Content - Non-scrollable */}
-                <div className="p-4 md:p-8 flex-1 overflow-hidden flex flex-col">
-                  <div className="flex items-center justify-between mb-4 md:mb-6">
+                {/* Dashboard Content */}
+                <div className="p-4 md:p-8 flex-1 overflow-hidden flex flex-col gap-4 md:gap-6">
+                  {/* Overview header */}
+                  <div className="flex items-center justify-between shrink-0">
                     <div>
-                      <h2 className="text-lg md:text-2xl font-bold text-zinc-900 tracking-tight">Welcome back, Sarah!</h2>
-                      <p className="text-[10px] md:text-xs text-zinc-500">Your AI sequences are 18% above target.</p>
+                      <h2 className="text-lg md:text-2xl font-black tracking-tight text-zinc-900">Overview</h2>
+                      <p className="text-[10px] md:text-sm text-zinc-500 font-medium hidden sm:block">Real-time indicators of your outreach performance and deliverability.</p>
+                    </div>
+                    <div className="h-8 md:h-9 px-3 md:px-5 rounded-lg text-[10px] md:text-xs font-bold bg-indigo-600 text-white flex items-center gap-1.5 shrink-0">
+                      <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" /> <span className="hidden sm:inline">Create Campaign</span>
                     </div>
                   </div>
 
-                  {/* Metric Panels - Interactive Cards - Compact 3 cols on mobile */}
-                  <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4 md:mb-6 shrink-0">
-                    {[
-                      {
-                        icon: CheckCircle2,
-                        iconColor: "text-blue-500",
-                        bgGradient: "from-blue-50 to-indigo-50",
-                        label: "Emails Sent",
-                        value: "15,200",
-                        subtitle: "98.9% deliverability rate",
-                        delay: 0.2,
-                      },
-                      {
-                        icon: TrendingUp,
-                        iconColor: "text-cyan-500",
-                        bgGradient: "from-cyan-50 to-teal-50",
-                        label: "Open Rate",
-                        value: "68.4%",
-                        subtitle: "+12% vs industry average",
-                        delay: 0.3,
-                      },
-                      {
-                        icon: Zap,
-                        iconColor: "text-indigo-500",
-                        bgGradient: "from-indigo-50 to-purple-50",
-                        label: "Replies",
-                        value: "3,250",
-                        subtitle: "21.3% reply-to-send ratio",
-                        delay: 0.4,
-                      },
-                    ].map((metric, i) => (
-                      <div
-                        key={i}
-                        className={`bg-gradient-to-br ${metric.bgGradient} p-2.5 md:p-4.5 rounded-xl flex flex-col justify-center`}
-                      >
-                        <div className="flex items-center gap-1.5 md:gap-2 mb-1 md:mb-2 text-zinc-500">
-                          <div>
-                            <metric.icon className={`w-3.5 h-3.5 md:w-4 md:h-4 ${metric.iconColor}`} />
-                          </div>
-                          <span className="text-[8px] md:text-[10px] font-bold tracking-wide uppercase hidden sm:block">{metric.label}</span>
+                  {/* Stat cards */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 shrink-0">
+                    {statCards.map((card) => (
+                      <div key={card.label} className="border border-zinc-200 bg-white rounded-xl p-2.5 md:p-4 space-y-1 md:space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[8px] md:text-xs font-bold text-zinc-450 uppercase tracking-wider truncate">{card.label}</span>
+                          <card.icon className={`w-3.5 h-3.5 md:w-4 md:h-4 shrink-0 ${card.iconColor}`} />
                         </div>
-                        <div className="text-base sm:text-lg md:text-2xl font-extrabold text-zinc-900">
-                          {metric.value}
-                        </div>
-                        <div className="text-[8px] md:text-[10px] text-zinc-500 mt-0.5 md:mt-1 font-semibold leading-tight">{metric.subtitle}</div>
+                        <div className="text-xl md:text-3xl font-black text-zinc-800">{card.value}</div>
+                        <p className="text-[8px] md:text-[10px] text-zinc-500 font-semibold flex items-center gap-1 leading-tight">
+                          {card.subIcon && <card.subIcon className={`w-3 h-3 shrink-0 ${card.subIconColor}`} />}
+                          <span className="truncate">{card.sub}</span>
+                        </p>
                       </div>
                     ))}
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5 flex-1 min-h-0">
-                    {/* Chart */}
-                    <div className="lg:col-span-2 bg-white p-4 md:p-5 rounded-xl flex flex-col h-full hidden sm:flex">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-bold text-zinc-900">Outreach Performance</h3>
-                        <div className="text-[10px] bg-gradient-to-r from-green-50 to-emerald-50 rounded-full px-3 py-1 text-green-700 font-bold flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                          Live Metrics
-                        </div>
+                  {/* Charts row */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-5 flex-1 min-h-0">
+                    {/* Sending Activity area chart */}
+                    <div className="lg:col-span-2 bg-white border border-zinc-200 rounded-xl p-4 md:p-5 flex-col gap-3 hidden sm:flex">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-xs md:text-sm font-bold text-zinc-900 flex items-center gap-2">
+                          <Activity className="w-4 h-4 text-indigo-600" /> Sending Activity
+                        </h3>
+                        <span className="text-[10px] text-zinc-500 font-semibold">Last 7 days</span>
                       </div>
-                      <div className="h-[160px] w-full">
+                      <div className="flex-1 min-h-0 w-full">
                         <Suspense fallback={
                           <div className="h-full w-full flex items-center justify-center">
-                            <div className="h-[140px] w-full rounded-lg bg-gradient-to-t from-blue-50/50 to-transparent animate-pulse" />
+                            <div className="h-full w-full rounded-lg bg-gradient-to-t from-indigo-50/50 to-transparent animate-pulse" />
                           </div>
                         }>
                           <LazyChart />
                         </Suspense>
                       </div>
-                      <div className="flex gap-6 mt-3 justify-center text-[10px] font-semibold">
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-2 h-2 rounded-full bg-[#2563EB]" />
-                          <span className="text-zinc-600">Opens</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-2 h-2 rounded-full bg-[#06B6D4]" />
-                          <span className="text-zinc-600">Clicks</span>
-                        </div>
-                      </div>
                     </div>
 
-                    {/* Activity List - Takes full height on mobile */}
-                    <div className="bg-white p-4 md:p-5 rounded-xl flex flex-col justify-between flex-1 overflow-hidden">
-                      <h3 className="text-sm font-bold text-zinc-900 mb-2 md:mb-4 shrink-0">Recent Activity</h3>
-                      <div className="space-y-2 md:space-y-3.5 flex-1 overflow-y-auto pr-1">
+                    {/* Setup / Quick actions panel */}
+                    <div className="bg-white border border-zinc-200 rounded-xl p-4 md:p-5 flex flex-col gap-3 flex-1 overflow-hidden">
+                      <h3 className="text-xs md:text-sm font-bold text-zinc-900 shrink-0">Setup Outreach Engine</h3>
+                      <p className="text-[10px] md:text-xs text-zinc-500 font-medium leading-relaxed hidden md:block">
+                        Configure SMTP accounts, build lists, and upload leads to start sending.
+                      </p>
+                      <div className="flex flex-col gap-2 md:gap-3 pt-1">
                         {[
-                          { title: "Campaign Launched", desc: "Q3 DevRel Outreach", val: "+340", color: "text-blue-600" },
-                          { title: "New Integration", desc: "GitHub Webhook Sync", val: "Active", color: "text-green-600" },
-                          { title: "Follow-ups Sent", desc: "Batch #44", val: "120", color: "text-cyan-600" },
-                          { title: "Reply Detected", desc: "Positive Sentiment", val: "Review", color: "text-indigo-600" },
-                        ].map((item, i) => (
-                          <div
-                            key={i}
-                            className="flex items-center justify-between text-xs font-semibold p-2.5 rounded-lg group"
-                          >
-                            <div className="flex items-center gap-2 md:gap-3">
-                              <div
-                                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${item.color.replace("text-", "bg-")}`}
-                              />
-                              <div>
-                                <p className="text-zinc-800 group-hover:text-zinc-900 transition-colors text-[11px] md:text-xs">{item.title}</p>
-                                <p className="text-[9px] md:text-[10px] text-zinc-400">{item.desc}</p>
-                              </div>
-                            </div>
-                            <span className={`${item.color} font-bold`}>{item.val}</span>
+                          "1. Connect SMTP accounts",
+                          "2. Upload target lead list",
+                          "3. Build email sequence",
+                        ].map((step) => (
+                          <div key={step} className="w-full h-8 md:h-10 rounded-lg bg-zinc-50 border border-zinc-200 text-[10px] md:text-xs font-bold text-zinc-600 flex items-center justify-between px-3 md:px-4">
+                            <span className="truncate">{step}</span>
+                            <ArrowUpRight className="w-3.5 h-3.5 md:w-4 md:h-4 text-zinc-400 shrink-0" />
                           </div>
                         ))}
                       </div>
-                      <div className="text-[10px] font-bold text-indigo-600 mt-4 text-right w-full flex items-center justify-end gap-1">
-                        View All
-                        <ArrowRight className="w-3 h-3" />
-                      </div>
                     </div>
+                  </div>
+
+                  {/* Recent activity table */}
+                  <div className="bg-white border border-zinc-200 rounded-xl p-4 md:p-5 flex-col gap-3 shrink-0 hidden md:flex">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-bold text-zinc-900">Recent Activity</h3>
+                      <span className="text-[10px] text-indigo-600 font-extrabold flex items-center gap-0.5">
+                        All campaigns <ArrowUpRight className="w-3 h-3" />
+                      </span>
+                    </div>
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="text-zinc-400 font-bold uppercase text-[9px] tracking-wider border-b border-zinc-100">
+                          <th className="pb-2 font-semibold">Campaign</th>
+                          <th className="pb-2 font-semibold">Lead</th>
+                          <th className="pb-2 font-semibold">Activity</th>
+                          <th className="pb-2 font-semibold">Status</th>
+                          <th className="pb-2 font-semibold text-right">Time</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-100">
+                        {recentActivity.map((act, i) => (
+                          <tr key={i} className="text-zinc-600">
+                            <td className="py-2 font-bold text-zinc-800">{act.campaign}</td>
+                            <td className="py-2 font-mono text-zinc-500">{act.lead}</td>
+                            <td className="py-2">{act.message}</td>
+                            <td className="py-2">
+                              <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase border ${
+                                act.status === "SUCCESS"
+                                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/10"
+                                  : "bg-red-500/10 text-red-600 border-red-500/10"
+                              }`}>
+                                {act.status}
+                              </span>
+                            </td>
+                            <td className="py-2 text-right text-zinc-400 font-semibold">{act.time}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
@@ -371,6 +379,32 @@ export function HeroSection() {
 
           </div>
           </motion.div>
+        </div>
+
+        {/* Infinite Scrolling Features Marquee */}
+        <div className="w-full mt-4 relative overflow-hidden">
+          {/* Faint Edge Masking */}
+          <div className="absolute inset-y-0 left-0 w-16 sm:w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+          <div className="absolute inset-y-0 right-0 w-16 sm:w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+          
+          <style>{`
+            @keyframes heroMarquee {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+            .animate-hero-marquee {
+              animation: heroMarquee 30s linear infinite;
+            }
+          `}</style>
+          
+          <div className="flex w-max gap-8 animate-hero-marquee px-4 select-none">
+            {HERO_MARQUEE_ITEMS.map((item, idx) => (
+              <div key={idx} className="flex items-center gap-2.5 text-zinc-450 hover:text-zinc-800 transition-colors">
+                <item.icon className="w-4 h-4 shrink-0 text-zinc-350" />
+                <span className="text-xs font-semibold whitespace-nowrap">{item.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </Container>
     </section>

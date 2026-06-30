@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { toast, confirmDialog } from "@/components/ui/feedback";
@@ -26,6 +26,9 @@ import {
   Copy,
   Edit,
   FolderSync,
+  MailX,
+  Paperclip,
+  FileText,
 } from "lucide-react";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import CodeMirror from "@uiw/react-codemirror";
@@ -40,10 +43,12 @@ interface TemplateItem {
   bodyHtml: string;
   bodyText: string | null;
   isDragDrop: boolean;
+  includeUnsubscribe: boolean;
   createdAt: string;
   updatedAt: string;
   category?: { name: string };
   categoryId: string | null;
+  attachments?: { id: string; file: { id: string; name: string; size: number; type: string; url: string } }[];
 }
 
 interface CategoryInfo {
@@ -51,7 +56,11 @@ interface CategoryInfo {
   name: string;
 }
 
-const getPreviewHtml = (htmlContent: string) => {
+const UNSUB_FOOTER_PREVIEW = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#9ca3af;line-height:1.5;text-align:center;">
+If you'd prefer not to receive these emails, you can <a href="#" style="color:#9ca3af;text-decoration:underline;">unsubscribe here</a>.
+</div>`;
+
+const getPreviewHtml = (htmlContent: string, showUnsubFooter: boolean = false) => {
   if (!htmlContent) return "";
   let content = htmlContent;
   const mockValues: Record<string, string> = {
@@ -89,6 +98,16 @@ const getPreviewHtml = (htmlContent: string) => {
     content = content.replace("</head>", `${styleInject}</head>`);
   } else {
     content = styleInject + content;
+  }
+
+  // Append a mock unsubscribe footer when the toggle is enabled,
+  // but only if the HTML doesn't already contain one from the builder's footer block.
+  if (showUnsubFooter && !/unsubscribe/i.test(content)) {
+    if (/<\/body>/i.test(content)) {
+      content = content.replace(/<\/body>/i, `${UNSUB_FOOTER_PREVIEW}</body>`);
+    } else {
+      content += UNSUB_FOOTER_PREVIEW;
+    }
   }
   
   return content;
@@ -139,6 +158,7 @@ export default function TemplatesPage() {
   const [subject, setSubject] = useState("");
   const [bodyHtml, setBodyHtml] = useState("<div style=\"font-family: sans-serif; padding: 20px;\">\n  <p>Hello {{firstName}},</p>\n  <p>I noticed your work at {{companyName}} and wanted to reach out...</p>\n  <p>Best regards,<br/>Your Name</p>\n</div>");
   const [categoryId, setCategoryId] = useState("");
+  const [includeUnsubscribe, setIncludeUnsubscribe] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
   // Category state
@@ -287,6 +307,7 @@ export default function TemplatesPage() {
           subject,
           bodyHtml,
           smtpAccountId: testSmtpAccountId || null,
+          includeUnsubscribe,
         }),
       });
 
@@ -328,6 +349,7 @@ export default function TemplatesPage() {
     setSubject("");
     setBodyHtml("<div style=\"font-family: sans-serif; padding: 20px;\">\n  <p>Hello {{firstName}},</p>\n  <p>I noticed your work at {{companyName}} and wanted to reach out...</p>\n  <p>Best regards,<br/>Your Name</p>\n</div>");
     setCategoryId("");
+    setIncludeUnsubscribe(true);
     setPreviewActive(false);
     setIsComposerOpen(true);
   };
@@ -338,6 +360,7 @@ export default function TemplatesPage() {
     setSubject(template.subject);
     setBodyHtml(template.bodyHtml);
     setCategoryId(template.categoryId || "");
+    setIncludeUnsubscribe(template.includeUnsubscribe !== false);
     setPreviewActive(false);
     setIsComposerOpen(true);
   };
@@ -363,6 +386,7 @@ export default function TemplatesPage() {
         subject: subject.trim(),
         bodyHtml,
         categoryId: categoryId || null,
+        includeUnsubscribe,
       };
 
       const url = editingId ? `/api/templates/${editingId}` : "/api/templates";
@@ -440,6 +464,84 @@ export default function TemplatesPage() {
       fetchTemplates();
     } catch (err: any) {
       toast.error(err.message || "Failed to rename template");
+    }
+  };
+
+  const handleToggleUnsubscribe = async (id: string, currentValue: boolean) => {
+    try {
+      const res = await fetch(`/api/templates/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ includeUnsubscribe: !currentValue }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to update template");
+      }
+      toast.success(!currentValue ? "Unsubscribe button enabled" : "Unsubscribe button disabled");
+      setTemplates((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, includeUnsubscribe: !currentValue } : t))
+      );
+    } catch (err: any) {
+      toast.error(err.message || "Failed to toggle unsubscribe");
+    }
+  };
+
+  // ===== PDF Attachment management =====
+  const [attachTemplateId, setAttachTemplateId] = useState<string | null>(null);
+  const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
+  const attachFileRef = useRef<HTMLInputElement>(null);
+
+  const handleAttachPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!attachTemplateId) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Maximum file size is 10MB");
+      return;
+    }
+    setIsUploadingAttachment(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch(`/api/templates/${attachTemplateId}/attachments`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Upload failed");
+      const data = await res.json();
+      toast.success(`Attached: ${file.name}`);
+      setTemplates((prev) =>
+        prev.map((t) =>
+          t.id === attachTemplateId
+            ? { ...t, attachments: [...(t.attachments || []), data.attachment] }
+            : t
+        )
+      );
+    } catch (err: any) {
+      toast.error(err.message || "Failed to attach file");
+    } finally {
+      setIsUploadingAttachment(false);
+      if (attachFileRef.current) attachFileRef.current.value = "";
+    }
+  };
+
+  const handleRemoveAttachment = async (templateId: string, attachmentId: string) => {
+    try {
+      const res = await fetch(`/api/templates/${templateId}/attachments?attachmentId=${attachmentId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to remove attachment");
+      toast.success("Attachment removed");
+      setTemplates((prev) =>
+        prev.map((t) =>
+          t.id === templateId
+            ? { ...t, attachments: (t.attachments || []).filter((a) => a.id !== attachmentId) }
+            : t
+        )
+      );
+    } catch (err: any) {
+      toast.error(err.message || "Failed to remove attachment");
     }
   };
 
@@ -685,6 +787,39 @@ export default function TemplatesPage() {
                       </div>
 
                       <div className="flex items-center gap-1">
+                        {/* Unsubscribe Toggle */}
+                        <button
+                          onClick={() => handleToggleUnsubscribe(t.id, t.includeUnsubscribe !== false)}
+                          title={t.includeUnsubscribe !== false ? "Unsubscribe button enabled — click to disable" : "Unsubscribe button disabled — click to enable"}
+                          className={cn(
+                            "p-1.5 rounded-lg border transition-all cursor-pointer",
+                            t.includeUnsubscribe !== false
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                              : "border-transparent text-zinc-400 hover:border-zinc-200 hover:bg-zinc-50 hover:text-zinc-700"
+                          )}
+                        >
+                          <MailX className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* PDF Attachments */}
+                        <button
+                          onClick={() => setAttachTemplateId(t.id)}
+                          title="Manage PDF attachments"
+                          className={cn(
+                            "p-1.5 rounded-lg border transition-all cursor-pointer relative",
+                            (t.attachments?.length || 0) > 0
+                              ? "border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                              : "border-transparent text-zinc-400 hover:border-zinc-200 hover:bg-zinc-50 hover:text-zinc-700"
+                          )}
+                        >
+                          <Paperclip className="w-3.5 h-3.5" />
+                          {(t.attachments?.length || 0) > 0 && (
+                            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-indigo-600 text-white text-[8px] font-bold flex items-center justify-center">
+                              {t.attachments!.length}
+                            </span>
+                          )}
+                        </button>
+
                         {/* Duplicate */}
                         <button
                           onClick={() => handleDuplicateTemplate(t.id, t.name)}
@@ -852,6 +987,41 @@ export default function TemplatesPage() {
                 </select>
               </div>
 
+              {/* Unsubscribe Toggle */}
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => setIncludeUnsubscribe(!includeUnsubscribe)}
+                  className={cn(
+                    "w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border transition-all cursor-pointer",
+                    includeUnsubscribe
+                      ? "border-emerald-200 bg-emerald-50/60 hover:bg-emerald-50"
+                      : "border-zinc-200 bg-zinc-50 hover:bg-zinc-100"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <MailX className={cn("w-3.5 h-3.5", includeUnsubscribe ? "text-emerald-600" : "text-zinc-400")} />
+                    <span className={cn("text-[11px] font-semibold", includeUnsubscribe ? "text-emerald-700" : "text-zinc-500")}>
+                      Unsubscribe Button
+                    </span>
+                  </div>
+                  <div className={cn(
+                    "relative w-8 h-[18px] rounded-full transition-colors",
+                    includeUnsubscribe ? "bg-emerald-500" : "bg-zinc-300"
+                  )}>
+                    <div className={cn(
+                      "absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white shadow-sm transition-all",
+                      includeUnsubscribe ? "left-[16px]" : "left-[2px]"
+                    )} />
+                  </div>
+                </button>
+                <p className="text-[10px] text-zinc-400 font-medium mt-1 px-1">
+                  {includeUnsubscribe
+                    ? "Recipients can unsubscribe from future emails."
+                    : "No unsubscribe link will be added to this template."}
+                </p>
+              </div>
+
               {/* Variables */}
               <div className="space-y-1.5 pt-1 select-none">
                 <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Insert Variables</label>
@@ -922,7 +1092,7 @@ export default function TemplatesPage() {
                       )}
                     >
                       <iframe
-                        srcDoc={bodyHtml}
+                        srcDoc={includeUnsubscribe && !/unsubscribe/i.test(bodyHtml) ? (bodyHtml + UNSUB_FOOTER_PREVIEW) : bodyHtml}
                         title="HTML Live Preview"
                         className="w-full h-96 border-0"
                         sandbox="allow-same-origin"
@@ -1056,7 +1226,7 @@ export default function TemplatesPage() {
                 )}
               >
                 <iframe
-                  srcDoc={getPreviewHtml(previewModalTemplate.bodyHtml)}
+                  srcDoc={getPreviewHtml(previewModalTemplate.bodyHtml, previewModalTemplate.includeUnsubscribe !== false)}
                   title={`Preview: ${previewModalTemplate.name}`}
                   className="w-full border-0"
                   style={{ minHeight: "400px", height: "500px" }}
@@ -1306,6 +1476,100 @@ export default function TemplatesPage() {
                     Write raw HTML code directly with autocomplete syntax highlighting.
                   </p>
                 </div>
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ─── PDF ATTACHMENT MODAL ─── */}
+      {mounted && attachTemplateId && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setAttachTemplateId(null)}>
+          <div
+            className="w-full max-w-md bg-white border border-zinc-200 rounded-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
+              <div>
+                <h3 className="font-bold text-zinc-900 text-sm flex items-center gap-2">
+                  <Paperclip className="w-4 h-4 text-indigo-600" /> PDF Attachments
+                </h3>
+                <p className="text-[11px] text-zinc-500 mt-0.5 font-medium">
+                  Attach PDFs that will be sent with emails using this template.
+                </p>
+              </div>
+              <button type="button" onClick={() => setAttachTemplateId(null)} className="p-1.5 rounded-lg border border-zinc-200 hover:bg-zinc-50 text-zinc-400 hover:text-zinc-700 cursor-pointer transition-colors">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4 max-h-[50vh] overflow-y-auto">
+              {/* Existing attachments */}
+              {(() => {
+                const tpl = templates.find((t) => t.id === attachTemplateId);
+                const atts = tpl?.attachments || [];
+                if (atts.length === 0) {
+                  return (
+                    <p className="text-xs text-zinc-400 font-semibold text-center py-4">
+                      No attachments yet. Upload a PDF below.
+                    </p>
+                  );
+                }
+                return (
+                  <div className="space-y-2">
+                    {atts.map((att) => (
+                      <div key={att.id} className="flex items-center justify-between gap-3 p-3 rounded-lg border border-zinc-100 bg-zinc-50/50">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <FileText className="w-4 h-4 text-red-500 shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-zinc-800 truncate">{att.file.name}</p>
+                            <p className="text-[10px] text-zinc-400 font-medium">
+                              {(att.file.size / 1024).toFixed(0)} KB · {att.file.type.split("/").pop()?.toUpperCase()}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveAttachment(attachTemplateId!, att.id)}
+                          className="p-1.5 rounded-lg border border-transparent hover:border-red-200 hover:bg-red-50 text-zinc-400 hover:text-red-600 transition-colors shrink-0"
+                          title="Remove attachment"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="border-t border-zinc-100 px-5 py-3.5 flex items-center justify-between">
+              <input
+                ref={attachFileRef}
+                type="file"
+                accept=".pdf,application/pdf"
+                onChange={handleAttachPdf}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => attachFileRef.current?.click()}
+                disabled={isUploadingAttachment}
+                className="h-9 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white flex items-center gap-1.5 cursor-pointer transition-colors disabled:opacity-60"
+              >
+                {isUploadingAttachment ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Plus className="w-3.5 h-3.5" />
+                )}
+                Upload PDF
+              </button>
+              <button
+                type="button"
+                onClick={() => setAttachTemplateId(null)}
+                className="h-9 px-4 rounded-lg border border-zinc-200 hover:bg-zinc-50 text-xs font-semibold text-zinc-700 transition-colors cursor-pointer"
+              >
+                Done
               </button>
             </div>
           </div>

@@ -24,7 +24,8 @@ import {
   Building,
   UserPlus,
   BookOpen,
-  FolderHeart
+  FolderHeart,
+  Ban
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -104,6 +105,7 @@ export function DashboardLayoutShell({ children, user, company, trial }: Dashboa
     { label: "Leads", href: "/dashboard/leads", icon: Users },
     { label: "Templates", href: "/dashboard/templates", icon: BookOpen },
     { label: "SMTP Accounts", href: "/dashboard/smtp", icon: Key },
+    { label: "Unsubscribes", href: "/dashboard/unsubscribes", icon: Ban },
     { label: "Reports", href: "/dashboard/reports", icon: BarChart3 },
     { label: "Billing", href: "/dashboard/billing", icon: CreditCard },
   ];
@@ -114,6 +116,7 @@ export function DashboardLayoutShell({ children, user, company, trial }: Dashboa
     { name: "Import Leads", desc: "Upload CSV or list leads", href: "/dashboard/leads" },
     { name: "Connect SMTP", desc: "Add email sending accounts", href: "/dashboard/smtp" },
     { name: "Compose Template", desc: "Design outreach template", href: "/dashboard/templates" },
+    { name: "Unsubscribes", desc: "View suppressed / blacklisted emails", href: "/dashboard/unsubscribes" },
     { name: "CRM Contacts", desc: "View managed CRM pipeline", href: "/dashboard/crm" },
     { name: "Workspace Settings", desc: "Adjust timezone or company profile", href: "/dashboard/settings" },
   ];
@@ -417,7 +420,7 @@ export function DashboardLayoutShell({ children, user, company, trial }: Dashboa
 
         {/* Dynamic Nested Content */}
         <main className={cn("flex-1 overflow-y-auto relative flex flex-col", pathname?.includes("/builder/") ? "p-0 overflow-hidden" : "p-6 md:p-8")}>
-          {trial?.onTrial && !pathname?.includes("/builder/") && pathname !== "/dashboard/billing" && (
+          {trial?.onTrial && pathname === "/dashboard" && (
             <Link
               href="/dashboard/billing"
               className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-indigo-200 bg-indigo-50/70 px-4 py-2.5 hover:bg-indigo-50 transition-colors"

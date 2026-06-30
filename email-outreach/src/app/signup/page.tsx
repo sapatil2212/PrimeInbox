@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 
 // Selectable subscription plans (mirrors the pricing page)
 const SIGNUP_PLANS = [
+  { id: "BRONZE", name: "Bronze", price: "Free", emails: "10 emails total" },
   { id: "SILVER", name: "Silver", price: "₹499", emails: "20,000 emails/mo" },
   { id: "GOLD", name: "Gold", price: "₹999", emails: "100,000 emails/mo", popular: true },
   { id: "PLATINUM", name: "Platinum", price: "₹1999", emails: "250,000 emails/mo" },
@@ -36,7 +37,7 @@ const signupSchema = z.object({
   email: z.string().email("Please enter a valid business email"),
   companyName: z.string().min(2, "Company name must be at least 2 characters"),
   businessType: z.string().min(1, "Please select a business type"),
-  plan: z.enum(["SILVER", "GOLD", "PLATINUM"], { message: "Please select a plan" }),
+  plan: z.enum(["BRONZE", "SILVER", "GOLD", "PLATINUM"], { message: "Please select a plan" }),
   contactNo: z.string().min(6, "Contact number must be at least 6 characters"),
   whatsappNo: z.string().optional(),
   password: z
@@ -69,6 +70,7 @@ export default function SignupPage() {
   const [otpValues, setOtpValues] = useState<string[]>(Array(6).fill(""));
   const [isVerifying, setIsVerifying] = useState(false);
   const [verifySuccess, setVerifySuccess] = useState(false);
+  const [showPendingModal, setShowPendingModal] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const [otpError, setOtpError] = useState("");
   
@@ -139,12 +141,20 @@ export default function SignupPage() {
         throw new Error(result.error || "Failed to verify code.");
       }
 
-      setVerifySuccess(true);
-      // Removed toast success popup as the checkmark animation communicates success clearly
+      // Paid plans require manual admin activation — show the "registration
+      // completed" message instead of routing into the (locked) dashboard.
+      if (result.pendingActivation) {
+        setShowOtpModal(false);
+        setShowPendingModal(true);
+        return;
+      }
 
+      // Free (Bronze) plans are active immediately and the API has logged the
+      // user in, so send them straight to the dashboard.
+      setVerifySuccess(true);
       setTimeout(() => {
-        router.push("/login");
-      }, 2000);
+        router.push(result.redirectTo || "/dashboard");
+      }, 1500);
     } catch (error: any) {
       setOtpError(error.message || "Invalid or expired OTP.");
     } finally {
@@ -212,7 +222,7 @@ export default function SignupPage() {
   // Preselect plan from ?plan= query param (e.g. coming from the pricing page)
   useEffect(() => {
     const param = new URLSearchParams(window.location.search).get("plan")?.toUpperCase();
-    if (param === "SILVER" || param === "GOLD" || param === "PLATINUM") {
+    if (param === "BRONZE" || param === "SILVER" || param === "GOLD" || param === "PLATINUM") {
       setValue("plan", param);
     }
   }, [setValue]);
@@ -303,10 +313,10 @@ export default function SignupPage() {
               className="h-9 w-auto group-hover:scale-105 transition-all" 
             />
           </Link>
-          <h2 className="text-xl font-extrabold text-zinc-900 tracking-tight">Start your 14-day free trial</h2>
+          <h2 className="text-xl font-extrabold text-zinc-900 tracking-tight">Create your PrimeInbox account</h2>
         </div>
 
-        <GlowCard className="border border-zinc-200/50 shadow-none" glowColor="rgba(59, 130, 246, 0.03)">
+        <GlowCard className="border border-zinc-200/50 shadow-none" disableGlow={true}>
           <div className="p-6">
             <form className="flex flex-col gap-3 text-left" onSubmit={handleSubmit(onSubmit)}>
               {generalError && (
@@ -322,7 +332,7 @@ export default function SignupPage() {
                 render={({ field }) => (
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[11px] font-bold text-zinc-500">Choose your plan</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {SIGNUP_PLANS.map((p) => {
                         const selected = field.value === p.id;
                         return (
@@ -348,7 +358,9 @@ export default function SignupPage() {
                             </div>
                             <div className="text-sm font-black text-zinc-900 mt-0.5">
                               {p.price}
-                              <span className="text-[9px] font-semibold text-zinc-400">/mo</span>
+                              {p.price !== "Free" && (
+                                <span className="text-[9px] font-semibold text-zinc-400">/mo</span>
+                              )}
                             </div>
                             <div className="text-[9px] text-zinc-500 font-semibold mt-0.5">{p.emails}</div>
                           </button>
@@ -371,7 +383,7 @@ export default function SignupPage() {
                       id="name" 
                       placeholder="Enter name" 
                       {...register("name")}
-                      className="h-10 pl-10 pr-4 w-full rounded-xl border border-zinc-200/80 bg-white text-zinc-800 text-xs placeholder-zinc-450 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all font-semibold"
+                      className="h-9 pl-10 pr-4 w-full rounded-xl border border-zinc-200/80 bg-white text-zinc-800 text-[11px] placeholder-zinc-300 placeholder:font-normal focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all font-medium"
                     />
                   </div>
                   {errors.name && <p className="text-[10px] font-bold text-red-500 mt-0.5">{errors.name.message}</p>}
@@ -391,7 +403,7 @@ export default function SignupPage() {
                       id="email" 
                       placeholder="Enter business email" 
                       {...register("email")}
-                      className="h-10 pl-10 pr-4 w-full rounded-xl border border-zinc-200/80 bg-white text-zinc-800 text-xs placeholder-zinc-450 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all font-semibold"
+                      className="h-9 pl-10 pr-4 w-full rounded-xl border border-zinc-200/80 bg-white text-zinc-800 text-[11px] placeholder-zinc-300 placeholder:font-normal focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all font-medium"
                     />
                   </div>
                   {errors.email && <p className="text-[10px] font-bold text-red-500 mt-0.5">{errors.email.message}</p>}
@@ -407,7 +419,7 @@ export default function SignupPage() {
                       id="companyName" 
                       placeholder="Enter company name" 
                       {...register("companyName")}
-                      className="h-10 pl-10 pr-4 w-full rounded-xl border border-zinc-200/80 bg-white text-zinc-800 text-xs placeholder-zinc-450 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all font-semibold"
+                      className="h-9 pl-10 pr-4 w-full rounded-xl border border-zinc-200/80 bg-white text-zinc-800 text-[11px] placeholder-zinc-300 placeholder:font-normal focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all font-medium"
                     />
                   </div>
                   {errors.companyName && <p className="text-[10px] font-bold text-red-500 mt-0.5">{errors.companyName.message}</p>}
@@ -432,7 +444,7 @@ export default function SignupPage() {
 
                 {/* Contact Number */}
                 <div className="flex flex-col gap-1">
-                  <label htmlFor="contactNo" className="text-[11px] font-bold text-zinc-500">Contact Number*</label>
+                  <label htmlFor="contactNo" className="text-[11px] font-bold text-zinc-500">Contact Number</label>
                   <div className="relative">
                     <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" />
                     <input 
@@ -440,7 +452,7 @@ export default function SignupPage() {
                       id="contactNo" 
                       placeholder="Enter contact number" 
                       {...register("contactNo")}
-                      className="h-10 pl-10 pr-4 w-full rounded-xl border border-zinc-200/80 bg-white text-zinc-800 text-xs placeholder-zinc-450 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all font-semibold"
+                      className="h-9 pl-10 pr-4 w-full rounded-xl border border-zinc-200/80 bg-white text-zinc-800 text-[11px] placeholder-zinc-300 placeholder:font-normal focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all font-medium"
                     />
                   </div>
                   {errors.contactNo && <p className="text-[10px] font-bold text-red-500 mt-0.5">{errors.contactNo.message}</p>}
@@ -459,7 +471,7 @@ export default function SignupPage() {
                       id="whatsappNo" 
                       placeholder="Enter WhatsApp number (optional)" 
                       {...register("whatsappNo")}
-                      className="h-10 pl-10 pr-4 w-full rounded-xl border border-zinc-200/80 bg-white text-zinc-800 text-xs placeholder-zinc-450 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all font-semibold"
+                      className="h-9 pl-10 pr-4 w-full rounded-xl border border-zinc-200/80 bg-white text-zinc-800 text-[11px] placeholder-zinc-300 placeholder:font-normal focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all font-medium"
                     />
                   </div>
                   {errors.whatsappNo && <p className="text-[10px] font-bold text-red-500 mt-0.5">{errors.whatsappNo.message}</p>}
@@ -475,7 +487,7 @@ export default function SignupPage() {
                       id="password" 
                       placeholder="Enter password" 
                       {...register("password")}
-                      className="h-10 pl-10 pr-10 w-full rounded-xl border border-zinc-200/80 bg-white text-zinc-800 text-xs placeholder-zinc-450 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all font-semibold"
+                      className="h-9 pl-10 pr-10 w-full rounded-xl border border-zinc-200/80 bg-white text-zinc-800 text-[11px] placeholder-zinc-300 placeholder:font-normal focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all font-medium"
                     />
                     <button
                       type="button"
@@ -486,10 +498,35 @@ export default function SignupPage() {
                     </button>
                   </div>
                   {errors.password && <p className="text-[10px] font-bold text-red-500 mt-0.5">{errors.password.message}</p>}
+                </div>
 
-                  {/* Password Strength Meter & Real-time Indicator */}
-                  {passwordVal && (
-                    <div className="mt-1 space-y-1.5 border border-zinc-100 rounded-xl p-2.5 bg-zinc-50/50 text-[10px] text-zinc-500">
+                {/* Confirm Password */}
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="confirmPassword" className="text-[11px] font-bold text-zinc-500">Confirm Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" />
+                    <input 
+                      type={showConfirmPassword ? "text" : "password"} 
+                      id="confirmPassword" 
+                      placeholder="Confirm password" 
+                      {...register("confirmPassword")}
+                      className="h-9 pl-10 pr-10 w-full rounded-xl border border-zinc-200/80 bg-white text-zinc-800 text-[11px] placeholder-zinc-300 placeholder:font-normal focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all font-medium"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-zinc-100 text-zinc-400 transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && <p className="text-[10px] font-bold text-red-500 mt-0.5">{errors.confirmPassword.message}</p>}
+                </div>
+
+                {/* Password Strength Meter & Real-time Indicator (Full Width below) */}
+                {passwordVal && (
+                  <div className="sm:col-span-2">
+                    <div className="space-y-1.5 border border-zinc-100 rounded-xl p-2.5 bg-zinc-50/50 text-[10px] text-zinc-500">
                       <div className="flex items-center justify-between">
                         <span className="font-bold">Password Strength:</span>
                         <span className={`font-bold px-1.5 py-0.5 rounded text-[9px] text-white ${strengthInfo.color}`}>
@@ -504,54 +541,31 @@ export default function SignupPage() {
                         />
                       </div>
                       {/* Requirements checklist */}
-                      <div className="grid grid-cols-2 gap-y-1 gap-x-2 mt-0.5 font-semibold">
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-y-1.5 gap-x-2 mt-1 font-semibold text-[9px]">
                         <span className="flex items-center gap-1">
-                          {criteria.length ? <CheckCircle2 className="w-3 h-3 text-emerald-500 animate-pulse" /> : <XCircle className="w-3 h-3 text-zinc-350" />}
-                          8+ chars
+                          {criteria.length ? <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" /> : <XCircle className="w-3 h-3 text-zinc-300 shrink-0" />}
+                          8+ characters
                         </span>
                         <span className="flex items-center gap-1">
-                          {criteria.upper ? <CheckCircle2 className="w-3 h-3 text-emerald-500 animate-pulse" /> : <XCircle className="w-3 h-3 text-zinc-350" />}
-                          Uppercase
+                          {criteria.upper ? <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" /> : <XCircle className="w-3 h-3 text-zinc-300 shrink-0" />}
+                          At least 1 uppercase
                         </span>
                         <span className="flex items-center gap-1">
-                          {criteria.lower ? <CheckCircle2 className="w-3 h-3 text-emerald-500 animate-pulse" /> : <XCircle className="w-3 h-3 text-zinc-350" />}
-                          Lowercase
+                          {criteria.lower ? <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" /> : <XCircle className="w-3 h-3 text-zinc-300 shrink-0" />}
+                          At least 1 lowercase
                         </span>
                         <span className="flex items-center gap-1">
-                          {criteria.number ? <CheckCircle2 className="w-3 h-3 text-emerald-500 animate-pulse" /> : <XCircle className="w-3 h-3 text-zinc-350" />}
-                          Number
+                          {criteria.number ? <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" /> : <XCircle className="w-3 h-3 text-zinc-300 shrink-0" />}
+                          At least 1 number
                         </span>
-                        <span className="flex items-center gap-1 col-span-2">
-                          {criteria.special ? <CheckCircle2 className="w-3 h-3 text-emerald-500 animate-pulse" /> : <XCircle className="w-3 h-3 text-zinc-350" />}
-                          Special symbol (!@#$ etc)
+                        <span className="flex items-center gap-1">
+                          {criteria.special ? <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" /> : <XCircle className="w-3 h-3 text-zinc-300 shrink-0" />}
+                          At least 1 special symbol
                         </span>
                       </div>
                     </div>
-                  )}
-                </div>
-
-                {/* Confirm Password */}
-                <div className="flex flex-col gap-1">
-                  <label htmlFor="confirmPassword" className="text-[11px] font-bold text-zinc-500">Confirm Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" />
-                    <input 
-                      type={showConfirmPassword ? "text" : "password"} 
-                      id="confirmPassword" 
-                      placeholder="Confirm password" 
-                      {...register("confirmPassword")}
-                      className="h-10 pl-10 pr-10 w-full rounded-xl border border-zinc-200/80 bg-white text-zinc-800 text-xs placeholder-zinc-450 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all font-semibold"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-zinc-100 text-zinc-400 transition-colors"
-                    >
-                      {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                    </button>
                   </div>
-                  {errors.confirmPassword && <p className="text-[10px] font-bold text-red-500 mt-0.5">{errors.confirmPassword.message}</p>}
-                </div>
+                )}
               </div>
 
               {/* Accept Terms Checkbox */}
@@ -575,7 +589,7 @@ export default function SignupPage() {
               <ShimmerButton 
                 type="submit"
                 disabled={isLoading}
-                className="h-10 w-full mt-1.5 rounded-xl text-xs font-bold bg-zinc-900 text-white hover:bg-black flex items-center justify-center gap-2"
+                className="h-9 w-full mt-1.5 rounded-xl text-xs font-bold bg-zinc-900 text-white hover:bg-black flex items-center justify-center gap-2"
                 shimmerColor="#3B82F6"
               >
                 {isLoading ? (
@@ -708,11 +722,39 @@ export default function SignupPage() {
                 <div className="space-y-1">
                   <h3 className="text-lg font-extrabold text-zinc-900 tracking-tight">Email Verified!</h3>
                   <p className="text-xs text-zinc-500 leading-relaxed font-semibold">
-                    Your account is now active. Redirecting you to login...
+                    Your workspace is ready. Taking you to your dashboard...
                   </p>
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Registration Completed (Pending Activation) Modal — shown for paid plans */}
+      {showPendingModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-[420px] bg-white border border-zinc-200/60 rounded-2xl shadow-2xl p-8 text-center space-y-5 relative animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center border border-emerald-100/50 mx-auto">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-lg font-extrabold text-zinc-900 tracking-tight">
+                Your registration is completed!
+              </h3>
+              <p className="text-sm text-zinc-500 leading-relaxed font-semibold">
+                Your workspace will be activated soon. We&apos;ll email you a login link with your plan
+                details once it&apos;s ready.
+              </p>
+              <p className="text-sm font-extrabold text-zinc-800 pt-1">Thank you!</p>
+            </div>
+            <ShimmerButton
+              onClick={() => router.push("/login")}
+              className="h-10 w-full rounded-xl text-xs font-bold bg-zinc-900 text-white hover:bg-black"
+              shimmerColor="#3B82F6"
+            >
+              Got it
+            </ShimmerButton>
           </div>
         </div>
       )}

@@ -20,6 +20,12 @@ export async function POST(req: NextRequest) {
     if (!plan) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
+    if (plan.free || plan.amountPaise <= 0) {
+      return NextResponse.json(
+        { error: "This plan is free and does not require checkout." },
+        { status: 400 }
+      );
+    }
 
     const keyId = process.env.RAZORPAY_KEY_ID;
     const keySecret = process.env.RAZORPAY_KEY_SECRET;

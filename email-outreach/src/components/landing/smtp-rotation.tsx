@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 
 export function SmtpRotation() {
   return (
-    <section className="py-28 bg-transparent relative z-10">
+    <section className="py-16 bg-transparent relative z-10">
       <Container>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           
@@ -150,10 +150,10 @@ export function SmtpRotation() {
               <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6 text-zinc-900">
                 Never land in spam again
               </h2>
-              <p className="text-base md:text-lg text-zinc-500 mb-6 leading-relaxed">
+              <p className="text-xs sm:text-sm text-zinc-500 mb-6 leading-relaxed font-normal">
                 Our intelligent SMTP rotation engine automatically distributes your sending volume across multiple domains and custom mailboxes.
               </p>
-              <p className="text-base md:text-lg text-zinc-500 mb-8 leading-relaxed">
+              <p className="text-xs sm:text-sm text-zinc-500 mb-8 leading-relaxed font-normal">
                 By monitoring reputation in real-time, the platform instantly pauses mailboxes that show signs of rate-limiting, ensuring your sequences consistently hit the primary tab.
               </p>
               

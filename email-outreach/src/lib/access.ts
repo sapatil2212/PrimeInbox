@@ -1,13 +1,15 @@
 import { db } from "@/lib/db";
 
 export interface TrialState {
-  /** True when access should be blocked (trial expired and not on a paid plan). */
+  /** True when access should be blocked (workspace not yet activated). */
   blocked: boolean;
-  /** True while still within an active trial window. */
+  /** Deprecated: trials have been removed. Always false. */
   onTrial: boolean;
-  /** True when subscription is a paid, active plan. */
+  /** True when the workspace is awaiting manual activation by an admin. */
+  pendingActivation: boolean;
+  /** True when subscription is a paid/free active plan. */
   isPaid: boolean;
-  /** Whole days remaining in the trial (0 if none/expired). */
+  /** Deprecated: trials have been removed. Always 0. */
   daysLeft: number;
   status: string;
   plan: string;
@@ -21,34 +23,29 @@ export interface CompanyBillingFields {
 }
 
 /**
- * Computes the trial/subscription access state for a company.
+ * Computes the subscription access state for a company.
  *
- * Rules:
- *  - status "ACTIVE" => paid, full access.
- *  - status "TRIALING" with trialEndsAt in the future => trial access.
- *  - not paid and trialEndsAt in the past => blocked.
- *  - legacy companies with no trialEndsAt and non-ACTIVE status are NOT blocked
- *    (avoids locking out pre-existing accounts).
+ * Trials have been removed. Access rules:
+ *  - status "ACTIVE" => active workspace (paid or free Bronze), full access.
+ *  - status "PENDING_ACTIVATION" => paid signup awaiting admin activation, blocked.
+ *  - any other non-active status (SUSPENDED, EXPIRED, legacy TRIALING) => blocked.
+ *  - legacy companies with no explicit status default to ACTIVE at the DB level.
  */
 export function getTrialState(company: CompanyBillingFields): TrialState {
-  const now = Date.now();
   const status = company.subscriptionStatus;
   const isPaid = status === "ACTIVE";
-  const trialEnd = company.trialEndsAt ? new Date(company.trialEndsAt) : null;
-  const trialMs = trialEnd ? trialEnd.getTime() : null;
-
-  const onTrial = !isPaid && trialMs !== null && trialMs > now;
-  const blocked = !isPaid && trialMs !== null && trialMs <= now;
-  const daysLeft = trialMs ? Math.max(0, Math.ceil((trialMs - now) / (24 * 60 * 60 * 1000))) : 0;
+  const pendingActivation = status === "PENDING_ACTIVATION";
+  const blocked = !isPaid;
 
   return {
     blocked,
-    onTrial,
+    onTrial: false,
+    pendingActivation,
     isPaid,
-    daysLeft,
+    daysLeft: 0,
     status,
     plan: company.subscriptionPlan,
-    trialEndsAt: trialEnd,
+    trialEndsAt: company.trialEndsAt ? new Date(company.trialEndsAt) : null,
   };
 }
 

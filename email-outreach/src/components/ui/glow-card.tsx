@@ -7,12 +7,14 @@ interface GlowCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
   glowColor?: string; // e.g. "rgba(59, 130, 246, 0.06)"
+  disableGlow?: boolean;
 }
 
 export function GlowCard({
   children,
   className,
   glowColor = "rgba(59, 130, 246, 0.06)",
+  disableGlow = false,
   ...props
 }: GlowCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -20,7 +22,7 @@ export function GlowCard({
   const [isHovered, setIsHovered] = useState(false);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
+    if (!cardRef.current || disableGlow) return;
     const rect = cardRef.current.getBoundingClientRect();
     setCoords({
       x: e.clientX - rect.left,
@@ -32,7 +34,7 @@ export function GlowCard({
     <div
       ref={cardRef}
       onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={() => !disableGlow && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
         "relative rounded-2xl bg-gradient-to-b from-zinc-50/80 to-white border border-zinc-200/50 overflow-hidden transition-all duration-300 shadow-none",
@@ -41,7 +43,7 @@ export function GlowCard({
       {...props}
     >
       {/* Dynamic Cursor Light Spot */}
-      {isHovered && (
+      {!disableGlow && isHovered && (
         <div
           className="pointer-events-none absolute -inset-px rounded-2xl transition duration-300"
           style={{
@@ -51,7 +53,7 @@ export function GlowCard({
       )}
 
       {/* Dynamic Cursor Border Light Spot */}
-      {isHovered && (
+      {!disableGlow && isHovered && (
         <div
           className="pointer-events-none absolute -inset-px rounded-2xl transition duration-300 opacity-80"
           style={{

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { toast, confirmDialog } from "@/components/ui/feedback";
 import { cn } from "@/lib/utils";
 import {
@@ -16,6 +17,9 @@ import {
   Terminal,
   Server,
   Clock,
+  BadgeCheck,
+  BellRing,
+  X,
 } from "lucide-react";
 
 interface TenantItem {
@@ -50,6 +54,17 @@ interface StatsData {
   smtpCount: number;
 }
 
+interface PendingRegistration {
+  id: string;
+  name: string;
+  slug: string;
+  plan: string;
+  ownerName: string;
+  ownerEmail: string;
+  ownerContact: string | null;
+  createdAt: string;
+}
+
 export function AdminPanelClient() {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [health, setHealth] = useState<HealthInfo | null>(null);
@@ -58,6 +73,46 @@ export function AdminPanelClient() {
   const [isLoading, setIsLoading] = useState(true);
   const [tenantQuery, setTenantQuery] = useState("");
   const [logFilter, setLogFilter] = useState("ALL");
+
+  // New-registration / pending-activation alert
+  const [pendingList, setPendingList] = useState<PendingRegistration[]>([]);
+  const [showPendingAlert, setShowPendingAlert] = useState(false);
+  const [activatingId, setActivatingId] = useState<string | null>(null);
+
+  const fetchPending = async () => {
+    try {
+      const res = await fetch("/api/admin/pending-activations");
+      if (!res.ok) return;
+      const data = await res.json();
+      const list: PendingRegistration[] = data.pending || [];
+      setPendingList(list);
+      if (list.length > 0) setShowPendingAlert(true);
+    } catch {
+      // Non-blocking — the dedicated page surfaces errors.
+    }
+  };
+
+  const handleActivate = async (t: PendingRegistration) => {
+    setActivatingId(t.id);
+    try {
+      const res = await fetch(`/api/admin/tenants/${t.id}/activate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId: t.plan, method: "manual", durationDays: 30 }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to activate workspace");
+      toast.success(data.message || "Workspace activated");
+      const remaining = pendingList.filter((p) => p.id !== t.id);
+      setPendingList(remaining);
+      if (remaining.length === 0) setShowPendingAlert(false);
+      fetchAdminData();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to activate workspace");
+    } finally {
+      setActivatingId(null);
+    }
+  };
 
   const fetchAdminData = async () => {
     try {
@@ -81,6 +136,7 @@ export function AdminPanelClient() {
 
   useEffect(() => {
     fetchAdminData();
+    fetchPending();
     const interval = setInterval(() => fetchAdminData(), 30000);
     return () => clearInterval(interval);
   }, []);
@@ -130,6 +186,79 @@ export function AdminPanelClient() {
 
   return (
     <div className="p-5 md:p-7 max-w-7xl mx-auto space-y-5">
+      {/* New registration / pending activation alert modal */}
+      {showPendingAlert && pendingList.length > 0 && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="w-full max-w-lg bg-white border border-zinc-200 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-start justify-between p-5 border-b border-zinc-100 bg-gradient-to-r from-indigo-50 to-white">
+              <div className="flex items-center gap-3">
+                <div className="relative w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                  <BellRing className="w-5 h-5" />
+                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-600 text-white text-[9px] font-black flex items-center justify-center">
+                    {pendingList.length}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-zinc-900">New registration{pendingList.length === 1 ? "" : "s"}</h3>
+                  <p className="text-xs text-zinc-500 font-medium">
+                    {pendingList.length} workspace{pendingList.length === 1 ? "" : "s"} awaiting paid activation
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPendingAlert(false)}
+                className="text-zinc-400 hover:text-zinc-700"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="max-h-[50vh] overflow-y-auto divide-y divide-zinc-100">
+              {pendingList.map((t) => (
+                <div key={t.id} className="flex items-center justify-between gap-3 px-5 py-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-bold text-zinc-900 truncate">{t.name}</div>
+                    <div className="text-[11px] text-zinc-500 truncate">
+                      {t.ownerName} · {t.ownerEmail}
+                    </div>
+                    <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-zinc-100 text-zinc-600 border border-zinc-200/60">
+                      {t.plan}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleActivate(t)}
+                    disabled={activatingId === t.id}
+                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-[10px] font-bold transition-colors disabled:opacity-60"
+                  >
+                    {activatingId === t.id ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <BadgeCheck className="w-3.5 h-3.5" />
+                    )}
+                    Mark as Paid &amp; Activate
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between gap-3 p-4 border-t border-zinc-100 bg-zinc-50/50">
+              <Link
+                href="/admin/pending-activation"
+                className="text-[11px] font-bold text-indigo-600 hover:underline"
+              >
+                Open Pending Activation page
+              </Link>
+              <button
+                onClick={() => setShowPendingAlert(false)}
+                className="h-8 px-4 rounded-lg border border-zinc-200 hover:bg-white text-xs font-bold text-zinc-600"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Page Header */}
       <div>
         <h1 className="text-lg md:text-xl font-bold text-zinc-900">Admin Overview</h1>

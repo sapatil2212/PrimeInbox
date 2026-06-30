@@ -12,89 +12,89 @@ export async function GET(req: NextRequest) {
 
     const companyId = session.companyId;
 
-    // 1. Fetch count stats
-    const totalSends = await db.emailEvent.count({
-      where: { campaign: { companyId }, eventType: "SENT" },
-    });
+    // Time boundaries
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const weekStart = new Date(today);
+    weekStart.setDate(weekStart.getDate() - 6);
 
-    const totalOpens = await db.emailEvent.count({
-      where: { campaign: { companyId }, eventType: "OPENED" },
-    });
+    // Run all independent queries in parallel to minimise round trips to the
+    // (remote) database. A single groupBy replaces five separate count() calls,
+    // and one findMany over the last 7 days replaces 21 per-day counts.
+    const [eventCounts, activeCampaigns, smtpStats, todayQueue, recentActivity, weekEvents] =
+      await Promise.all([
+        db.emailEvent.groupBy({
+          by: ["eventType"],
+          where: { campaign: { companyId } },
+          _count: { _all: true },
+        }),
+        db.campaign.count({ where: { companyId, status: "RUNNING" } }),
+        db.smtpAccount.aggregate({
+          where: { companyId },
+          _avg: { healthScore: true },
+          _count: { id: true },
+        }),
+        db.campaignQueue.count({
+          where: { campaign: { companyId }, status: "QUEUED", scheduledAt: { gte: today } },
+        }),
+        db.campaignLog.findMany({
+          where: { campaign: { companyId } },
+          orderBy: { createdAt: "desc" },
+          take: 5,
+          select: {
+            id: true,
+            action: true,
+            status: true,
+            message: true,
+            createdAt: true,
+            campaign: { select: { name: true } },
+            lead: { select: { email: true } },
+          },
+        }),
+        db.emailEvent.findMany({
+          where: {
+            campaign: { companyId },
+            eventType: { in: ["SENT", "OPENED", "REPLIED"] },
+            createdAt: { gte: weekStart },
+          },
+          select: { eventType: true, createdAt: true },
+        }),
+      ]);
 
-    const totalClicks = await db.emailEvent.count({
-      where: { campaign: { companyId }, eventType: "CLICKED" },
-    });
-
-    const totalReplies = await db.emailEvent.count({
-      where: { campaign: { companyId }, eventType: "REPLIED" },
-    });
-
-    const totalBounces = await db.emailEvent.count({
-      where: { campaign: { companyId }, eventType: "BOUNCED" },
-    });
-
-    const activeCampaigns = await db.campaign.count({
-      where: { companyId, status: "RUNNING" },
-    });
-
-    // SMTP Health metrics
-    const smtpStats = await db.smtpAccount.aggregate({
-      where: { companyId },
-      _avg: { healthScore: true },
-      _count: { id: true },
-    });
+    // Aggregate the grouped event totals.
+    const countFor = (type: string) =>
+      eventCounts.find((e) => e.eventType === type)?._count._all || 0;
+    const totalSends = countFor("SENT");
+    const totalOpens = countFor("OPENED");
+    const totalClicks = countFor("CLICKED");
+    const totalReplies = countFor("REPLIED");
+    const totalBounces = countFor("BOUNCED");
 
     const activeSmtps = smtpStats._count.id;
     const smtpHealth = smtpStats._avg.healthScore || 100.0;
 
-    // Today's enqueued sends
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayQueue = await db.campaignQueue.count({
-      where: { campaign: { companyId }, status: "QUEUED", scheduledAt: { gte: today } },
-    });
-
-    // 2. Fetch recent activity (Campaign logs)
-    const recentActivity = await db.campaignLog.findMany({
-      where: { campaign: { companyId } },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      select: {
-        id: true,
-        action: true,
-        status: true,
-        message: true,
-        createdAt: true,
-        campaign: { select: { name: true } },
-        lead: { select: { email: true } },
-      },
-    });
-
-    // 3. Daily sends time-series data (Last 7 days)
+    // Bucket the last 7 days of events in memory (1 query instead of 21).
     const dailySends: { date: string; sends: number; opens: number; replies: number }[] = [];
     for (let i = 6; i >= 0; i--) {
-      const d = new Date();
+      const d = new Date(today);
       d.setDate(d.getDate() - i);
-      const start = new Date(d);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(d);
-      end.setHours(23, 59, 59, 999);
+      const next = new Date(d);
+      next.setDate(next.getDate() + 1);
 
-      const [sends, opens, replies] = await Promise.all([
-        db.emailEvent.count({
-          where: { campaign: { companyId }, eventType: "SENT", createdAt: { gte: start, lte: end } },
-        }),
-        db.emailEvent.count({
-          where: { campaign: { companyId }, eventType: "OPENED", createdAt: { gte: start, lte: end } },
-        }),
-        db.emailEvent.count({
-          where: { campaign: { companyId }, eventType: "REPLIED", createdAt: { gte: start, lte: end } },
-        }),
-      ]);
+      let sends = 0,
+        opens = 0,
+        replies = 0;
+      for (const ev of weekEvents) {
+        const t = new Date(ev.createdAt);
+        if (t >= d && t < next) {
+          if (ev.eventType === "SENT") sends++;
+          else if (ev.eventType === "OPENED") opens++;
+          else if (ev.eventType === "REPLIED") replies++;
+        }
+      }
 
-      const formattedDate = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
       dailySends.push({
-        date: formattedDate,
+        date: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         sends,
         opens,
         replies,

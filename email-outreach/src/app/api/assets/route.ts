@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { storeFile } from "@/lib/media";
+
+export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
   try {
@@ -48,27 +49,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadDir, { recursive: true });
+    // Pick the right media category from the mime type so the upload lands in
+    // a sensible workspace bucket on the VPS (e.g. images, pdfs, documents).
+    const mime = (file.type || "").toLowerCase();
+    const category = mime.startsWith("image/")
+      ? "email-assets"
+      : mime === "application/pdf"
+      ? "pdfs"
+      : "documents";
 
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const filename = `${uniqueSuffix}-${safeName}`;
-    const filePath = path.join(uploadDir, filename);
-
-    await writeFile(filePath, buffer);
-
-    const fileUrl = `/uploads/${filename}`;
+    const stored = await storeFile({
+      companyId: session.companyId,
+      category,
+      file,
+    });
 
     const fileRecord = await db.file.create({
       data: {
         companyId: session.companyId,
         name: file.name,
-        size: file.size,
-        type: file.type,
-        path: filePath,
-        url: fileUrl,
+        size: stored.size,
+        type: stored.type,
+        path: stored.path,
+        url: stored.url,
       },
     });
 

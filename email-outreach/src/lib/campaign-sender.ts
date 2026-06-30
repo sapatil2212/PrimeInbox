@@ -122,10 +122,46 @@ function htmlToPlainText(html: string): string {
     .trim();
 }
 
-/** Append a compliant, low-key unsubscribe footer to the HTML body. */
+/** Base URL of the app, used to absolutize root-relative asset URLs for email. */
+const APP_BASE_URL = (process.env.APP_URL || "http://localhost:3000").replace(/\/+$/, "");
+
+/**
+ * Email clients cannot resolve root-relative URLs (e.g. "/api/files/..."),
+ * so rewrite relative `src`/`background` attributes to absolute URLs. Leaves
+ * already-absolute (http/https/data/cid) and protocol-relative URLs untouched.
+ */
+function absolutizeEmailUrls(html: string): string {
+  if (!html) return html;
+  return html
+    .replace(/(\ssrc=)(["'])\/(?!\/)/gi, `$1$2${APP_BASE_URL}/`)
+    .replace(/(\sbackground=)(["'])\/(?!\/)/gi, `$1$2${APP_BASE_URL}/`);
+}
+
+/** Append a compliant, low-key unsubscribe footer to the HTML body.
+ *  Skips injection if the template already contains an unsubscribe link
+ *  (e.g. from a visual-builder footer block with {{unsubscribe}} or an
+ *  existing "unsubscribe" anchor). This prevents duplicate footers. */
 function appendUnsubFooter(html: string, companyId: string, leadId: string): string {
   const url = unsubscribeUrl(companyId, leadId);
-  const footer = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#9ca3af;line-height:1.5;">
+
+  // Replace the {{unsubscribe}} placeholder if the template footer block uses it.
+  if (/\{\{unsubscribe\}\}/i.test(html)) {
+    return html.replace(/\{\{unsubscribe\}\}/gi, url);
+  }
+
+  // If the HTML already contains an unsubscribe link (from the footer block renderer),
+  // just inject the real URL into its href="#" placeholder and skip appending a second footer.
+  if (/unsubscribe/i.test(html) && /href=["']#["'][^>]*>[\s\S]*?unsubscribe/i.test(html)) {
+    // The builder-renderer outputs: <a href="#">Unsubscribe</a>
+    // Replace the first "#" href adjacent to "Unsubscribe" text with the real URL.
+    return html.replace(
+      /(<a\s[^>]*href=["'])#(["'][^>]*>[\s\S]*?[Uu]nsubscribe[\s\S]*?<\/a>)/i,
+      `$1${url}$2`
+    );
+  }
+
+  // No existing unsubscribe content found — append the standard footer.
+  const footer = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#9ca3af;line-height:1.5;text-align:center;">
 If you'd prefer not to receive these emails, you can <a href="${url}" style="color:#9ca3af;text-decoration:underline;">unsubscribe here</a>.
 </div>`;
 
@@ -184,6 +220,8 @@ export async function sendViaSmtpAccount(
     text?: string;
     companyId?: string;
     leadId?: string;
+    includeUnsubscribe?: boolean;
+    attachments?: { filename: string; path: string }[];
   }
 ): Promise<{ messageId: string }> {
   const transporter = buildTransport(account);
@@ -193,10 +231,11 @@ export async function sendViaSmtpAccount(
   const messageId = `<${Date.now()}.${Math.random().toString(36).slice(2)}@${fromDomain}>`;
 
   // Build the body + headers. One-click unsubscribe is now expected by major providers.
-  let html = payload.html;
+  let html = absolutizeEmailUrls(payload.html);
   const headers: Record<string, string> = {};
 
-  if (payload.companyId && payload.leadId) {
+  const shouldIncludeUnsub = payload.includeUnsubscribe !== false;
+  if (payload.companyId && payload.leadId && shouldIncludeUnsub) {
     html = appendUnsubFooter(html, payload.companyId, payload.leadId);
     const unsubUrl = unsubscribeUrl(payload.companyId, payload.leadId);
     headers["List-Unsubscribe"] = `<${unsubUrl}>, <mailto:${account.fromEmail}?subject=unsubscribe>`;
@@ -214,6 +253,10 @@ export async function sendViaSmtpAccount(
     text,
     messageId,
     headers,
+    attachments: payload.attachments?.map((a) => ({
+      filename: a.filename,
+      path: a.path,
+    })),
   });
 
   return { messageId };
@@ -243,7 +286,7 @@ export async function runCampaignSend(
 
   const campaign = await db.campaign.findUnique({
     where: { id: campaignId, companyId },
-    include: { steps: { include: { template: true }, orderBy: { stepNumber: "asc" } } },
+    include: { steps: { include: { template: { include: { attachments: { include: { file: true } } } } }, orderBy: { stepNumber: "asc" } } },
   });
 
   if (!campaign) return { processed: 0, failed: 0, skipped: 0, message: "Campaign not found" };
@@ -295,12 +338,55 @@ export async function runCampaignSend(
     include: { lead: true },
   });
 
+  // Blacklist check: never contact addresses on the company's suppression list
+  // (unsubscribed or hard-bounced). Build a lookup for this batch.
+  const batchEmails = pendingLeads
+    .map((cl) => cl.lead.email)
+    .filter((e): e is string => !!e);
+  const suppressedRows = batchEmails.length
+    ? await db.suppressionList.findMany({
+        where: { companyId, email: { in: batchEmails } },
+        select: { email: true, reason: true },
+      })
+    : [];
+  const suppressedMap = new Map(
+    suppressedRows.map((s) => [s.email.toLowerCase(), s.reason])
+  );
+
   let processed = 0;
   let failed = 0;
   let skipped = 0;
   let rotationIdx = 0;
 
   for (const campaignLead of pendingLeads) {
+    // Skip & permanently mark any recipient on the suppression (blacklist).
+    const leadEmail = campaignLead.lead.email?.toLowerCase();
+    if (leadEmail && suppressedMap.has(leadEmail)) {
+      const reason = suppressedMap.get(leadEmail);
+      const leadStatus = reason === "BOUNCED" ? "BOUNCED" : "UNSUBSCRIBED";
+      await db.$transaction([
+        db.campaignLead.update({
+          where: { campaignId_leadId: { campaignId, leadId: campaignLead.leadId } },
+          data: { status: leadStatus },
+        }),
+        db.lead.update({
+          where: { id: campaignLead.leadId },
+          data: { status: leadStatus },
+        }),
+        db.campaignLog.create({
+          data: {
+            campaignId,
+            leadId: campaignLead.leadId,
+            action: "EMAIL_SKIPPED_SUPPRESSED",
+            status: "SKIPPED",
+            message: `Skipped ${campaignLead.lead.email} — on suppression list (${reason || "UNSUBSCRIBED"}).`,
+          },
+        }),
+      ]);
+      skipped++;
+      continue;
+    }
+
     const stepConfig = campaign.steps.find((s) => s.stepNumber === campaignLead.currentStepNumber);
 
     if (!stepConfig) {
@@ -330,6 +416,10 @@ export async function runCampaignSend(
         text,
         companyId,
         leadId: campaignLead.leadId,
+        includeUnsubscribe: stepConfig.template.includeUnsubscribe !== false,
+        attachments: (stepConfig.template as any).attachments
+          ?.map((a: any) => a.file ? { filename: a.file.name, path: a.file.path } : null)
+          .filter(Boolean),
       });
 
       const nextStep = campaign.steps.find((s) => s.stepNumber === campaignLead.currentStepNumber + 1);

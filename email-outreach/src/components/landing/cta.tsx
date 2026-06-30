@@ -3,49 +3,61 @@
 import { Container } from "@/components/layout/container";
 import { SlideUp } from "@/components/animations/slide-up";
 import { Button } from "@/components/ui/button";
-import { ShimmerButton } from "@/components/ui/shimmer-button";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 export function CtaSection() {
   return (
-    <section className="py-32 relative overflow-hidden bg-transparent z-10">
-      {/* Background Radial Glow Spotlight */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] opacity-10 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary via-accent to-purple-600 blur-[130px] rounded-full filter" />
-      </div>
+    <section className="py-16 relative overflow-hidden bg-zinc-950 border-t border-zinc-900 z-10">
+      {/* Grid Pattern Overlay */}
+      <div 
+        className="absolute inset-0 z-0 pointer-events-none opacity-40"
+        style={{
+          backgroundImage: "linear-gradient(to right, rgba(59, 130, 246, 0.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(59, 130, 246, 0.08) 1px, transparent 1px)",
+          backgroundSize: "44px 44px",
+        }}
+      />
+      
+      {/* Blue Centered Radial Glow behind text */}
+      <div 
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[360px] z-0 pointer-events-none opacity-70"
+        style={{
+          backgroundImage: "radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%)",
+        }}
+      />
 
-      <Container className="relative z-10 text-center">
+      <Container className="relative z-10 text-center flex flex-col items-center">
         <SlideUp>
-          <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-xs font-semibold rounded-full bg-zinc-100 border border-zinc-200/80 text-primary">
-            <Sparkles className="w-3 h-3 animate-pulse" />
-            Get Started Instantly
-          </div>
-          <h2 className="max-w-4xl mx-auto text-4xl md:text-6xl font-extrabold tracking-tight text-zinc-900 mb-6 leading-tight">
-            Start scaling your outreach today
+          {/* Main Title Heading */}
+          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white mb-6 leading-tight">
+            Ready to Simplify Your <br />
+            <span className="text-blue-500 font-extrabold">Outreach Process?</span>
           </h2>
-          <p className="max-w-2xl mx-auto text-base md:text-lg text-zinc-500 mb-10 leading-relaxed">
-            Join developer relations and growth engineering teams using PrimeInbox to land in developer inboxes, build relationships, and grow pipeline.
+          
+          {/* Descriptive Content Paragraph */}
+          <p className="max-w-2xl mx-auto text-xs sm:text-sm md:text-base text-zinc-400 mb-10 leading-relaxed font-normal">
+            Automate sequences, protect your domains, and deliver a seamless developer relations outreach experience with PrimeInbox. 
+            Let AI draft the copy while you focus on growing developer relationships.
           </p>
           
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto sm:max-w-none">
-            <ShimmerButton 
-              className="h-14 px-8 rounded-full text-base font-bold w-full sm:w-auto bg-zinc-900 hover:bg-black"
-              shimmerColor="#3B82F6"
-            >
-              Start Free Trial <ArrowRight className="ml-2 w-4 h-4" />
-            </ShimmerButton>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="h-14 px-8 rounded-full text-base font-semibold w-full sm:w-auto text-zinc-700 hover:text-zinc-950 border border-zinc-200/80 hover:bg-zinc-50 bg-white/40 backdrop-blur-sm transition-all"
-            >
-              Book a Demo
-            </Button>
+          {/* Action Call-to-Action Buttons */}
+          <div className="flex flex-row items-center justify-center gap-3 w-full px-4 sm:px-0">
+            <Link href="/signup">
+              <Button 
+                className="h-10 px-6 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white border-0 transition-all shadow-lg shadow-blue-600/25 whitespace-nowrap flex items-center justify-center"
+              >
+                Get started now <ArrowRight className="w-3.5 h-3.5 ml-2" />
+              </Button>
+            </Link>
+            
+            <Link href="/contact">
+              <Button 
+                className="h-10 px-6 rounded-lg text-xs font-semibold text-white/80 hover:text-white border border-white/20 hover:border-white/40 bg-zinc-900/40 hover:bg-zinc-900/60 transition-all whitespace-nowrap"
+              >
+                Talk to sales
+              </Button>
+            </Link>
           </div>
-          
-          <p className="mt-8 text-xs text-zinc-400 font-bold">
-            No credit card required • 14-day free trial • Cancel anytime
-          </p>
         </SlideUp>
       </Container>
     </section>

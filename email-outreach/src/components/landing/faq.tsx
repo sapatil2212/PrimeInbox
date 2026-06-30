@@ -34,9 +34,9 @@ const FAQS = [
 
 export function FaqSection() {
   return (
-    <section className="py-28 bg-transparent relative z-10">
+    <section className="py-16 bg-transparent relative z-10">
       <Container className="max-w-4xl">
-        <div className="text-center mb-20">
+        <div className="text-center mb-12">
           <FadeIn>
             <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 text-xs font-semibold rounded-full bg-zinc-100 border border-zinc-200/80 text-primary">
               Support Center
@@ -50,26 +50,25 @@ export function FaqSection() {
           </FadeIn>
         </div>
 
-        <FadeIn delay={0.2}>
-          <div className="bg-white border border-zinc-200/60 p-6 md:p-8 rounded-2xl shadow-sm">
-            <Accordion className="w-full space-y-2">
-              {FAQS.map((faq, i) => (
+        <div className="max-w-3xl mx-auto">
+          <Accordion className="w-full">
+            {FAQS.map((faq, i) => (
+              <FadeIn key={i} delay={0.1 + i * 0.1}>
                 <AccordionItem 
-                  key={i} 
                   value={`item-${i}`}
-                  className="border-b border-zinc-100 last:border-b-0 py-2"
+                  className={`border-b border-zinc-200 ${i === FAQS.length - 1 ? "border-b-0" : ""}`}
                 >
-                  <AccordionTrigger className="text-left text-sm md:text-base font-bold text-zinc-900 hover:text-primary transition-colors py-4">
-                    {faq.question}
+                  <AccordionTrigger className="text-left text-base md:text-lg font-bold text-zinc-900 hover:text-primary transition-colors py-6 hover:no-underline [&[data-state=open]]:text-primary group">
+                    <span className="group-hover:translate-x-2 transition-transform duration-300">{faq.question}</span>
                   </AccordionTrigger>
-                  <AccordionContent className="text-xs md:text-sm text-zinc-500 leading-relaxed font-semibold pb-4">
+                  <AccordionContent className="text-sm md:text-base text-zinc-500 leading-relaxed font-medium pb-6 pl-2">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
-        </FadeIn>
+              </FadeIn>
+            ))}
+          </Accordion>
+        </div>
       </Container>
     </section>
   );

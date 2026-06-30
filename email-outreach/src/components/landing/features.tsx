@@ -5,55 +5,55 @@ import { FadeIn } from "@/components/animations/fade-in";
 import { GlowCard } from "@/components/ui/glow-card";
 import { 
   Wand2, Repeat, Download, LayoutTemplate, 
-  BarChart, Layers, Code, Target 
+  BarChart, Layers, Code, Target, Webhook, Users
 } from "lucide-react";
 
 const FEATURES = [
   {
-    title: "AI Email Generator",
-    description: "Instantly draft highly personalized emails that get replies using our advanced AI models tailored for developer relations.",
+    title: "AI Copywriter & Sequencer",
+    description: "Draft context-aware 2-step sequences, subject lines, and call-to-actions automatically using Gemini prompts tuned for conversions.",
     icon: Wand2,
     gridClass: "md:col-span-3 lg:col-span-4",
     accent: "rgba(59, 130, 246, 0.06)"
   },
   {
-    title: "SMTP Rotation",
-    description: "Cycle through multiple sender accounts to maintain deliverability and protect domain reputation.",
+    title: "SMTP Rotation & DKIM",
+    description: "Cycle outbound volume across multiple sender accounts with custom daily/hourly limits, priority weights, and active DKIM keys.",
     icon: Repeat,
     gridClass: "md:col-span-3 lg:col-span-2",
     accent: "rgba(6, 182, 212, 0.06)"
   },
   {
-    title: "Intelligent Lead Import",
-    description: "Import your contacts via CSV or sync with CRM. Automap custom fields like github username or social links.",
+    title: "CSV Import & Mapping",
+    description: "Upload contacts via CSV with an interactive header mapper to link custom attributes, check duplicates, and filter suppressed leads.",
     icon: Download,
     gridClass: "md:col-span-3 lg:col-span-2",
     accent: "rgba(16, 185, 129, 0.06)"
   },
   {
-    title: "Visual Campaign Builder",
-    description: "Drag-and-drop wizard builder to map complex multi-step developer sequence paths without code.",
+    title: "Drag & Drop HTML Builder",
+    description: "Build custom templates visually using an advanced block editor, or modify layouts conversationally using the AI design copilot.",
     icon: LayoutTemplate,
     gridClass: "md:col-span-3 lg:col-span-2",
     accent: "rgba(245, 158, 11, 0.06)"
   },
   {
-    title: "Real-time Analytics",
-    description: "Track precise opens, link clicks, and reply sentiment to measure DevRel pipeline growth.",
+    title: "Interactive Analytics",
+    description: "Monitor outbound sends, open rates, links clicked, and bounces over time with dynamic Recharts line and area charts.",
     icon: BarChart,
     gridClass: "md:col-span-3 lg:col-span-2",
     accent: "rgba(99, 102, 241, 0.06)"
   },
   {
-    title: "White Label Engine",
-    description: "Run under custom subdomains, branded SMTP connections, and custom logo styling.",
-    icon: Layers,
+    title: "Collaborative Workspaces",
+    description: "Invite teammates, share connected SMTP sender pools, and collaborate on outbound campaigns from a single dashboard.",
+    icon: Users,
     gridClass: "md:col-span-3 lg:col-span-3",
-    accent: "rgba(236, 72, 153, 0.06)"
+    accent: "rgba(99, 102, 241, 0.06)"
   },
   {
-    title: "Tailored HTML Editor",
-    description: "Create HTML layouts directly or insert raw code snippets with full syntax highlight.",
+    title: "Sentiment Suppressions",
+    description: "Identify reply sentiments automatically, pause running sequences on detection, and manage global unsubscribes list.",
     icon: Code,
     gridClass: "md:col-span-3 lg:col-span-3",
     accent: "rgba(139, 92, 246, 0.06)"
@@ -62,9 +62,9 @@ const FEATURES = [
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="py-28 bg-transparent relative z-10">
+    <section id="features" className="py-16 bg-transparent relative z-10">
       <Container>
-        <div className="text-center max-w-3xl mx-auto mb-20">
+        <div className="text-center max-w-3xl mx-auto mb-12">
           <FadeIn>
             <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 text-xs font-semibold rounded-full bg-zinc-100 border border-zinc-200/80 text-primary">
               Core Capabilities
@@ -72,7 +72,7 @@ export function FeaturesSection() {
             <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5 text-zinc-900">
               Everything you need to scale your outreach
             </h2>
-            <p className="text-base md:text-lg text-zinc-500">
+            <p className="text-sm md:text-base text-zinc-500 font-normal">
               A comprehensive suite of tools built for developer relations teams to reach the inbox, 
               engage developers, and grow pipelines.
             </p>

@@ -16,6 +16,11 @@ export async function GET(
 
     const template = await db.emailTemplate.findUnique({
       where: { id, companyId: session.companyId },
+      include: {
+        attachments: {
+          include: { file: { select: { id: true, name: true, size: true, type: true, url: true } } },
+        },
+      },
     });
 
     if (!template) {
@@ -50,6 +55,7 @@ export async function PUT(
       variables,
       isDragDrop,
       dragDropData,
+      includeUnsubscribe,
     } = body;
 
     const existing = await db.emailTemplate.findUnique({
@@ -71,6 +77,7 @@ export async function PUT(
         variables: variables || undefined,
         isDragDrop: isDragDrop !== undefined ? isDragDrop : undefined,
         dragDropData: dragDropData || undefined,
+        includeUnsubscribe: includeUnsubscribe !== undefined ? includeUnsubscribe : undefined,
       },
     });
 

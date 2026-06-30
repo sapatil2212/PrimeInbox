@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { setSessionCookie } from "@/lib/session";
 
 const IST_OFFSET = 5.5 * 60 * 60 * 1000; // 5 hours 30 mins
 const getIstDate = (offsetMs = 0) => new Date(Date.now() + IST_OFFSET + offsetMs);
@@ -110,10 +111,52 @@ export async function POST(req: NextRequest) {
         },
       });
     });
-    
+
+    // Determine the workspace activation state. Free (Bronze) workspaces are
+    // ACTIVE immediately; paid workspaces remain PENDING_ACTIVATION until an
+    // admin marks them paid & activates.
+    const company = user.companyId
+      ? await db.company.findUnique({
+          where: { id: user.companyId },
+          select: { subscriptionStatus: true, subscriptionPlan: true },
+        })
+      : null;
+
+    const isActive = company?.subscriptionStatus === "ACTIVE";
+
+    // For an active (free) workspace, log the user in straight away so they can
+    // be sent directly to the dashboard.
+    if (isActive) {
+      await setSessionCookie({
+        userId: user.id,
+        companyId: user.companyId,
+        role: user.role,
+        email: user.email,
+        name: user.name,
+      });
+
+      await db.user.update({
+        where: { id: user.id },
+        data: { lastLogin: new Date() },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: "Email verified! Welcome to PrimeInbox.",
+        activated: true,
+        pendingActivation: false,
+        redirectTo: "/dashboard",
+        plan: company?.subscriptionPlan || null,
+      });
+    }
+
     return NextResponse.json({
       success: true,
-      message: "Email address verified successfully! You can now log in.",
+      message: "Your registration is completed! Your workspace will be activated soon.",
+      activated: false,
+      pendingActivation: true,
+      redirectTo: "/login",
+      plan: company?.subscriptionPlan || null,
     });
   } catch (error) {
     console.error("Email verification API error:", error);

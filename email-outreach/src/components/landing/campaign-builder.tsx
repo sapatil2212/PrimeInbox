@@ -26,9 +26,9 @@ export function CampaignBuilder() {
   }, []);
 
   return (
-    <section className="py-28 bg-transparent relative z-10">
+    <section className="py-16 bg-transparent relative z-10">
       <Container>
-        <div className="text-center max-w-3xl mx-auto mb-20">
+        <div className="text-center max-w-3xl mx-auto mb-12">
           <FadeIn>
             <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 text-xs font-semibold rounded-full bg-zinc-100 border border-zinc-200/80 text-primary">
               Outreach Pipelines
@@ -36,7 +36,7 @@ export function CampaignBuilder() {
             <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5 text-zinc-900">
               Launch campaigns in minutes
             </h2>
-            <p className="text-base md:text-lg text-zinc-500">
+            <p className="text-sm md:text-base text-zinc-500 font-normal">
               Our wizard pipeline makes it effortless to construct multi-step drip sequences. 
               No developer expertise required.
             </p>
@@ -47,16 +47,12 @@ export function CampaignBuilder() {
           <div className="relative max-w-5xl mx-auto px-4 md:px-0">
             
             {/* Glowing Pipeline Connector Line */}
-            <div className="absolute top-[48px] left-[10%] right-[10%] h-[2px] bg-zinc-200/50 -translate-y-1/2 hidden md:block z-0 overflow-hidden">
+            <div className="absolute top-8 left-[10%] right-[10%] h-[2px] bg-zinc-200/50 -translate-y-1/2 hidden md:block z-0">
               <motion.div
-                initial={{ left: "-100%" }}
-                animate={{ left: "100%" }}
-                transition={{
-                  duration: 2.5,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-                className="absolute top-0 bottom-0 w-1/3 bg-gradient-to-r from-transparent via-primary to-transparent"
+                initial={{ width: "0%" }}
+                animate={{ width: `${(activeStep / (STEPS.length - 1)) * 100}%` }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="absolute top-0 left-0 bottom-0 bg-primary"
               />
             </div>
             
@@ -75,7 +71,7 @@ export function CampaignBuilder() {
                     <div 
                       className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-5 transition-all duration-500 relative border ${
                         isActive 
-                          ? "bg-primary/10 border-primary shadow-md shadow-primary/10 scale-105" 
+                          ? "bg-white border-primary shadow-md shadow-primary/10 scale-105" 
                           : isCompleted 
                             ? "bg-white border-emerald-500/50 shadow-sm" 
                             : "bg-white border-zinc-200/60 shadow-sm group-hover:border-zinc-300"
@@ -101,7 +97,7 @@ export function CampaignBuilder() {
                     }`}>
                       {step.title}
                     </h4>
-                    <p className="text-[11px] text-zinc-500 px-2">
+                    <p className="text-[11px] text-zinc-500 px-2 leading-relaxed">
                       {step.description}
                     </p>
                   </div>

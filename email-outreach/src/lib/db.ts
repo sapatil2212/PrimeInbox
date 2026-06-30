@@ -25,6 +25,14 @@ const createPrismaClient = () => {
     password,
     database,
     connectionLimit: 10,
+    // Default mariadb connectTimeout is ~1000ms, which is too short to open a
+    // socket to a remote DB over a latent link (causes "failed to create
+    // socket" + pool-timeout cascades). Give the handshake and pool acquisition
+    // a realistic window.
+    connectTimeout: 30000,
+    acquireTimeout: 30000,
+    // Recycle idle connections so stale sockets to the remote host don't linger.
+    idleTimeout: 60,
   });
   
   return new PrismaClient({

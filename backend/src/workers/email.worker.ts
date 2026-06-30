@@ -104,7 +104,7 @@ export async function processEmailJob(data: EmailJobData): Promise<void> {
   if (campaign.trackingClicks) {
     htmlBody = rewriteLinksForTracking(htmlBody, eventId);
   }
-  if (campaign.trackingUnsub) {
+  if (campaign.trackingUnsub && step.template.includeUnsubscribe !== false) {
     htmlBody = injectUnsubscribeLink(htmlBody, lead.id, campaign.companyId);
   }
 

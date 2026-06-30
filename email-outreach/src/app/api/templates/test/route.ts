@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { to, subject, bodyHtml, smtpAccountId = null } = body;
+    const { to, subject, bodyHtml, smtpAccountId = null, includeUnsubscribe = true } = body;
 
     if (!to || !subject || !bodyHtml) {
       return NextResponse.json({ error: "Recipient email, subject, and email body are required." }, { status: 400 });
@@ -40,6 +40,20 @@ export async function POST(req: NextRequest) {
       const regex = new RegExp(`{{\\s*${key}\\s*}}`, "g");
       parsedSubject = parsedSubject.replace(regex, val);
       parsedBodyHtml = parsedBodyHtml.replace(regex, val);
+    }
+
+    // Append a mock unsubscribe footer when the template has it enabled,
+    // but only if the template HTML doesn't already contain one from the
+    // visual builder's footer block.
+    if (includeUnsubscribe && !/unsubscribe/i.test(parsedBodyHtml)) {
+      const unsubFooter = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#9ca3af;line-height:1.5;text-align:center;">
+If you'd prefer not to receive these emails, you can <a href="#" style="color:#9ca3af;text-decoration:underline;">unsubscribe here</a>.
+</div>`;
+      if (/<\/body>/i.test(parsedBodyHtml)) {
+        parsedBodyHtml = parsedBodyHtml.replace(/<\/body>/i, `${unsubFooter}</body>`);
+      } else {
+        parsedBodyHtml += unsubFooter;
+      }
     }
 
     // Find custom SMTP account if specified, or auto-fallback to first active account

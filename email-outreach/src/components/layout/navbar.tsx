@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, Mail } from "lucide-react";
+import { Menu, X, Mail, UserPlus, Wand2, Repeat, Download, LayoutTemplate, BarChart3, Layers, ChevronDown } from "lucide-react";
 import { Container } from "./container";
 import { Button } from "@/components/ui/button";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
@@ -13,10 +13,11 @@ import { AnnouncementBar } from "@/components/landing/announcement-bar";
 
 const NAV_LINKS = [
   { name: "Home", href: "/" },
+  { name: "Features", href: "/features" },
   { name: "Pricing", href: "/pricing" },
-  { name: "About", href: "/about" },
   { name: "Contact", href: "/contact" },
 ];
+
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -88,7 +89,8 @@ export function Navbar() {
                 className="h-9 px-5 rounded-full text-xs font-semibold bg-black hover:bg-zinc-900"
                 shimmerColor="#3B82F6"
               >
-                14 days free trial
+                <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+                Get Started
               </ShimmerButton>
             </Link>
           </div>
@@ -145,7 +147,8 @@ export function Navbar() {
                   shimmerColor="#3B82F6"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  14 days free trial
+                  <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+                  Get Started
                 </ShimmerButton>
               </Link>
             </div>

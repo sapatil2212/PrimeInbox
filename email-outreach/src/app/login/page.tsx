@@ -94,7 +94,7 @@ function LoginContent() {
           <p className="text-xs text-zinc-500 font-semibold mt-1">Welcome back! Please enter your details.</p>
         </div>
 
-        <GlowCard className="border border-zinc-200/50 shadow-none" glowColor="rgba(59, 130, 246, 0.05)">
+        <GlowCard className="border border-zinc-200/50 shadow-none" disableGlow={true}>
           <div className="p-8">
             <form className="flex flex-col gap-4 text-left" onSubmit={handleSubmit(onSubmit)}>
               {generalSuccess && (
@@ -117,7 +117,7 @@ function LoginContent() {
                     id="email" 
                     placeholder="name@company.com" 
                     {...register("email")}
-                    className="h-11 pl-10 pr-4 w-full rounded-xl border border-zinc-200/80 bg-white text-zinc-800 text-sm placeholder-zinc-400 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all font-semibold"
+                    className="h-9 pl-10 pr-4 w-full rounded-xl border border-zinc-200/80 bg-white text-zinc-800 text-[11px] placeholder-zinc-300 placeholder:font-normal focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all font-medium"
                   />
                 </div>
                 {errors.email && <p className="text-[11px] font-bold text-red-500 mt-0.5">{errors.email.message}</p>}
@@ -138,7 +138,7 @@ function LoginContent() {
                     id="password" 
                     placeholder="••••••••" 
                     {...register("password")}
-                    className="h-11 pl-10 pr-10 w-full rounded-xl border border-zinc-200/80 bg-white text-zinc-800 text-sm placeholder-zinc-400 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all font-semibold"
+                    className="h-9 pl-10 pr-10 w-full rounded-xl border border-zinc-200/80 bg-white text-zinc-800 text-[11px] placeholder-zinc-300 placeholder:font-normal focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all font-medium"
                   />
                   <button
                     type="button"
@@ -157,9 +157,9 @@ function LoginContent() {
                   type="checkbox" 
                   id="rememberMe" 
                   {...register("rememberMe")}
-                  className="h-4 w-4 rounded border-zinc-350 accent-indigo-650 cursor-pointer"
+                  className="h-3 w-3 rounded border-zinc-350 accent-indigo-650 cursor-pointer"
                 />
-                <label htmlFor="rememberMe" className="text-xs text-zinc-500 font-semibold cursor-pointer select-none">
+                <label htmlFor="rememberMe" className="text-[10px] text-zinc-500 font-semibold cursor-pointer select-none">
                   Remember Me
                 </label>
               </div>
@@ -167,7 +167,7 @@ function LoginContent() {
               <ShimmerButton 
                 type="submit"
                 disabled={isLoading}
-                className="h-11 w-full mt-2 rounded-xl text-sm font-bold bg-zinc-900 text-white hover:bg-black flex items-center justify-center gap-2"
+                className="h-9 w-full mt-2 rounded-xl text-xs font-bold bg-zinc-900 text-white hover:bg-black flex items-center justify-center gap-2"
                 shimmerColor="#3B82F6"
               >
                 {isLoading ? (

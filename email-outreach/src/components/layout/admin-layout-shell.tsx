@@ -21,6 +21,7 @@ import {
   ArrowLeft,
   Terminal,
   Calendar,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -77,6 +78,7 @@ export function AdminLayoutShell({ children, user }: AdminLayoutShellProps) {
   const navLinks = [
     { label: "Overview", href: "/admin", icon: BarChart3, exact: true },
     { label: "Tenants", href: "/admin/tenants", icon: Building },
+    { label: "Pending Activation", href: "/admin/pending-activation", icon: Clock },
     { label: "Users", href: "/admin/users", icon: Users },
     { label: "Demo Enquiry", href: "/admin/demo-enquiry", icon: Calendar },
     { label: "System Health", href: "/admin/health", icon: Activity },
@@ -87,6 +89,7 @@ export function AdminLayoutShell({ children, user }: AdminLayoutShellProps) {
 
   const quickActions = [
     { name: "View Tenants", desc: "Manage workspace tenants", href: "/admin/tenants" },
+    { name: "Pending Activation", desc: "Activate paid workspaces", href: "/admin/pending-activation" },
     { name: "Demo Enquiries", desc: "Inbound demo requests", href: "/admin/demo-enquiry" },
     { name: "System Health", desc: "Check system diagnostics", href: "/admin/health" },
     { name: "View Logs", desc: "Monitor system logs", href: "/admin/logs" },

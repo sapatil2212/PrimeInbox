@@ -15,6 +15,9 @@ export async function GET(req: NextRequest) {
         category: {
           select: { name: true },
         },
+        attachments: {
+          include: { file: { select: { id: true, name: true, size: true, type: true, url: true } } },
+        },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -43,6 +46,7 @@ export async function POST(req: NextRequest) {
       isDragDrop = false,
       dragDropData = {},
       variables = ["firstName", "lastName", "companyName", "email"],
+      includeUnsubscribe = true,
     } = body;
 
     if (!name || !subject || !bodyHtml) {
@@ -60,6 +64,7 @@ export async function POST(req: NextRequest) {
         isDragDrop,
         dragDropData,
         variables,
+        includeUnsubscribe,
       },
     });
 

@@ -44,15 +44,20 @@ const UPLOAD_PATH = process.env.MEDIA_UPLOAD_PATH || path.join(process.cwd(), "p
 const PUBLIC_URL = (process.env.MEDIA_PUBLIC_URL || "").replace(/\/+$/, "");
 const PUBLIC_FALLBACK_DIR = path.join(process.cwd(), "public", "uploads");
 
-// Only use an absolute public base (e.g. nginx serving /var/www/storage) in
-// production. In dev we always serve through the /api/files route handler so
-// runtime-uploaded files are reachable (Next.js does not serve files added to
-// public/ after start).
+// Absolute base for the app itself, used to build fully-qualified URLs. Image
+// URLs embedded in outbound emails MUST be absolute — email clients cannot
+// resolve relative paths like "/api/files/...".
+const APP_URL = (process.env.APP_URL || "http://localhost:3000").replace(/\/+$/, "");
+
+// Use the dedicated public base (e.g. nginx serving /var/www/storage) only when
+// it's an absolute URL AND we're in production. Otherwise we serve through the
+// /api/files route handler (Next.js does not serve files added to public/ after
+// start). Either way the resulting URL is made absolute via APP_URL.
 const isAbsolutePublic = /^https?:\/\//i.test(PUBLIC_URL);
 const useAbsolute = isAbsolutePublic && process.env.NODE_ENV === "production";
 
 function publicUrlFor(relPath: string): string {
-  return useAbsolute ? `${PUBLIC_URL}/${relPath}` : `/api/files/${relPath}`;
+  return useAbsolute ? `${PUBLIC_URL}/${relPath}` : `${APP_URL}/api/files/${relPath}`;
 }
 
 /**
@@ -113,7 +118,7 @@ export async function storeFile(params: {
     const absPath = path.join(fallbackDir, filename);
     await writeFile(absPath, buffer);
     return {
-      url: `/api/files/${relPath}`,
+      url: `${APP_URL}/api/files/${relPath}`,
       path: absPath,
       filename,
       size: file.size,

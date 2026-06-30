@@ -2,13 +2,25 @@
 
 import { Container } from "@/components/layout/container";
 import { FadeIn } from "@/components/animations/fade-in";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
 const PLANS = [
+  {
+    name: "Bronze",
+    price: "Free",
+    description: "Get started and test the waters with no commitment.",
+    features: [
+      "10 emails total",
+      "1 SMTP sender domain",
+      { text: "HTML Based Email Generator", included: false },
+      { text: "Basic Conversion Analytics", included: false },
+      { text: "Community Slack Support", included: false }
+    ]
+  },
   {
     name: "Silver",
     price: "₹499",
@@ -50,12 +62,12 @@ const PLANS = [
 
 export function PricingSection() {
   return (
-    <section id="pricing" className="py-28 bg-transparent relative z-10">
+    <section id="pricing" className="pt-16 pb-12 bg-transparent relative z-10">
       {/* Decorative background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-primary/5 rounded-full blur-[140px] pointer-events-none" />
 
       <Container>
-        <div className="text-center max-w-3xl mx-auto mb-20">
+        <div className="text-center max-w-3xl mx-auto mb-14">
           <FadeIn>
             <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 text-xs font-semibold rounded-full bg-zinc-100 border border-zinc-200/80 text-primary">
               Simple Billing
@@ -63,23 +75,23 @@ export function PricingSection() {
             <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5 text-zinc-900">
               Simple, transparent pricing
             </h2>
-            <p className="text-base md:text-lg text-zinc-500">
+            <p className="text-sm md:text-base text-zinc-500 font-normal">
               Choose the sending volume that fits your DevRel growth goals. No hidden fees.
             </p>
           </FadeIn>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto items-stretch">
           {PLANS.map((plan, i) => {
             const isPopular = plan.popular;
             
             return (
               <FadeIn key={plan.name} delay={i * 0.1} className="h-full">
                 <div 
-                  className={`relative flex flex-col h-full p-8 rounded-3xl border transition-all duration-300 ${
+                  className={`relative flex flex-col h-full p-6 rounded-2xl border transition-all duration-300 ${
                     isPopular 
-                      ? 'border-primary bg-white shadow-2xl shadow-primary/5 scale-[1.02] md:scale-[1.04]' 
-                      : 'border-zinc-200/60 bg-white/70 backdrop-blur-sm hover:border-zinc-300 shadow-sm'
+                      ? 'border-primary/40 bg-white scale-[1.02] md:scale-[1.04]' 
+                      : 'border-zinc-200/50 bg-white/70 backdrop-blur-sm hover:border-zinc-300'
                   }`}
                 >
                   {isPopular && (
@@ -93,31 +105,47 @@ export function PricingSection() {
                     </>
                   )}
                   
-                  <div className="mb-6">
-                    <h3 className="text-xl font-bold text-zinc-900 mb-2">{plan.name}</h3>
-                    <p className="text-xs text-zinc-500 leading-relaxed min-h-[40px]">{plan.description}</p>
+                  <div className="mb-2">
+                    <h3 className="text-lg font-bold text-zinc-900 mb-1">{plan.name}</h3>
+                    <p className="text-xs text-zinc-400 leading-relaxed min-h-[36px]">{plan.description}</p>
                   </div>
                   
-                  <div className="mb-8 flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold text-zinc-900">{plan.price}</span>
-                    <span className="text-zinc-400 text-xs font-semibold">/ month</span>
+                  <div className="mb-3 flex items-baseline gap-1">
+                    <span className="text-3xl font-extrabold text-zinc-900">{plan.price}</span>
+                    {plan.price !== "Free" && (
+                      <span className="text-zinc-400 text-xs font-semibold">/ month</span>
+                    )}
                   </div>
                   
-                  <div className="w-full h-px bg-zinc-150 mb-8" />
+                  <div className="w-full h-px bg-zinc-150 mb-4" />
                   
-                  <ul className="space-y-4 mb-8 flex-1">
-                    {plan.features.map((feature, j) => (
-                      <li key={j} className="flex items-start gap-3 text-xs text-zinc-650 font-semibold">
-                        <CheckCircle2 className={`w-4 h-4 shrink-0 mt-0.5 ${isPopular ? "text-primary" : "text-zinc-400"}`} />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
+                  <ul className="space-y-3 mb-6 flex-1">
+                    {plan.features.map((feature, j) => {
+                      const isObj = typeof feature === "object";
+                      const included = isObj ? feature.included : true;
+                      const text = isObj ? feature.text : feature;
+                      return (
+                        <li
+                          key={j}
+                          className={`flex items-start gap-3 text-xs font-semibold ${
+                            included ? "text-zinc-650" : "text-zinc-400"
+                          }`}
+                        >
+                          {included ? (
+                            <CheckCircle2 className={`w-4 h-4 shrink-0 mt-0.5 ${isPopular ? "text-primary" : "text-zinc-400"}`} />
+                          ) : (
+                            <XCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
+                          )}
+                          <span>{text}</span>
+                        </li>
+                      );
+                    })}
                   </ul>
                   
                   {isPopular ? (
                     <Link href={`/signup?plan=${plan.name.toUpperCase()}`} className="block">
                       <ShimmerButton 
-                        className="w-full h-12 rounded-xl text-xs font-bold bg-zinc-950 hover:bg-black"
+                        className="w-full h-9 rounded-lg text-xs font-bold bg-zinc-950 hover:bg-black"
                         shimmerColor="#3B82F6"
                       >
                         Get Started {plan.name}
@@ -126,7 +154,7 @@ export function PricingSection() {
                   ) : (
                     <Link href={`/signup?plan=${plan.name.toUpperCase()}`} className="block">
                       <Button 
-                        className="w-full h-12 rounded-xl text-xs font-bold text-zinc-600 hover:text-zinc-950 border border-zinc-200/80 hover:border-zinc-300 hover:bg-zinc-50 transition-all bg-white" 
+                        className="w-full h-9 rounded-lg text-xs font-bold text-zinc-600 hover:text-zinc-950 border border-zinc-200/80 hover:border-zinc-300 hover:bg-zinc-50 transition-all bg-white" 
                         variant="outline"
                       >
                         Get Started

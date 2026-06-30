@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     
     if (!user) {
       return NextResponse.json(
-        { error: "Invalid email or password" },
+        { error: "This email is not registered yet. Please sign up to create an account." },
         { status: 401 }
       );
     }

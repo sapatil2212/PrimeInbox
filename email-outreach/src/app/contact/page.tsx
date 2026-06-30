@@ -23,6 +23,10 @@ import {
   Phone,
   PhoneCall,
   Loader2,
+  Wand2,
+  Repeat,
+  LayoutTemplate,
+  BarChart,
 } from "lucide-react";
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -121,52 +125,105 @@ export default function ContactPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-5xl mx-auto items-stretch">
-            {/* Contact Info */}
-            <div className="lg:col-span-5 flex flex-col gap-6">
-              <GlowCard className="flex-1 border border-zinc-200/50" glowColor="rgba(59, 130, 246, 0.05)">
-                <div className="p-8 flex flex-col justify-between h-full">
-                  <div>
+            {/* Contact Info & Features */}
+            <div className="lg:col-span-5 order-2 lg:order-1">
+              <GlowCard className="border border-zinc-200/50 h-full" glowColor="rgba(59, 130, 246, 0.05)">
+                <div className="flex flex-col h-full divide-y divide-zinc-200">
+                  {/* Contact Information */}
+                  <div className="p-8">
                     <h3 className="text-xl font-bold mb-6 text-zinc-900">Contact Information</h3>
                     <div className="flex flex-col gap-6">
-                      <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-primary shrink-0">
-                          <Phone className="w-4 h-4" />
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-primary shrink-0">
+                          <Phone className="w-3.5 h-3.5" />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-zinc-400">Contact</p>
-                          <a href="tel:+919168081355" className="text-sm font-semibold text-zinc-800 hover:text-primary transition-colors">+91 9168 08 1355</a>
+                          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Contact</p>
+                          <a href="tel:+919168081355" className="text-xs font-semibold text-zinc-800 hover:text-primary transition-colors">+91 9168 08 1355</a>
                         </div>
                       </div>
 
-                      <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-lg bg-cyan-50 border border-cyan-100 flex items-center justify-center text-cyan-600 shrink-0">
-                          <Mail className="w-4 h-4" />
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-cyan-50 border border-cyan-100 flex items-center justify-center text-cyan-600 shrink-0">
+                          <Mail className="w-3.5 h-3.5" />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-zinc-400">Email</p>
-                          <a href="mailto:contact.primeinbox@gmail.com" className="text-sm font-semibold text-zinc-800 hover:text-primary transition-colors break-all">contact.primeinbox@gmail.com</a>
+                          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Email</p>
+                          <a href="mailto:contact.primeinbox@gmail.com" className="text-xs font-semibold text-zinc-800 hover:text-primary transition-colors break-all">contact.primeinbox@gmail.com</a>
                         </div>
                       </div>
 
-                      <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
-                          <Globe className="w-4 h-4" />
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
+                          <Globe className="w-3.5 h-3.5" />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-zinc-400">Location</p>
-                          <p className="text-sm font-semibold text-zinc-800">Pune, Maharashtra, India</p>
+                          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Location</p>
+                          <p className="text-xs font-semibold text-zinc-800">Pune, Maharashtra, India</p>
                         </div>
                       </div>
                     </div>
                   </div>
 
+                  {/* Platform Features */}
+                  <div className="p-8">
+                    <h3 className="text-xl font-bold mb-6 text-zinc-900">Platform Features</h3>
+                    <div className="flex flex-col gap-5">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-zinc-50 border border-zinc-200/60 flex items-center justify-center text-zinc-600 shrink-0">
+                          <Wand2 className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-zinc-800">AI Email Generator</h4>
+                          <p className="text-[11px] font-medium text-zinc-400 mt-0.5 leading-relaxed">
+                            Highly personalized developer-focused cold outreach copy at scale.
+                          </p>
+                        </div>
+                      </div>
 
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-zinc-50 border border-zinc-200/60 flex items-center justify-center text-zinc-600 shrink-0">
+                          <Repeat className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-zinc-800">SMTP Rotation</h4>
+                          <p className="text-[11px] font-medium text-zinc-400 mt-0.5 leading-relaxed">
+                            Cycle sending domains & accounts to maximize inbox deliverability.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-zinc-50 border border-zinc-200/60 flex items-center justify-center text-zinc-600 shrink-0">
+                          <LayoutTemplate className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-zinc-800">Visual Campaign Builder</h4>
+                          <p className="text-[11px] font-medium text-zinc-400 mt-0.5 leading-relaxed">
+                            Build complex multi-step user sequence paths visually.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-zinc-50 border border-zinc-200/60 flex items-center justify-center text-zinc-650 shrink-0">
+                          <BarChart className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-zinc-800">Real-time Analytics</h4>
+                          <p className="text-[11px] font-medium text-zinc-400 mt-0.5 leading-relaxed">
+                            Track opens, clicks, and reply sentiment in real time.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </GlowCard>
             </div>
 
             {/* Demo Booking Form */}
-            <div className="lg:col-span-7">
+            <div className="lg:col-span-7 order-1 lg:order-2">
               <GlowCard className="border border-zinc-200/50 h-full" glowColor="rgba(59, 130, 246, 0.05)">
                 <div className="p-8">
                   <h3 className="text-xl font-bold mb-1.5 text-zinc-900">Book a demo</h3>

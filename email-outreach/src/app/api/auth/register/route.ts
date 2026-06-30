@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import crypto from "crypto";
 import { sendVerificationEmail } from "@/lib/mail";
-import { TRIAL_DAYS } from "@/lib/plans";
+import { getPlan } from "@/lib/plans";
 
 const IST_OFFSET = 5.5 * 60 * 60 * 1000; // 5 hours 30 mins
 const getIstDate = (offsetMs = 0) => new Date(Date.now() + IST_OFFSET + offsetMs);
@@ -12,7 +12,7 @@ const getIstDate = (offsetMs = 0) => new Date(Date.now() + IST_OFFSET + offsetMs
 const registerSchema = z.object({
   companyName: z.string().min(2, "Company name must be at least 2 characters"),
   businessType: z.string().min(1, "Please select a business type"),
-  plan: z.enum(["SILVER", "GOLD", "PLATINUM"]).optional(),
+  plan: z.enum(["BRONZE", "SILVER", "GOLD", "PLATINUM"]).optional(),
   name: z.string().min(2, "Full name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   contactNo: z.string().min(6, "Contact number must be at least 6 characters"),
@@ -40,7 +40,11 @@ export async function POST(req: NextRequest) {
     
     const { companyName, businessType, plan, name, email, contactNo, whatsappNo, password } = result.data;
     const selectedPlan = plan || "SILVER";
-    const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
+    // Trials removed. Free (Bronze) plans are activated immediately; paid plans
+    // start as PENDING_ACTIVATION until a super admin marks them paid & activates.
+    const planMeta = getPlan(selectedPlan);
+    const isFreePlan = !!planMeta?.free;
+    const initialStatus = isFreePlan ? "ACTIVE" : "PENDING_ACTIVATION";
     
     // Check if user already exists
     let existingUser = await db.user.findUnique({
@@ -104,8 +108,8 @@ export async function POST(req: NextRequest) {
               name: companyName,
               businessType,
               subscriptionPlan: selectedPlan,
-              subscriptionStatus: "TRIALING",
-              trialEndsAt,
+              subscriptionStatus: initialStatus,
+              trialEndsAt: null,
             },
           });
         }
@@ -194,8 +198,8 @@ export async function POST(req: NextRequest) {
           workspaceSlug,
           businessType,
           subscriptionPlan: selectedPlan,
-          subscriptionStatus: "TRIALING",
-          trialEndsAt,
+          subscriptionStatus: initialStatus,
+          trialEndsAt: null,
         },
       });
       
@@ -236,7 +240,7 @@ export async function POST(req: NextRequest) {
       });
       
       return { user, token: verificationToken };
-    });
+    }, { timeout: 20000, maxWait: 10000 });
     
     // Send email (async, don't await to block client response)
     sendVerificationEmail(user.email, user.name, token.token).catch((err) => {

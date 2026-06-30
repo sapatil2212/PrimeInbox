@@ -1,7 +1,12 @@
+export interface PlanFeature {
+  text: string;
+  included: boolean;
+}
+
 export interface Plan {
-  id: "SILVER" | "GOLD" | "PLATINUM";
+  id: "BRONZE" | "SILVER" | "GOLD" | "PLATINUM";
   name: string;
-  /** Monthly price in INR (rupees). */
+  /** Monthly price in INR (rupees). 0 means a free plan. */
   price: number;
   /** Amount in paise for Razorpay (price * 100). */
   amountPaise: number;
@@ -13,11 +18,32 @@ export interface Plan {
   smtpLimit: number;
   /** Whether the drag-and-drop visual template builder is available. */
   visualBuilder: boolean;
-  features: string[];
+  /** Marks a free, non-payable tier (skips the payment gateway). */
+  free?: boolean;
+  features: (string | PlanFeature)[];
   popular?: boolean;
 }
 
 export const PLANS: Plan[] = [
+  {
+    id: "BRONZE",
+    name: "Bronze",
+    price: 0,
+    amountPaise: 0,
+    emails: "10 emails total",
+    smtp: "1 SMTP sender domain",
+    emailsPerMonth: 10,
+    smtpLimit: 1,
+    visualBuilder: false,
+    free: true,
+    features: [
+      "10 emails total",
+      "1 SMTP sender domain",
+      { text: "HTML Based Email Generator", included: false },
+      { text: "Basic Conversion Analytics", included: false },
+      { text: "Community Slack Support", included: false },
+    ],
+  },
   {
     id: "SILVER",
     name: "Silver",

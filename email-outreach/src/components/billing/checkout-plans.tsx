@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Loader2, Sparkles } from "lucide-react";
+import { Check, X, Loader2, Sparkles } from "lucide-react";
 import { toast } from "@/components/ui/feedback";
 import { cn } from "@/lib/utils";
 import { PLANS } from "@/lib/plans";
@@ -100,7 +100,7 @@ export function CheckoutPlans({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
       {PLANS.map((plan) => {
         const isEnrolled = currentPlan === plan.id;
         const isActivePaid = isEnrolled && !!isPaid;
@@ -128,41 +128,68 @@ export function CheckoutPlans({
             ) : null}
             <h3 className="text-lg font-black text-zinc-900">{plan.name}</h3>
             <div className="mt-2 flex items-baseline gap-1">
-              <span className="text-3xl font-black text-zinc-900">₹{plan.price}</span>
-              <span className="text-xs text-zinc-400 font-semibold">/mo</span>
+              {plan.free ? (
+                <span className="text-3xl font-black text-zinc-900">Free</span>
+              ) : (
+                <>
+                  <span className="text-3xl font-black text-zinc-900">₹{plan.price}</span>
+                  <span className="text-xs text-zinc-400 font-semibold">/mo</span>
+                </>
+              )}
             </div>
             <ul className="mt-5 space-y-2.5 flex-1">
-              {plan.features.map((f, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs text-zinc-600 font-semibold">
-                  <Check className={cn("w-4 h-4 shrink-0 mt-0.5", isEnrolled ? "text-emerald-600" : plan.popular ? "text-indigo-600" : "text-zinc-400")} />
-                  <span>{f}</span>
-                </li>
-              ))}
+              {plan.features.map((f, i) => {
+                const isObj = typeof f === "object";
+                const included = isObj ? f.included : true;
+                const text = isObj ? f.text : f;
+                return (
+                  <li
+                    key={i}
+                    className={cn(
+                      "flex items-start gap-2 text-xs font-semibold",
+                      included ? "text-zinc-600" : "text-zinc-400"
+                    )}
+                  >
+                    {included ? (
+                      <Check className={cn("w-4 h-4 shrink-0 mt-0.5", isEnrolled ? "text-emerald-600" : plan.popular ? "text-indigo-600" : "text-zinc-400")} />
+                    ) : (
+                      <X className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
+                    )}
+                    <span>{text}</span>
+                  </li>
+                );
+              })}
             </ul>
-            <button
-              disabled={isActivePaid || busy}
-              onClick={() => handleSubscribe(plan.id)}
-              className={cn(
-                "mt-6 h-11 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 disabled:cursor-default",
-                isActivePaid
-                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                  : isEnrolled
-                  ? "bg-emerald-600 hover:bg-emerald-500 text-white"
-                  : plan.popular
-                  ? "bg-indigo-600 hover:bg-indigo-500 text-white"
-                  : "bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-700"
-              )}
-            >
-              {busy ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : isActivePaid ? (
-                "Current Plan"
-              ) : isEnrolled ? (
-                `Activate — ₹${plan.price}/mo`
-              ) : (
-                `Subscribe — ₹${plan.price}/mo`
-              )}
-            </button>
+            {plan.free ? (
+              <div className="mt-6 h-11 rounded-xl text-xs font-bold flex items-center justify-center bg-zinc-50 border border-zinc-200 text-zinc-500">
+                {isEnrolled ? "Current Plan" : "Free Plan"}
+              </div>
+            ) : (
+              <button
+                disabled={isActivePaid || busy}
+                onClick={() => handleSubscribe(plan.id)}
+                className={cn(
+                  "mt-6 h-11 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 disabled:cursor-default",
+                  isActivePaid
+                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    : isEnrolled
+                    ? "bg-emerald-600 hover:bg-emerald-500 text-white"
+                    : plan.popular
+                    ? "bg-indigo-600 hover:bg-indigo-500 text-white"
+                    : "bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-700"
+                )}
+              >
+                {busy ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : isActivePaid ? (
+                  "Current Plan"
+                ) : isEnrolled ? (
+                  `Activate — ₹${plan.price}/mo`
+                ) : (
+                  `Subscribe — ₹${plan.price}/mo`
+                )}
+              </button>
+            )}
           </div>
         );
       })}

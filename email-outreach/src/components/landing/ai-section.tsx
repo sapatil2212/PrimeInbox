@@ -86,7 +86,7 @@ export function AISection() {
   }, [activeIdx]);
 
   return (
-    <section className="py-28 bg-transparent text-zinc-900 relative overflow-hidden z-10">
+    <section className="py-16 bg-transparent text-zinc-900 relative overflow-hidden z-10">
       {/* Decorative Radial Grid Mask */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[130px] pointer-events-none" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[90px] pointer-events-none" />
@@ -95,18 +95,18 @@ export function AISection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
             <FadeIn>
-              <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-xs font-semibold rounded-full bg-zinc-100 border border-zinc-200/85 text-primary">
+              <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 text-xs font-semibold rounded-full bg-zinc-100 border border-zinc-200/85 text-primary">
                 <Sparkles className="w-3.5 h-3.5 animate-pulse" />
                 AI Assistant Engine
               </div>
-              <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6 text-zinc-900">
+              <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 text-zinc-900">
                 Write perfect cold emails in <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-primary">seconds</span>
               </h2>
-              <p className="text-base md:text-lg text-zinc-500 mb-8 leading-relaxed">
+              <p className="text-sm md:text-base text-zinc-500 mb-5 leading-relaxed font-normal">
                 Say goodbye to writer's block. Provide a simple prompt, and our AI will generate highly personalized, conversion-optimized email sequences that sound exactly like you.
               </p>
               
-              <ul className="space-y-4 mb-8">
+              <ul className="space-y-3 mb-6">
                 {[
                   "Subject line optimization & A/B variants",
                   "Personalized icebreakers via social enrichment",
@@ -135,7 +135,7 @@ export function AISection() {
 
           {/* Interactive AI Screen Simulator */}
           <SlideUp yOffset={40} className="relative">
-            <div className="rounded-2xl border border-zinc-200/80 bg-white/80 backdrop-blur-xl p-6 shadow-xl relative overflow-hidden">
+            <div className="rounded-2xl border border-zinc-200/40 bg-white/80 backdrop-blur-xl p-6 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
               
               {/* Card Header Controls */}

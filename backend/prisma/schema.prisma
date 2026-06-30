@@ -348,6 +348,7 @@ model EmailTemplate {
   company        Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   category       TemplateCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   campaignSteps  CampaignStep[]
+  attachments    Attachment[]
 }
 
 // ==========================================
@@ -708,8 +709,9 @@ model Attachment {
   fileId     String
   templateId String?
   stepId     String?
-  file       File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
+  file       File            @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  template   EmailTemplate?  @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  createdAt  DateTime        @default(now())
 }
 
 // ==========================================

@@ -80,9 +80,9 @@ export function SearchableSelect({
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className={`h-10 w-full rounded-xl border border-zinc-200/80 bg-white pr-10 text-left text-xs text-zinc-800 transition-all font-semibold focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 flex items-center justify-between cursor-pointer ${
+          className={`h-9 w-full rounded-xl border border-zinc-200/80 bg-white pr-10 text-left text-[11px] text-zinc-800 transition-all font-medium focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 flex items-center justify-between cursor-pointer ${
             icon ? "pl-10" : "pl-4"
-          } ${!value ? "text-zinc-400 font-medium" : "text-zinc-800"}`}
+          } ${!value ? "text-zinc-300 font-normal" : "text-zinc-800"}`}
         >
           <span className="truncate">{value || placeholder}</span>
           <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
@@ -99,7 +99,7 @@ export function SearchableSelect({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={searchPlaceholder}
-                className="w-full h-8 pl-8 pr-3 rounded-lg border border-zinc-200/70 bg-white text-zinc-800 text-xs font-semibold focus:outline-none focus:border-blue-500/40 focus:ring-1 focus:ring-blue-500/20 transition-all"
+                className="w-full h-8 pl-8 pr-3 rounded-lg border border-zinc-200/70 bg-white text-zinc-800 text-[11px] font-medium placeholder-zinc-300 placeholder:font-normal focus:outline-none focus:border-blue-500/40 focus:ring-1 focus:ring-blue-500/20 transition-all"
               />
             </div>
 

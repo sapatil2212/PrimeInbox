@@ -52,6 +52,7 @@ import {
   LayoutTemplate,
   GripVertical,
   Palette,
+  MailX,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { renderDragDropToHtml } from "@/lib/builder-renderer";
@@ -187,6 +188,15 @@ const defaultDragDropData: DragDropData = {
                   padding: "12px 24px"
                 }
               }
+            },
+            {
+              id: "footer-1",
+              type: "footer",
+              content: {
+                text: "© 2026 PrimeInbox Inc. All rights reserved.",
+                unsubText: "If you'd prefer not to receive these emails, you can unsubscribe below.",
+                align: "center"
+              }
             }
           ]
         }
@@ -273,6 +283,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
   const [templateSubject, setTemplateSubject] = useState("Outreach Email Subject");
   const [templateCategoryId, setTemplateCategoryId] = useState("");
   const [categories, setCategories] = useState<any[]>([]);
+  const [includeUnsubscribe, setIncludeUnsubscribe] = useState(true);
   const [dragDropData, setDragDropData] = useState<DragDropData>(defaultDragDropData);
 
   // Stacks for Undo / Redo
@@ -437,6 +448,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
       setTemplateName(template.name);
       setTemplateSubject(template.subject);
       setTemplateCategoryId(template.categoryId || "");
+      setIncludeUnsubscribe(template.includeUnsubscribe !== false);
       if (template.isDragDrop && template.dragDropData) {
         let parsed = template.dragDropData;
         if (typeof parsed === "string") parsed = JSON.parse(parsed);
@@ -496,6 +508,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
           isDragDrop: true,
           dragDropData: dragDropData,
           bodyHtml: compiledHtml,
+          includeUnsubscribe,
         }),
       });
 
@@ -1885,7 +1898,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
         {!previewMode && (
           <div className="flex shrink-0 h-full border-r border-zinc-200 bg-white">
             {/* Canva-Style Vertical Strip Navigation */}
-            <div className="w-16 bg-zinc-900 flex flex-col items-center py-4 gap-4 text-white shrink-0 select-none">
+            <div className="w-20 bg-zinc-100 flex flex-col items-center py-4 gap-4 text-zinc-700 shrink-0 select-none border-r border-zinc-200">
               {[
                 { tab: "templates", label: "Templates", icon: <LayoutTemplate className="w-5 h-5" /> },
                 { tab: "blocks", label: "Elements", icon: <Plus className="w-5 h-5" /> },
@@ -1899,10 +1912,10 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                     key={item.tab}
                     onClick={() => setLeftSidebarTab(item.tab as any)}
                     className={cn(
-                      "w-12 h-12 rounded-xl flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-150 border-0 bg-transparent text-[9px] font-bold outline-none",
+                      "w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-150 border-0 bg-transparent text-[8px] font-bold outline-none",
                       isActive
-                        ? "bg-zinc-800 text-indigo-400"
-                        : "text-zinc-400 hover:text-zinc-250 hover:bg-zinc-800/40"
+                        ? "bg-white text-indigo-600 shadow-sm border border-zinc-200"
+                        : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200/60"
                     )}
                   >
                     {item.icon}
@@ -1913,7 +1926,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
             </div>
 
             {/* Tab Panel Details */}
-            <aside className="w-60 bg-white flex flex-col h-full overflow-hidden select-none border-0">
+            <aside className="w-72 bg-white flex flex-col h-full overflow-hidden select-none border-0">
               <div className="h-12 border-b border-zinc-200 flex items-center px-4 shrink-0 justify-between bg-zinc-50/50">
                 <span className="text-[11px] font-bold text-zinc-700 uppercase tracking-wider">
                   {leftSidebarTab === "templates" && "Layout Presets"}
@@ -2382,6 +2395,45 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                           </button>
                         ))}
                       </div>
+                    </div>
+
+                    {/* Unsubscribe Footer Toggle */}
+                    <div className="space-y-2 pt-3 border-t border-zinc-150">
+                      <h4 className="text-[10px] font-bold text-zinc-450 uppercase tracking-wider">Email Footer</h4>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIncludeUnsubscribe(!includeUnsubscribe);
+                          setHasUnsavedChanges(true);
+                        }}
+                        className={cn(
+                          "w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border transition-all cursor-pointer",
+                          includeUnsubscribe
+                            ? "border-emerald-200 bg-emerald-50/60 hover:bg-emerald-50"
+                            : "border-zinc-200 bg-zinc-50 hover:bg-zinc-100"
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <MailX className={cn("w-3.5 h-3.5", includeUnsubscribe ? "text-emerald-600" : "text-zinc-400")} />
+                          <span className={cn("text-[11px] font-semibold", includeUnsubscribe ? "text-emerald-700" : "text-zinc-500")}>
+                            Unsubscribe Button
+                          </span>
+                        </div>
+                        <div className={cn(
+                          "relative w-8 h-[18px] rounded-full transition-colors",
+                          includeUnsubscribe ? "bg-emerald-500" : "bg-zinc-300"
+                        )}>
+                          <div className={cn(
+                            "absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white shadow-sm transition-all",
+                            includeUnsubscribe ? "left-[16px]" : "left-[2px]"
+                          )} />
+                        </div>
+                      </button>
+                      <p className="text-[9px] text-zinc-400 font-medium px-1">
+                        {includeUnsubscribe
+                          ? "An unsubscribe link will be added to the email footer for each recipient."
+                          : "No unsubscribe link will be added to this template."}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -4214,6 +4266,61 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                             ) : (
                               <p className="text-[10px] text-zinc-400 font-semibold italic">No assets uploaded.</p>
                             )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* FOOTER BLOCK EDITING */}
+                      {block.type === "footer" && (
+                        <div className="space-y-3">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Footer Text</label>
+                            <textarea
+                              value={block.content.text || ""}
+                              onChange={(e) => {
+                                updateBlockContent(sectionId, colId, blockId, {
+                                  ...block.content,
+                                  text: e.target.value,
+                                });
+                              }}
+                              placeholder="© 2026 Your Company. All rights reserved."
+                              className="w-full p-2.5 rounded-lg bg-zinc-50 border border-zinc-200 text-xs text-zinc-700 font-semibold focus:outline-none focus:bg-white focus:border-indigo-300 transition-colors"
+                              rows={2}
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Unsubscribe Message</label>
+                            <textarea
+                              value={block.content.unsubText || ""}
+                              onChange={(e) => {
+                                updateBlockContent(sectionId, colId, blockId, {
+                                  ...block.content,
+                                  unsubText: e.target.value,
+                                });
+                              }}
+                              placeholder="If you don't wish to receive these emails, you can unsubscribe below."
+                              className="w-full p-2.5 rounded-lg bg-zinc-50 border border-zinc-200 text-xs text-zinc-700 font-semibold focus:outline-none focus:bg-white focus:border-indigo-300 transition-colors"
+                              rows={2}
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Alignment</label>
+                            <select
+                              value={block.content.align || "center"}
+                              onChange={(e) => {
+                                updateBlockContent(sectionId, colId, blockId, {
+                                  ...block.content,
+                                  align: e.target.value,
+                                });
+                              }}
+                              className="w-full h-8 px-2 rounded-lg bg-zinc-50 border border-zinc-200 text-xs focus:outline-none"
+                            >
+                              <option value="left">Left</option>
+                              <option value="center">Center</option>
+                              <option value="right">Right</option>
+                            </select>
                           </div>
                         </div>
                       )}

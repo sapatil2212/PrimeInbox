@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { DashboardLayoutShell } from "@/components/layout/dashboard-layout-shell";
 import { getTrialState } from "@/lib/access";
 import { TrialEnded } from "@/components/billing/trial-ended";
+import { WorkspacePending } from "@/components/billing/workspace-pending";
+import { getPlan } from "@/lib/plans";
 
 export default async function DashboardLayout({
  children,
@@ -75,6 +77,15 @@ export default async function DashboardLayout({
  });
 
  if (trial.blocked && user.role !== "SUPER_ADMIN") {
+ // Paid workspaces awaiting manual admin activation see a dedicated pending screen.
+ if (trial.pendingActivation) {
+ return (
+ <WorkspacePending
+ planName={getPlan(company.subscriptionPlan)?.name || company.subscriptionPlan}
+ email={user.email}
+ />
+ );
+ }
  return (
  <TrialEnded
  currentPlan={company.subscriptionPlan}
