@@ -77,7 +77,12 @@ function logEmailFallback(to: string, subject: string, text: string) {
 
 // ─── Shared layout helpers ────────────────────────────────────────────────────
 
-const logoUrl = `${appUrl}/logo/primeinbox-logo.png`;
+// For email images, never use localhost — email clients can't resolve it.
+// Fall back to the production domain if APP_URL points to localhost.
+const emailBaseUrl = /localhost|127\.0\.0\.1/i.test(appUrl)
+  ? "https://primeinbox.online"
+  : appUrl;
+const logoUrl = `${emailBaseUrl}/logo/primeinbox-logo.png`;
 
 function emailWrapper(bodyContent: string): string {
   return `<!DOCTYPE html>
