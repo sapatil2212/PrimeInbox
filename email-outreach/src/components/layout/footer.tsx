@@ -66,7 +66,7 @@ export function Footer() {
         </div>
 
         <div className="pt-8 border-t border-zinc-200/60 text-center text-xs font-normal text-zinc-400">
-          <p>© {new Date().getFullYear()} PrimeInbox. All rights reserved. | A product of Brightwave Digital Products</p>
+          <p>Copyright © 2026 PrimeInbox All rights reserved. | A product of Brightwave Digital Products</p>
         </div>
       </Container>
     </footer>
