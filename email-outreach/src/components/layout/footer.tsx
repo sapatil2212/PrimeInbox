@@ -32,8 +32,13 @@ export function Footer() {
             <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-800 mb-4">Company</h4>
             <ul className="space-y-3 text-xs font-bold text-zinc-500">
               <li><Link href="/privacy" className="hover:text-zinc-900 transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/terms" className="hover:text-zinc-900 transition-colors">Terms of Service</Link></li>
+              <li><Link href="/terms" className="hover:text-zinc-900 transition-colors">Terms & Conditions</Link></li>
+              <li><Link href="/refund-policy" className="hover:text-zinc-900 transition-colors">Refund & Cancellation Policy</Link></li>
+              <li><Link href="/shipping-policy" className="hover:text-zinc-900 transition-colors">Shipping & Delivery Policy</Link></li>
+              <li><Link href="/contact" className="hover:text-zinc-900 transition-colors">Contact Us</Link></li>
+              <li><Link href="/about" className="hover:text-zinc-900 transition-colors">About Us</Link></li>
               <li><Link href="/cookie-policy" className="hover:text-zinc-900 transition-colors">Cookie Policy</Link></li>
+              <li><Link href="/security-policy" className="hover:text-zinc-900 transition-colors">Security Policy</Link></li>
             </ul>
           </div>
 

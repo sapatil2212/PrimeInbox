@@ -49,7 +49,7 @@ const signupSchema = z.object({
     .regex(hasSpecial, "Must contain at least one special character"),
   confirmPassword: z.string().min(1, "Please confirm your password"),
   acceptTerms: z.literal(true, {
-    message: "You must accept the Terms of Service and Privacy Policy",
+    message: "You must accept the Terms & Conditions and Privacy Policy",
   }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
@@ -578,7 +578,7 @@ export default function SignupPage() {
                   />
                   <span className="text-[11px] leading-tight">
                     I agree to the{" "}
-                    <Link href="/terms" className="text-primary font-bold hover:underline">Terms of Service</Link>
+                    <Link href="/terms" className="text-primary font-bold hover:underline">Terms & Conditions</Link>
                     {" "}and{" "}
                     <Link href="/privacy" className="text-primary font-bold hover:underline">Privacy Policy</Link>.
                   </span>
