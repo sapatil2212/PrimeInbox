@@ -7,11 +7,11 @@ import { Users, FileText, Send, Calendar, Play, Check } from "lucide-react";
 import { motion } from "framer-motion";
 
 const STEPS = [
-  { icon: Users, title: "Import Leads", description: "CSV or GitHub webhook Sync" },
+  { icon: Users, title: "Import Contacts", description: "CSV, Excel, PDF or Word" },
   { icon: FileText, title: "Select Template", description: "AI generated or manual HTML" },
-  { icon: Send, title: "Choose SMTP", description: "Configure auto-rotation" },
-  { icon: Calendar, title: "Schedule Sequence", description: "Target prospect timezones" },
-  { icon: Play, title: "Launch outreach", description: "Watch leads roll in" },
+  { icon: Send, title: "Choose Sender", description: "Single or multiple accounts" },
+  { icon: Calendar, title: "Schedule Sequence", description: "Set delays and send times" },
+  { icon: Play, title: "Launch Campaign", description: "Track sends in real time" },
 ];
 
 export function CampaignBuilder() {
@@ -31,7 +31,7 @@ export function CampaignBuilder() {
         <div className="text-center max-w-3xl mx-auto mb-12">
           <FadeIn>
             <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 text-xs font-semibold rounded-full bg-zinc-100 border border-zinc-200/80 text-primary">
-              Outreach Pipelines
+              Campaign Pipelines
             </div>
             <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5 text-zinc-900">
               Launch campaigns in minutes

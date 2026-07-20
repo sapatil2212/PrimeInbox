@@ -96,9 +96,9 @@ export function SmtpRotation() {
                 {/* SMTP Nodes (Left side) */}
                 <div className="col-span-7 space-y-4">
                   {[
-                    { id: 1, name: "dev-sender.co", color: "text-blue-600", bg: "bg-blue-500/10", border: "border-blue-500/20" },
-                    { id: 2, name: "outreach-node.app", color: "text-cyan-600", bg: "bg-cyan-500/10", border: "border-cyan-500/20" },
-                    { id: 3, name: "ops-mail.dev", color: "text-emerald-600", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+                    { id: 1, name: "sender-one.co", color: "text-blue-600", bg: "bg-blue-500/10", border: "border-blue-500/20" },
+                    { id: 2, name: "sender-two.app", color: "text-cyan-600", bg: "bg-cyan-500/10", border: "border-cyan-500/20" },
+                    { id: 3, name: "sender-three.dev", color: "text-emerald-600", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
                   ].map((node) => (
                     <motion.div
                       key={node.id}
@@ -133,7 +133,7 @@ export function SmtpRotation() {
                     <p className="text-[10px] font-bold text-zinc-900">Inboxes</p>
                     <p className="text-[9px] text-zinc-500 font-semibold mt-0.5">Primary Delivery</p>
                     <div className="absolute -top-1 -right-1 bg-emerald-100 text-emerald-600 text-[8px] font-bold border border-emerald-500/20 px-1.5 py-0.5 rounded-full">
-                      99.9%
+                      Live
                     </div>
                   </motion.div>
                 </div>
@@ -145,26 +145,26 @@ export function SmtpRotation() {
           <div className="order-1 lg:order-2">
             <FadeIn>
               <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 text-xs font-semibold rounded-full bg-zinc-100 border border-zinc-200/80 text-primary">
-                Smart Routing Technology
+                Multi-Account Sending
               </div>
               <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6 text-zinc-900">
-                Never land in spam again
+                Built for reliable inbox delivery
               </h2>
               <p className="text-xs sm:text-sm text-zinc-500 mb-6 leading-relaxed font-normal">
-                Our intelligent SMTP rotation engine automatically distributes your sending volume across multiple domains and custom mailboxes.
+                Connect multiple sending accounts and let PrimeInbox distribute your campaign volume across them, so no single account carries all the load.
               </p>
               <p className="text-xs sm:text-sm text-zinc-500 mb-8 leading-relaxed font-normal">
-                By monitoring reputation in real-time, the platform instantly pauses mailboxes that show signs of rate-limiting, ensuring your sequences consistently hit the primary tab.
+                Set custom daily and hourly limits per account and add randomized delays between sends to help protect your sender reputation and deliverability.
               </p>
               
               <div className="grid grid-cols-2 gap-6 pt-4 border-t border-zinc-200/80">
                 <div>
-                  <div className="text-3xl font-extrabold text-zinc-900 mb-1">99.9%</div>
-                  <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Average Deliverability</div>
+                  <div className="text-3xl font-extrabold text-zinc-900 mb-1">Multiple</div>
+                  <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Connected Sender Accounts</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-extrabold text-zinc-900 mb-1">Zero</div>
-                  <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Domain Blacklists</div>
+                  <div className="text-3xl font-extrabold text-zinc-900 mb-1">Custom</div>
+                  <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Per-Account Send Limits</div>
                 </div>
               </div>
             </FadeIn>

@@ -25,7 +25,7 @@ export function AnnouncementBar({ onClose }: AnnouncementBarProps) {
           <Sparkles className="h-4 w-4 text-primary animate-pulse" />
           <p className="text-xs font-semibold text-zinc-300">
             <span className="text-white">New AI Email Generator Released</span>
-            <span className="hidden md:inline"> &mdash; Construct high-converting developer sequence templates in seconds.</span>
+            <span className="hidden md:inline"> &mdash; Draft personalized email sequence templates in seconds.</span>
           </p>
           <a href="#features" className="text-xs font-bold text-primary underline underline-offset-2 hover:text-primary-foreground/90 transition-colors ml-1">
             Learn more

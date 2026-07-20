@@ -178,7 +178,7 @@ export default function ReportsPage() {
       .map((c) => ({
         name: c.name.length > 14 ? c.name.slice(0, 13) + "…" : c.name,
         openRate: c.openRate,
-        replyRate: c.replyRate,
+        clickRate: c.clickRate,
       }));
   }, [data]);
 
@@ -248,12 +248,12 @@ export default function ReportsPage() {
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard label="Emails Sent" value={summary.sent.toLocaleString()} delta={deltas.sent} icon={<Send className="w-5 h-5" />} sub="Total in period" />
         <KpiCard label="Open Rate" value={`${summary.openRate}%`} delta={deltas.opened} icon={<Mail className="w-5 h-5" />} sub={`${summary.opened.toLocaleString()} opens`} />
-        <KpiCard label="Reply Rate" value={`${summary.replyRate}%`} delta={deltas.replied} icon={<Percent className="w-5 h-5" />} sub={`${summary.replied.toLocaleString()} replies`} />
+        <KpiCard label="Click Rate" value={`${summary.clickRate}%`} icon={<Percent className="w-5 h-5" />} sub={`${summary.clicked.toLocaleString()} clicks`} />
         <KpiCard label="Bounce Rate" value={`${summary.bounceRate}%`} delta={deltas.bounced} icon={<AlertTriangle className="w-5 h-5" />} sub={`${summary.bounced.toLocaleString()} bounced`} invertDelta />
       </section>
 
       {/* Timeline */}
-      <Panel title="Performance Timeline" subtitle={`Daily sends, opens, clicks and replies (${range}).`}>
+      <Panel title="Performance Timeline" subtitle={`Daily sends, opens and clicks (${range}).`}>
         <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data.dailySends} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
@@ -275,7 +275,6 @@ export default function ReportsPage() {
               <Area name="Sends" type="monotone" dataKey="sends" stroke="#6366f1" strokeWidth={2} fill="url(#gSends)" />
               <Area name="Opens" type="monotone" dataKey="opens" stroke="#10b981" strokeWidth={2} fill="url(#gOpens)" />
               <Area name="Clicks" type="monotone" dataKey="clicks" stroke="#f59e0b" strokeWidth={2} fill="none" />
-              <Area name="Replies" type="monotone" dataKey="replies" stroke="#818cf8" strokeWidth={2} fill="none" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -284,7 +283,7 @@ export default function ReportsPage() {
       {/* Funnel + Status distribution */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <Panel title="Engagement Funnel" subtitle="Conversion from sent to replied.">
+          <Panel title="Engagement Funnel" subtitle="Conversion from sent to clicked.">
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.funnel} layout="vertical" margin={{ left: 20, right: 30 }}>
@@ -333,7 +332,7 @@ export default function ReportsPage() {
       </section>
 
       {/* Campaign comparison */}
-      <Panel title="Top Campaigns — Open vs Reply Rate" subtitle="Highest-volume campaigns compared.">
+      <Panel title="Top Campaigns — Open vs Click Rate" subtitle="Highest-volume campaigns compared.">
         <div className="h-72 w-full">
           {campaignComparison.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
@@ -344,7 +343,7 @@ export default function ReportsPage() {
                 <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "#f4f4f5" }} />
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
                 <Bar name="Open Rate" dataKey="openRate" fill="#10b981" radius={[6, 6, 0, 0]} barSize={18} />
-                <Bar name="Reply Rate" dataKey="replyRate" fill="#6366f1" radius={[6, 6, 0, 0]} barSize={18} />
+                <Bar name="Click Rate" dataKey="clickRate" fill="#6366f1" radius={[6, 6, 0, 0]} barSize={18} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -364,7 +363,7 @@ export default function ReportsPage() {
                   <th className="pb-3 text-center">Status</th>
                   <th className="pb-3 text-center">Sent</th>
                   <th className="pb-3 text-center">Open</th>
-                  <th className="pb-3 text-center">Reply</th>
+                  <th className="pb-3 text-center">Click</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
@@ -384,7 +383,7 @@ export default function ReportsPage() {
                     </td>
                     <td className="py-2.5 text-center font-semibold">{c.sent}</td>
                     <td className="py-2.5 text-center font-bold text-emerald-600">{c.openRate}%</td>
-                    <td className="py-2.5 text-center font-bold text-indigo-600">{c.replyRate}%</td>
+                    <td className="py-2.5 text-center font-bold text-indigo-600">{c.clickRate}%</td>
                   </tr>
                 ))}
                 {data.campaigns.length === 0 && (
@@ -484,14 +483,15 @@ function KpiCard({
 }: {
   label: string;
   value: string;
-  delta: number;
+  delta?: number;
   icon: React.ReactNode;
   sub: string;
   invertDelta?: boolean;
 }) {
   // For bounce rate, a positive delta is bad (invert color logic).
-  const isGood = invertDelta ? delta <= 0 : delta >= 0;
-  const up = delta >= 0;
+  const hasDelta = typeof delta === "number";
+  const isGood = invertDelta ? (delta ?? 0) <= 0 : (delta ?? 0) >= 0;
+  const up = (delta ?? 0) >= 0;
   return (
     <div className="bg-white border border-zinc-200 rounded-2xl p-4 flex flex-col gap-1 relative overflow-hidden group hover:border-indigo-200 transition-all">
       <div className="flex items-center justify-between">
@@ -500,15 +500,17 @@ function KpiCard({
       </div>
       <div className="text-3xl font-black text-zinc-900 mt-1">{value}</div>
       <div className="flex items-center gap-2 mt-1">
-        <span
-          className={cn(
-            "text-[10px] font-bold flex items-center gap-0.5",
-            isGood ? "text-emerald-600" : "text-red-600"
-          )}
-        >
-          {up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-          {Math.abs(delta)}%
-        </span>
+        {hasDelta && (
+          <span
+            className={cn(
+              "text-[10px] font-bold flex items-center gap-0.5",
+              isGood ? "text-emerald-600" : "text-red-600"
+            )}
+          >
+            {up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+            {Math.abs(delta as number)}%
+          </span>
+        )}
         <span className="text-[10px] text-zinc-400 font-medium">{sub}</span>
       </div>
     </div>

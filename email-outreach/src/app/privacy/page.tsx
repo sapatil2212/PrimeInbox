@@ -16,14 +16,17 @@ export default function PrivacyPage() {
               <p className="text-sm font-semibold text-zinc-500">
                 Effective Date: July 1, 2026 · Last Updated: July 1, 2026
               </p>
+              <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                A PRODUCT OF BRIGHTWAVE DIGITAL PRODUCTS LLP.
+              </p>
             </div>
 
             <div className="prose prose-zinc max-w-none text-zinc-650 space-y-6 text-sm md:text-base leading-relaxed">
               <p>
                 Welcome to PrimeInbox (&quot;PrimeInbox&quot;, &quot;we&quot;, &quot;our&quot;, or &quot;us&quot;). PrimeInbox is an
-                AI-powered email outreach and sales engagement platform that enables businesses to manage leads,
-                create personalized email campaigns, automate follow-ups, collaborate with teams, and analyze
-                campaign performance.
+                AI-powered email campaign and sales engagement platform, operated by Brightwave Digital Products LLP, that
+                enables businesses to manage leads, create personalized email campaigns, automate follow-ups, collaborate
+                with teams, and analyze campaign performance.
               </p>
               <p>
                 Your privacy is important to us. This Privacy Policy explains how we collect, use, store, process,
@@ -104,7 +107,6 @@ export default function PrivacyPage() {
                 <li>Email Opens</li>
                 <li>Link Clicks</li>
                 <li>Bounce Information</li>
-                <li>Reply Status</li>
                 <li>Unsubscribe Requests</li>
                 <li>Campaign Performance Metrics</li>
               </ul>
@@ -162,7 +164,7 @@ export default function PrivacyPage() {
               <p>We use your information to:</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Create and manage your account.</li>
-                <li>Provide AI-powered email outreach services.</li>
+                <li>Provide AI-powered email campaign services.</li>
                 <li>Manage campaigns.</li>
                 <li>Generate personalized email content.</li>
                 <li>Process subscription payments.</li>

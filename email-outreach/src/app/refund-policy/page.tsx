@@ -14,6 +14,9 @@ export default function RefundPolicyPage() {
             <div className="space-y-2">
               <h1 className="text-4xl font-extrabold tracking-tight text-zinc-950">Refund & Cancellation Policy</h1>
               <p className="text-sm font-semibold text-zinc-500">Last updated: June 25, 2026</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                A PRODUCT OF BRIGHTWAVE DIGITAL PRODUCTS LLP.
+              </p>
             </div>
             
             <div className="prose prose-zinc max-w-none text-zinc-650 space-y-6 text-sm md:text-base leading-relaxed">

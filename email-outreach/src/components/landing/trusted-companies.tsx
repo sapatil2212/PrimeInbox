@@ -5,14 +5,14 @@ import { FadeIn } from "@/components/animations/fade-in";
 import { motion } from "framer-motion";
 
 const COMPANIES = [
-  { name: "Sourcegraph", id: "sourcegraph" },
-  { name: "liblab", id: "liblab" },
-  { name: "twilio", id: "twilio" },
-  { name: "Hedera", id: "hedera" },
-  { name: "krunch.co", id: "krunch" },
-  { name: "Supabase", id: "supabase" },
-  { name: "Resend", id: "resend" },
-  { name: "Vercel", id: "vercel" },
+  { name: "SaaS Startups", id: "saas" },
+  { name: "Marketing Agencies", id: "agencies" },
+  { name: "Sales Teams", id: "sales" },
+  { name: "Consultants", id: "consultants" },
+  { name: "E-commerce Brands", id: "ecommerce" },
+  { name: "IT Service Providers", id: "it-services" },
+  { name: "Recruiters", id: "recruiters" },
+  { name: "Small Businesses", id: "smb" },
 ];
 
 export function TrustedCompanies() {
@@ -24,7 +24,7 @@ export function TrustedCompanies() {
       <Container>
         <FadeIn>
           <p className="text-center text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-8">
-            Trusted by Developer-Focused Engineering Teams
+            Built for businesses of every kind
           </p>
         </FadeIn>
       </Container>

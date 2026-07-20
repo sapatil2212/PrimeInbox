@@ -31,13 +31,13 @@ export function CtaSection() {
           {/* Main Title Heading */}
           <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white mb-6 leading-tight">
             Ready to Simplify Your <br />
-            <span className="text-blue-500 font-extrabold">Outreach Process?</span>
+            <span className="text-blue-500 font-extrabold">Email Campaigns?</span>
           </h2>
           
           {/* Descriptive Content Paragraph */}
           <p className="max-w-2xl mx-auto text-xs sm:text-sm md:text-base text-zinc-400 mb-10 leading-relaxed font-normal">
-            Automate sequences, protect your domains, and deliver a seamless developer relations outreach experience with PrimeInbox. 
-            Let AI draft the copy while you focus on growing developer relationships.
+            Automate follow-up sequences, protect your sender reputation, and deliver a seamless email experience with PrimeInbox. 
+            Let AI draft the copy while you focus on building customer relationships.
           </p>
           
           {/* Action Call-to-Action Buttons */}

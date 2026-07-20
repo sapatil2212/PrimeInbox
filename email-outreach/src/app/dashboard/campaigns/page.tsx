@@ -253,7 +253,7 @@ export default function CampaignsPage() {
             <p className="text-xs text-zinc-500 leading-relaxed font-semibold">
               {searchQuery || filter !== "all"
                 ? "No campaigns match your current filter."
-                : "You haven't created any outreach campaigns yet. Launch your first one now."}
+                : "You haven't created any email campaigns yet. Launch your first one now."}
             </p>
           </div>
           {!searchQuery && filter === "all" && (

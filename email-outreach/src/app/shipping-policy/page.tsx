@@ -16,6 +16,9 @@ export default function ShippingPolicyPage() {
               <p className="text-sm font-semibold text-zinc-500">
                 Effective Date: July 1, 2026 · Last Updated: July 1, 2026
               </p>
+              <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                A PRODUCT OF BRIGHTWAVE DIGITAL PRODUCTS LLP.
+              </p>
             </div>
 
             <div className="prose prose-zinc max-w-none text-zinc-650 space-y-6 text-sm md:text-base leading-relaxed">
@@ -33,12 +36,12 @@ export default function ShippingPolicyPage() {
 
               <h2 className="text-xl font-bold text-zinc-900 mt-8 mb-4">1. Nature of Services</h2>
               <p>
-                PrimeInbox provides cloud-based software designed for businesses to manage and automate email outreach
+                PrimeInbox provides cloud-based software designed for businesses to manage and automate email campaign
                 activities. Our services include:
               </p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>AI Email Generation</li>
-                <li>Cold Email Campaign Management</li>
+                <li>Email Campaign Management</li>
                 <li>Email Personalization</li>
                 <li>Automated Follow-ups</li>
                 <li>Lead &amp; CRM Management</li>
@@ -50,9 +53,9 @@ export default function ShippingPolicyPage() {
               </ul>
               <p>Since these are digital services, there is no physical shipment involved.</p>
 
-              <h2 className="text-xl font-bold text-zinc-900 mt-8 mb-4">2. 7-Day Free Trial</h2>
+              <h2 className="text-xl font-bold text-zinc-900 mt-8 mb-4">2. 14-Day Free Trial</h2>
               <p>
-                Every new user receives a 7-day free trial to evaluate PrimeInbox before purchasing a subscription.
+                Every new user receives a 14-day free trial to evaluate PrimeInbox before purchasing a subscription.
                 During the trial period:
               </p>
               <ul className="list-disc pl-6 space-y-1">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { toast, confirmDialog } from "@/components/ui/feedback";
 import { cn } from "@/lib/utils";
@@ -78,6 +79,9 @@ export function AdminPanelClient() {
   const [pendingList, setPendingList] = useState<PendingRegistration[]>([]);
   const [showPendingAlert, setShowPendingAlert] = useState(false);
   const [activatingId, setActivatingId] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const fetchPending = async () => {
     try {
@@ -187,7 +191,8 @@ export function AdminPanelClient() {
   return (
     <div className="p-5 md:p-7 max-w-7xl mx-auto space-y-5">
       {/* New registration / pending activation alert modal */}
-      {showPendingAlert && pendingList.length > 0 && (
+      {showPendingAlert && pendingList.length > 0 && mounted &&
+        createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="w-full max-w-lg bg-white border border-zinc-200 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-start justify-between p-5 border-b border-zinc-100 bg-gradient-to-r from-indigo-50 to-white">
@@ -256,7 +261,8 @@ export function AdminPanelClient() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Page Header */}

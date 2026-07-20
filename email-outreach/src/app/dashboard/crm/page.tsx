@@ -325,7 +325,7 @@ export default function CrmPage() {
  className="w-full h-9 px-3 rounded-xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-800 focus:outline-none"
  >
  <option value="PROSPECT">Prospect Lead</option>
- <option value="CONTACTED">Contacted Outreach</option>
+ <option value="CONTACTED">Contacted</option>
  <option value="WARM">Warm Pipeline</option>
  <option value="WON">Closed Won Deal</option>
  <option value="LOST">Closed Lost</option>

@@ -280,7 +280,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
 
   // States
   const [templateName, setTemplateName] = useState("Untitled Template");
-  const [templateSubject, setTemplateSubject] = useState("Outreach Email Subject");
+  const [templateSubject, setTemplateSubject] = useState("Email Subject");
   const [templateCategoryId, setTemplateCategoryId] = useState("");
   const [categories, setCategories] = useState<any[]>([]);
   const [includeUnsubscribe, setIncludeUnsubscribe] = useState(true);
@@ -671,7 +671,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
     }
   };
 
-  // Gemini Prompt Editor call
+  // AI prompt editor call
   const handleAiEditLayout = async () => {
     if (!aiPrompt.trim()) return;
     setIsEditingAi(true);
@@ -719,7 +719,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
       shorter: "make it very short, concise, and clear",
       longer: "expand it to be more detailed, explanatory, and thorough while keeping it readable",
       event: "rewrite it to be exciting, event-focused, and action-oriented for event invitation",
-      outreach: "rewrite it to be a personalized, warm, and highly engaging cold outreach introduction",
+      outreach: "rewrite it to be a personalized, warm, and engaging introduction",
       emojis: "enhance with relevant, tasteful emojis to make it friendly",
       translate_en: "translate it to clear, native English",
       translate_es: "translate it to fluent, natural Spanish",
@@ -728,7 +728,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
     const actionDesc = actionDescriptions[actionType] || "rewrite and improve this copy";
     const promptMessage = `In the template block with ID '${blockId}', rewrite the text content: "${originalText}" to be ${actionDesc}. Keep the styles, alignment, layout, structure, and all other sections completely unmodified. Just change the text content of this block.`;
 
-    const toastId = toast.loading("Gemini AI is rewriting your copy...");
+    const toastId = toast.loading("AI is rewriting your copy...");
     try {
       const res = await fetch("/api/ai/edit-template", {
         method: "POST",
@@ -1145,7 +1145,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                 id: `text-${Date.now()}-1`,
                 type: "text",
                 content: {
-                  text: '“Using PrimeInbox smtp pools increased our cold email deliverability rates from 45% up to 92% in less than 2 weeks. Highly recommended.”',
+                  text: '“PrimeInbox makes it easy to send personalized email campaigns and keep our sending organized. Highly recommended.”',
                   align: "left",
                   style: { fontSize: "16px", color: "#1f2937", fontWeight: "italic", padding: "5px 0", lineHeight: "1.6" }
                 }
@@ -1222,7 +1222,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                     id: `heading-${Date.now()}`,
                     type: "heading",
                     content: {
-                      text: "Improve your {{companyName}} outreach response by 2x",
+                      text: "A quick note for the {{companyName}} team",
                       level: "h2",
                       align: "left",
                       style: { fontSize: "22px", fontWeight: "800", color: "#111827", padding: "10px 0" }
@@ -1356,7 +1356,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                     id: `text-${Date.now()}`,
                     type: "text",
                     content: {
-                      text: "We are thrilled to launch our new Visual Email Builder. Now you can scale layouts, edit texts directly on the canvas, select templates, and chat with our Gemini-powered design AI.",
+                      text: "We are thrilled to launch our new Visual Email Builder. Now you can scale layouts, edit texts directly on the canvas, select templates, and chat with our AI-powered design assistant.",
                       align: "center",
                       style: { fontSize: "14px", color: "#475569", padding: "10px 0" }
                     }
@@ -1684,7 +1684,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                 <h5 className="font-bold text-zinc-700 mb-1.5 uppercase text-[9px] tracking-wider">Canvas Presets</h5>
                 <div className="flex flex-col gap-1">
                   {[
-                    { label: "Mobile Outreach", width: 480 },
+                    { label: "Mobile View", width: 480 },
                     { label: "Standard Newsletter", width: 600 },
                     { label: "Wide Promotion", width: 700 },
                   ].map((preset) => (
@@ -1884,7 +1884,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
             setHasUnsavedChanges(true);
           }}
           className="flex-1 bg-transparent border-0 outline-none text-xs font-medium text-zinc-700 placeholder-zinc-400"
-          placeholder="Outreach Email Subject (e.g. Quick question for {{firstName}})"
+          placeholder="Email Subject (e.g. Quick question for {{firstName}})"
         />
         <span className="text-[10px] text-zinc-400 font-semibold bg-white border border-zinc-200 rounded px-1.5 py-0.5">
           Dynamic tags active
@@ -1932,7 +1932,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                   {leftSidebarTab === "templates" && "Layout Presets"}
                   {leftSidebarTab === "blocks" && "Elements Blocks"}
                   {leftSidebarTab === "assets" && "Media Assets"}
-                  {leftSidebarTab === "ai" && "Gemini AI Assist"}
+                  {leftSidebarTab === "ai" && "AI Assist"}
                   {leftSidebarTab === "styles" && "Brand Style Kits"}
                 </span>
               </div>
@@ -1951,8 +1951,8 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                       {[
                         {
                           preset: "cold-outreach",
-                          title: "Cold Sales Outreach",
-                          desc: "Clean outreach template containing centered logo, heading banner, text values, button link, and full signature.",
+                          title: "Sales Introduction",
+                          desc: "Clean introduction template containing centered logo, heading banner, text values, button link, and full signature.",
                           color: "bg-indigo-50 text-indigo-700 border-indigo-150"
                         },
                         {
@@ -2209,10 +2209,10 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                     <div className="bg-indigo-50/70 border border-indigo-100 rounded-xl p-3.5 space-y-2">
                       <h4 className="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
                         <Sparkles className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
-                        Gemini AI Designer
+                        AI Designer
                       </h4>
                       <p className="text-[10.5px] text-indigo-800 leading-relaxed font-semibold">
-                        Instruct Gemini to edit fonts, styles, text, spacing, CTAs, and layout!
+                        Instruct the AI to edit fonts, styles, text, spacing, CTAs, and layout!
                       </p>
                     </div>
  
@@ -2857,7 +2857,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                                           <div className="relative group/ai flex items-center">
                                             <button 
                                               className="p-1 hover:bg-indigo-50 hover:text-indigo-750 rounded text-indigo-650 cursor-pointer flex items-center border-0 bg-transparent"
-                                              title="Gemini AI Rewrite"
+                                              title="AI Rewrite"
                                             >
                                               <Sparkles className="w-3.5 h-3.5 animate-pulse text-indigo-550" />
                                             </button>
@@ -2869,7 +2869,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                                                 { id: "shorter", label: "✍️ Make Shorter" },
                                                 { id: "longer", label: "📖 Expand Content" },
                                                 { id: "event", label: "🔥 Event Invitation" },
-                                                { id: "outreach", label: "🤝 Warm Outreach" },
+                                                { id: "outreach", label: "🤝 Warm Intro" },
                                                 { id: "emojis", label: "🚀 Add Emojis" },
                                                 { id: "translate_en", label: "🇬🇧 English" },
                                                 { id: "translate_es", label: "🇪🇸 Spanish" }
@@ -2918,7 +2918,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                                           <div className="relative group/ai flex items-center mr-0.5">
                                             <button 
                                               className="p-1 hover:bg-indigo-50 hover:text-indigo-750 rounded text-indigo-650 cursor-pointer flex items-center border-0 bg-transparent"
-                                              title="Gemini AI Rewrite CTA"
+                                              title="AI Rewrite CTA"
                                             >
                                               <Sparkles className="w-3.5 h-3.5 animate-pulse text-indigo-550" />
                                             </button>
@@ -2929,7 +2929,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                                                 { id: "professional", label: "🪄 Professional CTA" },
                                                 { id: "shorter", label: "✍️ Make Shorter" },
                                                 { id: "longer", label: "📖 Expand CTA" },
-                                                { id: "outreach", label: "🤝 Outreach Focus" }
+                                                { id: "outreach", label: "🤝 Intro Focus" }
                                               ].map((opt) => (
                                                 <button
                                                   key={opt.id}
@@ -3222,7 +3222,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                                     {isRewritingBlockId === block.id && (
                                       <div className="absolute inset-0 bg-white/75 backdrop-blur-[1px] flex items-center justify-center rounded-lg z-50 animate-pulse select-none pointer-events-none">
                                         <Loader2 className="w-4 h-4 animate-spin text-indigo-650" />
-                                        <span className="text-[9px] font-bold text-indigo-950 ml-1.5">Gemini Writing...</span>
+                                        <span className="text-[9px] font-bold text-indigo-950 ml-1.5">AI Writing...</span>
                                       </div>
                                     )}
                                     {block.type === "heading" && (

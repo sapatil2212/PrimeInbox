@@ -164,7 +164,7 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-black tracking-tight text-zinc-900">
             Overview
           </h1>
-          <p className="text-sm text-zinc-500 font-medium">Real-time indicators of your outreach performance and deliverability.</p>
+          <p className="text-sm text-zinc-500 font-medium">Real-time indicators of your campaign performance and deliverability.</p>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/dashboard/campaigns/create">
@@ -189,7 +189,7 @@ export default function DashboardPage() {
             </div>
             <div className="text-3xl font-black text-zinc-800">{stats?.totalSends || 0}</div>
             <p className="text-[10px] text-zinc-500 font-semibold flex items-center gap-1">
-              <TrendingUp className="w-3 h-3 text-emerald-600" /> Outbound emails dispatched
+              <TrendingUp className="w-3 h-3 text-emerald-600" /> Emails delivered
             </p>
           </div>
         </GlowCard>
@@ -202,7 +202,7 @@ export default function DashboardPage() {
             </div>
             <div className="text-3xl font-black text-zinc-800">{stats?.openRate || 0}%</div>
             <p className="text-[10px] text-zinc-500 font-semibold">
-              Reply rate: <span className="text-indigo-600 font-bold">{stats?.replyRate || 0}%</span>
+              Click rate: <span className="text-indigo-600 font-bold">{stats?.clickRate || 0}%</span>
             </p>
           </div>
         </GlowCard>
@@ -348,7 +348,7 @@ export default function DashboardPage() {
                 {activities.length === 0 && (
                   <tr>
                     <td colSpan={5} className="text-center py-8 text-zinc-400 font-bold">
-                      No outreach activity logged yet.
+                      No campaign activity logged yet.
                     </td>
                   </tr>
                 )}
@@ -359,9 +359,9 @@ export default function DashboardPage() {
 
         {/* Quick Actions Panel */}
         <div className="bg-white border border-zinc-200 rounded-xl p-5 flex flex-col gap-4">
-          <h3 className="text-sm font-bold text-zinc-900">Setup Outreach Engine</h3>
+          <h3 className="text-sm font-bold text-zinc-900">Setup Campaign Engine</h3>
           <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-            Configure SMTP accounts, create lists, and upload lead databases to start sending cold campaigns.
+            Configure SMTP accounts, create lists, and upload your contacts to start sending campaigns.
           </p>
           <div className="flex flex-col gap-3 pt-2">
             <Link href="/dashboard/smtp">

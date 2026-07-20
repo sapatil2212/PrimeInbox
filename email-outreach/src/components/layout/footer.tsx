@@ -15,7 +15,7 @@ export function Footer() {
               <img src="/logo/primeinbox-logo.png" alt="PrimeInbox Logo" className="h-9 w-auto group-hover:scale-105 transition-all" />
             </Link>
             <p className="text-zinc-500 text-xs max-w-sm leading-relaxed font-normal">
-              Turn wasted DevRel budget into measurable pipeline growth. We help B2B developer platforms convert community engagement into revenue opportunities.
+              An AI-powered email campaign and sales engagement platform that helps businesses create personalized email campaigns, automate follow-ups, and track engagement — all from one dashboard.
             </p>
           </div>
 
@@ -65,8 +65,9 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="pt-8 border-t border-zinc-200/60 text-center text-xs font-normal text-zinc-400">
-          <p>Copyright © 2026 PrimeInbox All rights reserved. | A product of Brightwave Digital Products</p>
+        <div className="pt-8 border-t border-zinc-200/60 text-center text-xs font-normal text-zinc-400 space-y-1">
+          <p>Copyright © 2026 PrimeInbox. All rights reserved.</p>
+          <p className="font-semibold text-zinc-500">A PRODUCT OF BRIGHTWAVE DIGITAL PRODUCTS LLP.</p>
         </div>
       </Container>
     </footer>

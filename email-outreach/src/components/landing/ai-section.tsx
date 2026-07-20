@@ -9,41 +9,41 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
 const PROMPTS = [
-  "Write a cold email to a VP of Engineering about our DevRel analytics tool...",
-  "Draft a follow-up email to developers who starred our GitHub repository...",
-  "Create a invitation sequence to our upcoming technical workshop event..."
+  "Write an intro email to a marketing manager about our email campaign platform...",
+  "Draft a friendly follow-up email for contacts who opened our last newsletter...",
+  "Create an invitation sequence for our upcoming product webinar..."
 ];
 
 const OUTPUTS = [
   {
-    subject: "Measuring developer community impact on pipeline",
+    subject: "A simpler way to run your email campaigns",
     body: `Hi [Name],
 
-Noticed your team is expanding its developer community efforts at [Company].
+I noticed [Company] is growing its email marketing efforts.
 
-Many VPs of Engineering struggle to tie DevRel activities to actual pipeline. We've built a platform that tracks developer adoption and accelerates pipeline specifically for B2B tech.
+We built a platform that helps teams create personalized campaigns, connect their own sending accounts, and track opens and clicks — all from one dashboard.
 
-Open to a quick chat next week to see how we helped Sourcegraph increase their pipeline by 35%?`
+Would you be open to a quick chat next week to see if it's a fit for your team?`
   },
   {
-    subject: "Thanks for starring [Repo] - quick question",
+    subject: "Thanks for reading our last update",
     body: `Hi [Name],
 
-Saw you starred our repository yesterday. Thanks for the support!
+Thanks for opening our latest newsletter!
 
-I'm curious: are you exploring our tooling for personal side projects, or is this related to a production challenge you're solving at [Company]?
+I wanted to check in: are you exploring tools to make your email campaigns easier to manage, or is this something on your roadmap at [Company]?
 
-Either way, we've compiled a quick developer getting-started guide if you want to check it out.`
+Either way, I'd be happy to share a short getting-started guide if it's helpful.`
   },
   {
-    subject: "Technical Workshop: Auto-scaling DevRel infrastructure",
+    subject: "Invitation: our upcoming product webinar",
     body: `Hi [Name],
 
-I'm hosting a hands-on technical workshop next Wednesday focused on scaling developer platforms without breaking deliverability.
+We're hosting a live webinar next Wednesday on running effective, well-organized email campaigns.
 
-Given your role at [Company], I thought you might find the session on SMTP rotation algorithms useful.
+Given your role at [Company], I thought you might find it useful.
 
-Can I register a free seat for you and your team?`
+Can I save a free seat for you and your team?`
   }
 ];
 
@@ -100,17 +100,17 @@ export function AISection() {
                 AI Assistant Engine
               </div>
               <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 text-zinc-900">
-                Write perfect cold emails in <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-primary">seconds</span>
+                Draft email copy in <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-primary">seconds</span>
               </h2>
               <p className="text-sm md:text-base text-zinc-500 mb-5 leading-relaxed font-normal">
-                Say goodbye to writer's block. Provide a simple prompt, and our AI will generate highly personalized, conversion-optimized email sequences that sound exactly like you.
+                Say goodbye to writer's block. Provide a simple prompt, and the AI assistant drafts personalized email copy and follow-up sequences that you can review and edit before sending.
               </p>
               
               <ul className="space-y-3 mb-6">
                 {[
-                  "Subject line optimization & A/B variants",
-                  "Personalized icebreakers via social enrichment",
-                  "Developer-tailored call-to-actions",
+                  "Subject line and call-to-action suggestions",
+                  "Personalization placeholders like {{firstName}}",
+                  "Editable, review-before-you-send drafts",
                   "Automated follow-up sequence generation"
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-zinc-700 text-sm font-semibold">
@@ -145,7 +145,7 @@ export function AISection() {
                   <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
                   <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
                 </div>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">AI Outreach Editor</span>
+                <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">AI Email Editor</span>
               </div>
 
               <div className="mb-6">

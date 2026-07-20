@@ -16,6 +16,9 @@ export default function SecurityPolicyPage() {
               <p className="text-sm font-semibold text-zinc-500">
                 Effective Date: July 1, 2026 · Last Updated: July 1, 2026
               </p>
+              <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                A PRODUCT OF BRIGHTWAVE DIGITAL PRODUCTS LLP.
+              </p>
             </div>
 
             <div className="prose prose-zinc max-w-none text-zinc-650 space-y-6 text-sm md:text-base leading-relaxed">

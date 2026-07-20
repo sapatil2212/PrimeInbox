@@ -16,6 +16,9 @@ export default function TermsPage() {
               <p className="text-sm font-semibold text-zinc-500">
                 Effective Date: July 1, 2026 · Last Updated: July 1, 2026
               </p>
+              <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                A PRODUCT OF BRIGHTWAVE DIGITAL PRODUCTS LLP.
+              </p>
             </div>
 
             <div className="prose prose-zinc max-w-none text-zinc-650 space-y-6 text-sm md:text-base leading-relaxed">
@@ -32,12 +35,13 @@ export default function TermsPage() {
 
               <h2 className="text-xl font-bold text-zinc-900 mt-8 mb-4">1. About PrimeInbox</h2>
               <p>
-                PrimeInbox is an AI-powered Software-as-a-Service (SaaS) platform designed to help businesses streamline
-                email outreach and sales engagement. Our platform provides features including:
+                PrimeInbox is an AI-powered Software-as-a-Service (SaaS) platform, operated by Brightwave Digital Products
+                LLP, designed to help businesses streamline email campaigns and sales engagement. Our platform provides
+                features including:
               </p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>AI Email Generation</li>
-                <li>Cold Email Campaigns</li>
+                <li>Email Campaigns</li>
                 <li>Email Personalization</li>
                 <li>Automated Follow-ups</li>
                 <li>Lead Management (CRM)</li>
@@ -73,7 +77,7 @@ export default function TermsPage() {
 
               <h2 className="text-xl font-bold text-zinc-900 mt-8 mb-4">4. Free Trial</h2>
               <p>
-                PrimeInbox offers a 7-day free trial for all new users. During the trial period, users can evaluate
+                PrimeInbox offers a 14-day free trial for all new users. During the trial period, users can evaluate
                 eligible platform features before purchasing a subscription. PrimeInbox reserves the right to modify,
                 suspend, or discontinue the free trial at any time without prior notice.
               </p>

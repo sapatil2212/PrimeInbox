@@ -17,45 +17,45 @@ const PLANS = [
       "10 emails total",
       "1 SMTP sender domain",
       { text: "HTML Based Email Generator", included: false },
-      { text: "Basic Conversion Analytics", included: false },
-      { text: "Community Slack Support", included: false }
+      { text: "Basic Campaign Analytics", included: false },
+      { text: "Community Email Support", included: false }
     ]
   },
   {
     name: "Silver",
     price: "₹499",
-    description: "Perfect for startups and small developer relations teams.",
+    description: "Perfect for startups and small teams.",
     features: [
       "20,000 emails/month",
       "Up to 2 SMTP sender domains",
       "HTML Based Email Generator",
-      "Basic Conversion Analytics",
-      "Community Slack Support"
+      "Basic Campaign Analytics",
+      "Community Email Support"
     ]
   },
   {
     name: "Gold",
     price: "₹999",
-    description: "For scaling developer platforms and dedicated agencies.",
+    description: "For scaling businesses and agencies.",
     popular: true,
     features: [
       "100,000 emails/month",
       "Up to 5 SMTP sender domains",
-      "Advanced Sentiment Analytics",
+      "Advanced Campaign Analytics",
       "AI Based Email Builder",
-      "Priority Discord & Support"
+      "Priority Support"
     ]
   },
   {
     name: "Platinum",
     price: "₹1999",
-    description: "Enterprise sending infrastructure with complete API access.",
+    description: "High-volume sending for larger teams.",
     features: [
       "250,000 emails/month",
       "Up to 10 SMTP sender domains",
-      "Advanced Sentiment Analytics",
+      "Advanced Campaign Analytics",
       "AI Based Email Builder",
-      "Priority Discord & Support"
+      "Priority Support"
     ]
   }
 ];
@@ -76,7 +76,7 @@ export function PricingSection() {
               Simple, transparent pricing
             </h2>
             <p className="text-sm md:text-base text-zinc-500 font-normal">
-              Choose the sending volume that fits your DevRel growth goals. No hidden fees.
+              Choose the sending volume that fits your growth goals. No hidden fees.
             </p>
           </FadeIn>
         </div>
