@@ -80,7 +80,7 @@ export default function BillingPage() {
       <header>
         <h1 className="text-2xl font-black tracking-tight text-zinc-900">Billing & Plans</h1>
         <p className="text-sm text-zinc-500 font-medium">
-          Manage your subscription, payment history, and outreach sending limits.
+          Manage your subscription, payment history, and email sending limits.
         </p>
       </header>
 

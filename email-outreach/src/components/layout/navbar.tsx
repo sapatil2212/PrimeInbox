@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, Mail, UserPlus, Wand2, Repeat, Download, LayoutTemplate, BarChart3, Layers, ChevronDown } from "lucide-react";
+import { Menu, X, Mail, UserPlus, LogIn, Wand2, Repeat, Download, LayoutTemplate, BarChart3, Layers, ChevronDown } from "lucide-react";
 import { Container } from "./container";
 import { Button } from "@/components/ui/button";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
@@ -80,8 +80,9 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-4">
             <Link
               href="/login"
-              className="text-sm font-medium text-zinc-600 hover:text-zinc-950 transition-colors px-3.5 py-1.5 hover:bg-zinc-100 rounded-full border border-transparent hover:border-zinc-200/30"
+              className="flex items-center gap-1.5 text-sm font-medium text-zinc-600 hover:text-zinc-950 transition-colors px-3.5 py-1.5 rounded-full border border-zinc-200/70 hover:border-zinc-300 hover:bg-zinc-50"
             >
+              <LogIn className="w-3.5 h-3.5" />
               Log in
             </Link>
             <Link href="/signup">
@@ -135,9 +136,10 @@ export function Navbar() {
               <Link href="/login" className="flex-1">
                 <Button
                   variant="ghost"
-                  className="w-full justify-center text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100 h-10 rounded-xl text-xs whitespace-nowrap"
+                  className="w-full justify-center gap-1.5 text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50 h-10 rounded-xl text-xs whitespace-nowrap border border-zinc-200/70"
                   onClick={() => setMobileMenuOpen(false)}
                 >
+                  <LogIn className="w-3.5 h-3.5" />
                   Log in
                 </Button>
               </Link>

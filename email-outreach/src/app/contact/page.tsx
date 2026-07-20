@@ -119,7 +119,7 @@ export default function ContactPage() {
                 See PrimeInbox in <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-650 font-extrabold">action.</span>
               </h1>
               <p className="text-sm md:text-base text-zinc-500 leading-relaxed font-semibold">
-                Tell us about your team and pick a time that works. Our specialists will walk you through outreach automation, deliverability, and AI-powered sequences.
+                Tell us about your team and pick a time that works. Our specialists will walk you through email campaign automation, deliverability, and AI-powered sequences.
               </p>
             </SlideUp>
           </div>
@@ -176,7 +176,7 @@ export default function ContactPage() {
                         <div>
                           <h4 className="text-xs font-bold text-zinc-800">AI Email Generator</h4>
                           <p className="text-[11px] font-medium text-zinc-400 mt-0.5 leading-relaxed">
-                            Highly personalized developer-focused cold outreach copy at scale.
+                            Draft personalized email copy and follow-up sequences from a simple prompt.
                           </p>
                         </div>
                       </div>
@@ -186,9 +186,9 @@ export default function ContactPage() {
                           <Repeat className="w-3.5 h-3.5" />
                         </div>
                         <div>
-                          <h4 className="text-xs font-bold text-zinc-800">SMTP Rotation</h4>
+                          <h4 className="text-xs font-bold text-zinc-800">Multi-Account Sending</h4>
                           <p className="text-[11px] font-medium text-zinc-400 mt-0.5 leading-relaxed">
-                            Cycle sending domains & accounts to maximize inbox deliverability.
+                            Distribute sending across multiple connected accounts for reliable deliverability.
                           </p>
                         </div>
                       </div>
@@ -212,7 +212,7 @@ export default function ContactPage() {
                         <div>
                           <h4 className="text-xs font-bold text-zinc-800">Real-time Analytics</h4>
                           <p className="text-[11px] font-medium text-zinc-400 mt-0.5 leading-relaxed">
-                            Track opens, clicks, and reply sentiment in real time.
+                            Track email delivery, opens, and clicks in real time.
                           </p>
                         </div>
                       </div>

@@ -193,7 +193,7 @@ export default function CreateCampaignPage() {
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Q3 SaaS Outreach"
+          placeholder="e.g. Q3 Product Newsletter"
           className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-zinc-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
         />
       </Section>

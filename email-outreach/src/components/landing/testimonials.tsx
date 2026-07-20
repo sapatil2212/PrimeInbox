@@ -6,40 +6,40 @@ import { Star } from "lucide-react";
 
 const TESTIMONIALS = [
   {
-    quote: "SMTP rotation completely resolved our daily rate-limiting issues. We successfully reached 1,200+ event contributors without a single domain block.",
+    quote: "Connecting several sending accounts and setting per-account limits made managing our campaigns far easier. Setup was quick and the dashboard is clear.",
     author: "Rohan Sharma",
-    title: "Developer Relations Manager",
-    company: "Appsmith",
+    title: "Marketing Manager",
+    company: "B2B SaaS Startup",
   },
   {
-    quote: "Our email open rates leaped from 22% to 68% in just two campaigns. The reputation monitor gave us real-time alerts before any drop occurred.",
+    quote: "The open and click tracking gives us a clear view of how each campaign performs, so we can iterate on subject lines and content with confidence.",
     author: "Neha Gupta",
     title: "Growth Lead",
-    company: "SigNoz",
+    company: "Digital Marketing Agency",
   },
   {
-    quote: "Building personalized sequence pipelines for GitHub contributors used to take hours. Now it's a seamless 5-minute CSV import.",
+    quote: "Importing our contact lists from CSV and mapping custom fields used to take hours. Now it's a simple few-minute upload.",
     author: "Amit Patel",
-    title: "Head of Developer Relations",
-    company: "Devtron",
+    title: "Head of Sales",
+    company: "IT Services Company",
   },
   {
-    quote: "PrimeInbox is a game-changer for open-source adoption. We map GitHub stargazers directly to custom personalized sequences.",
+    quote: "The AI assistant helps us draft first-draft email copy and follow-up sequences quickly, which we then review and personalize before sending.",
     author: "Ananya Iyer",
     title: "Community & Growth Lead",
-    company: "Plane",
+    company: "Early-Stage Startup",
   },
   {
-    quote: "The HTML template rendering combined with automatic SMTP rotation makes our cold developer outreach incredibly robust.",
+    quote: "The drag-and-drop template builder combined with multi-account sending makes running our email campaigns straightforward and reliable.",
     author: "Siddharth Verma",
     title: "Co-Founder",
-    company: "Hasura",
+    company: "Consulting Firm",
   },
   {
-    quote: "Super intuitive setup, clear analytics, and excellent deliverability results. It has saved our growth engineering team countess dev hours.",
+    quote: "Intuitive setup, clear analytics, and dependable delivery. It has saved our team a lot of manual work each week.",
     author: "Priya Nair",
-    title: "Developer Marketing Lead",
-    company: "Razorpay",
+    title: "Email Marketing Lead",
+    company: "E-commerce Business",
   }
 ];
 
@@ -75,10 +75,10 @@ export function TestimonialsSection() {
               Success Stories
             </div>
             <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-zinc-900 mb-4">
-              Loved by DevRel leaders
+              Loved by growing teams
             </h2>
             <p className="text-sm md:text-base text-zinc-500">
-              See how developer relations and growth engineering teams use PrimeInbox to grow pipelines.
+              See how businesses and marketing teams use PrimeInbox to run better email campaigns.
             </p>
           </FadeIn>
         </div>

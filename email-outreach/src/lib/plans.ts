@@ -40,8 +40,8 @@ export const PLANS: Plan[] = [
       "10 emails total",
       "1 SMTP sender domain",
       { text: "HTML Based Email Generator", included: false },
-      { text: "Basic Conversion Analytics", included: false },
-      { text: "Community Slack Support", included: false },
+      { text: "Basic Campaign Analytics", included: false },
+      { text: "Community Email Support", included: false },
     ],
   },
   {
@@ -58,8 +58,8 @@ export const PLANS: Plan[] = [
       "20,000 emails/month",
       "Up to 2 SMTP sender domains",
       "HTML Based Email Generator",
-      "Basic Conversion Analytics",
-      "Community Slack Support",
+      "Basic Campaign Analytics",
+      "Community Email Support",
     ],
   },
   {
@@ -76,9 +76,9 @@ export const PLANS: Plan[] = [
     features: [
       "100,000 emails/month",
       "Up to 5 SMTP sender domains",
-      "Advanced Sentiment Analytics",
+      "Advanced Campaign Analytics",
       "AI Based Email Builder",
-      "Priority Discord & Support",
+      "Priority Support",
     ],
   },
   {
@@ -94,9 +94,9 @@ export const PLANS: Plan[] = [
     features: [
       "250,000 emails/month",
       "Up to 10 SMTP sender domains",
-      "Advanced Sentiment Analytics",
+      "Advanced Campaign Analytics",
       "AI Based Email Builder",
-      "Priority Discord & Support",
+      "Priority Support",
     ],
   },
 ];

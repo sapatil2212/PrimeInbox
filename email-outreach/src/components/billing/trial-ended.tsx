@@ -36,7 +36,7 @@ export function TrialEnded({
           </h1>
           <p className="text-sm text-zinc-500 font-medium mt-2">
             Please subscribe to a plan to continue using PrimeInbox. Choose the plan that fits your
-            outreach needs below.
+            email campaign needs below.
           </p>
         </div>
 

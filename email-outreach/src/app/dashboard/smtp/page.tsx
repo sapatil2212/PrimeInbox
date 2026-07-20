@@ -310,7 +310,7 @@ export default function SmtpPage() {
         SMTP Manager
       </h1>
       <p className="text-sm text-zinc-500 font-medium mt-0.5">
-        Add, pools group, and verify cold outreach outbound email credentials.
+        Add, group into pools, and verify your email sending credentials.
       </p>
     </div>
     <div className="flex items-center gap-2.5">
@@ -488,7 +488,7 @@ export default function SmtpPage() {
  <div className="space-y-1.5 max-w-md">
  <h3 className="font-extrabold text-zinc-800 text-base">No SMTP accounts connected</h3>
  <p className="text-xs text-zinc-500 leading-relaxed font-semibold">
- Before launching outreach campaigns, configure SMTP credentials to enable automated rotational sending pools.
+ Before launching campaigns, configure SMTP credentials to enable multi-account sending pools.
  </p>
  </div>
   <button 

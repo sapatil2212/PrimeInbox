@@ -9,16 +9,16 @@ function buildSystemPrompt(
   recipientContext: string
 ): string {
   return `
-    You are an expert copywriter specializing in high-converting cold email outreach.
+    You are an expert copywriter specializing in personalized, permission-based email campaigns.
     
-    Task: Generate ${type === "sequence" ? "a 2-step cold email sequence" : type} based on the following:
+    Task: Generate ${type === "sequence" ? "a 2-step email sequence" : type} based on the following:
     - Tone: ${tone}
-    - Company / Product Context: ${companyContext || "AI Email Outreach SaaS"}
-    - Recipient / Target Audience: ${recipientContext || "Sales leaders, DevRel managers"}
-    - Additional Instructions / Focus: ${prompt || "Generate a compelling outreach message"}
+    - Company / Product Context: ${companyContext || "AI Email Campaign SaaS"}
+    - Recipient / Target Audience: ${recipientContext || "Business and marketing contacts"}
+    - Additional Instructions / Focus: ${prompt || "Generate a compelling, respectful email message"}
     
     Formatting Guidelines:
-    - Avoid spam words like "guarantee", "risk-free", "double your sales".
+    - Avoid spam words and exaggerated or unverifiable claims like "guarantee", "risk-free", "double your sales".
     - Keep emails under 150 words. Focus on a single clear call-to-action (CTA).
     - Use placeholders like {{firstName}} for personalization.
     - If generating a sequence, separate Step 1 and Step 2 clearly.
@@ -40,7 +40,7 @@ function generateMockAiResponse(
 
   if (type === "subject") {
     if (tone === "sales") return `Quick question regarding ${company}?`;
-    if (tone === "marketing") return `Unlocking outreach scaling for ${recipient}`;
+    if (tone === "marketing") return `An easier way to run campaigns for ${recipient}`;
     return "Collaboration request: PrimeInbox";
   }
 
@@ -49,17 +49,15 @@ function generateMockAiResponse(
   }
 
   // Sequence or Full Email
-  return `Subject: Quick question regarding {{companyName}}?
+  return `Subject: A simpler way to run your email campaigns
 
 Hello {{firstName}},
 
-I noticed your team is actively looking to scale outbound pipeline. 
+I noticed your team at {{companyName}} is growing its email marketing.
 
-We built ${company} specifically to help teams targeting ${recipient} automate their email rotation and AI content generation without hitting spam limits.
+We built ${company} to help teams like ${recipient} create personalized campaigns, connect their own sending accounts, and track opens and clicks — all from one dashboard.
 
-Most developers see a 3x lift in reply rates within the first 14 days of connecting. 
-
-Would you be open to a quick 5-minute feedback chat this Thursday at 10 AM?
+Would you be open to a quick 5-minute chat this Thursday at 10 AM to see if it's a fit?
 
 Best regards,
 {{senderName}}
@@ -67,13 +65,15 @@ Best regards,
 --
 [Step 2 - Follow Up (3 days later)]
 
-Subject: Re: Quick question regarding {{companyName}}?
+Subject: Re: A simpler way to run your email campaigns
 
 Hi {{firstName}},
 
-I know things get busy. I wanted to share a quick case study: our partners at DevCorp increased meetings booked by 40% last month using ${company}.
+I know things get busy, so I wanted to follow up in case my last note got buried.
 
-Is this something worth exploring for your team next week?
+If it's helpful, I'd be happy to share a short overview of how ${company} could fit your team's workflow.
+
+Is this worth a quick look next week?
 
 Best,
 {{senderName}}`;

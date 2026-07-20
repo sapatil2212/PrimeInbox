@@ -41,7 +41,7 @@ export default function AboutPage() {
     riskColor = "text-amber-500 bg-amber-50/50 border-amber-100";
   }
 
-  // Estimated Responses (Assuming average 12% baseline response on technical outreach, scaled by personalization)
+  // Illustrative engagement estimate, scaled by personalization (not a guarantee)
   const baseReplyRate = 0.08;
   const personalizationMultiplier = customization / 50;
   const replyRate = baseReplyRate * personalizationMultiplier * (deliverability / 100);
@@ -62,13 +62,16 @@ export default function AboutPage() {
                 Our Story & Vision
               </div>
               <h1 className="max-w-4xl mx-auto text-4xl md:text-5xl lg:text-6xl leading-[1.1] font-extrabold tracking-tight text-zinc-900 mb-6">
-                Empowering developer platforms to grow <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-650 font-extrabold">scalable pipelines.</span>
+                Helping businesses grow with <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-650 font-extrabold">smarter email campaigns.</span>
               </h1>
             </SlideUp>
 
             <SlideUp delay={0.3} yOffset={20}>
               <p className="max-w-2xl mx-auto text-sm md:text-base text-zinc-500 leading-relaxed font-semibold">
-                Founded in 2024, PrimeInbox was built to bridge the gap between developer relations and sales ops. We help B2B developer-first startups turn community engagement into qualified sales pipeline.
+                PrimeInbox was built to help businesses run personalized email campaigns, automate follow-ups, and manage contacts with ease. We help teams of every size communicate more effectively over email.
+              </p>
+              <p className="mt-4 text-xs font-bold uppercase tracking-wider text-zinc-500">
+                A PRODUCT OF BRIGHTWAVE DIGITAL PRODUCTS LLP.
               </p>
             </SlideUp>
           </div>
@@ -77,10 +80,10 @@ export default function AboutPage() {
           <div className="max-w-5xl mx-auto mb-20">
             <div className="text-center mb-8">
               <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-zinc-900 mb-2">
-                Outreach Deliverability Simulator
+                Email Deliverability Simulator
               </h2>
               <p className="text-xs md:text-sm text-zinc-500 max-w-xl mx-auto font-medium">
-                Adjust the parameters below to simulate your sending health score, deliverability risks, and reply rates using SMTP rotation.
+                Adjust the parameters below to explore how sending volume, multiple accounts, and personalization can affect an estimated deliverability score. Figures shown are illustrative estimates only.
               </p>
             </div>
 
@@ -107,7 +110,7 @@ export default function AboutPage() {
                       onChange={(e) => setDomains(Number(e.target.value))}
                       className="w-full h-1.5 bg-zinc-200 rounded-lg appearance-none cursor-pointer accent-primary"
                     />
-                    <p className="text-[10px] text-zinc-400 font-medium">Cycling your outreach across more domains reduces single-domain footprint.</p>
+                    <p className="text-[10px] text-zinc-400 font-medium">Distributing sending across more domains reduces single-domain footprint.</p>
                   </div>
 
                   {/* Slider 2 */}
@@ -183,7 +186,7 @@ export default function AboutPage() {
                         <p className="text-lg font-bold text-zinc-800 mt-1">{totalVolume.toLocaleString()}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-zinc-400 uppercase">Est. Monthly Replies</p>
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase">Est. Monthly Opens</p>
                         <p className="text-lg font-bold text-zinc-800 mt-1 flex items-center gap-1.5">
                           {estimatedReplies}
                           <span className="text-[10px] text-emerald-500 font-semibold">(~{(replyRate * 100).toFixed(1)}%)</span>
@@ -196,7 +199,7 @@ export default function AboutPage() {
                     {deliverability > 92 ? (
                       <>
                         <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                        <span><strong>Healthy Setup!</strong> Cycling domains ensures low volume per inbox. AI customization makes filters happy and replies climb.</span>
+                        <span><strong>Healthy Setup!</strong> Spreading volume across domains keeps per-inbox volume low, and personalization helps engagement.</span>
                       </>
                     ) : (
                       <>
@@ -220,9 +223,9 @@ export default function AboutPage() {
                     <div className="w-12 h-12 rounded-xl bg-zinc-50 border border-zinc-200/60 flex items-center justify-center text-primary mb-6">
                       <Target className="w-5 h-5" />
                     </div>
-                    <h3 className="text-lg font-bold mb-2 text-zinc-900">Developer-First</h3>
+                    <h3 className="text-lg font-bold mb-2 text-zinc-900">Recipient-First</h3>
                     <p className="text-xs md:text-sm text-zinc-500 leading-relaxed font-semibold">
-                      We know developers hate spam. Our tools ensure you send tailored, meaningful, and context-rich messages that respect developer time.
+                      We help you send tailored, meaningful, and context-rich messages, with one-click unsubscribe on every email so recipients stay in control.
                     </p>
                   </div>
                 </div>
@@ -236,7 +239,7 @@ export default function AboutPage() {
                     </div>
                     <h3 className="text-lg font-bold mb-2 text-zinc-900">Deliverability Focus</h3>
                     <p className="text-xs md:text-sm text-zinc-500 leading-relaxed font-semibold">
-                      Through advanced SMTP rotation, multi-inbox setup, and auto-warmups, we prioritize deliverability so you land in the primary inbox.
+                      Through multi-account sending, per-account send limits, optional DKIM signing, and plain-text alternatives, we help you reach the primary inbox.
                     </p>
                   </div>
                 </div>
@@ -248,9 +251,9 @@ export default function AboutPage() {
                     <div className="w-12 h-12 rounded-xl bg-zinc-50 border border-zinc-200/60 flex items-center justify-center text-indigo-600 mb-6">
                       <Rocket className="w-5 h-5" />
                     </div>
-                    <h3 className="text-lg font-bold mb-2 text-zinc-900">Revenue Oriented</h3>
+                    <h3 className="text-lg font-bold mb-2 text-zinc-900">Insight Oriented</h3>
                     <p className="text-xs md:text-sm text-zinc-500 leading-relaxed font-semibold">
-                      We tie outreach to actual business metrics. Track opens, links, replies, and opportunities generated from your campaigns in real-time.
+                      Track email delivery, opens, clicks, and bounces from your campaigns in real time, and export detailed reports whenever you need them.
                     </p>
                   </div>
                 </div>
@@ -269,8 +272,9 @@ export default function AboutPage() {
             </div>
 
             <p>
-              Welcome to PrimeInbox – an AI-powered Email Outreach &amp; Sales Engagement Platform built to help
-              businesses connect with prospects, generate leads, and grow through smarter email communication.
+              Welcome to PrimeInbox – an AI-powered email campaign &amp; sales engagement platform built to help
+              businesses connect with their contacts, manage leads, and grow through smarter email communication.
+              PrimeInbox is a product of Brightwave Digital Products LLP.
             </p>
             <p>
               PrimeInbox combines artificial intelligence, automation, and modern email infrastructure into a single
@@ -279,13 +283,13 @@ export default function AboutPage() {
             </p>
             <p>
               Whether you&apos;re a startup, sales team, marketing agency, freelancer, consultant, or enterprise
-              organization, PrimeInbox provides the tools needed to streamline outbound communication and improve
+              organization, PrimeInbox provides the tools needed to streamline your email communication and improve
               productivity.
             </p>
 
             <h2 className="text-xl font-bold text-zinc-900 mt-8 mb-4">Our Mission</h2>
             <p>
-              Our mission is to empower businesses with intelligent, secure, and easy-to-use email outreach tools that
+              Our mission is to empower businesses with intelligent, secure, and easy-to-use email campaign tools that
               simplify communication, save time, and help build meaningful business relationships.
             </p>
             <p>
@@ -295,16 +299,16 @@ export default function AboutPage() {
 
             <h2 className="text-xl font-bold text-zinc-900 mt-8 mb-4">What We Offer</h2>
             <p>
-              PrimeInbox provides a comprehensive suite of features designed to modernize email outreach and customer
+              PrimeInbox provides a comprehensive suite of features designed to modernize email campaigns and customer
               engagement, including:
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>AI-Powered Email Writing</li>
-              <li>Cold Email Campaign Management</li>
+              <li>Email Campaign Management</li>
               <li>Automated Follow-up Sequences</li>
               <li>Smart Personalization</li>
               <li>Contact &amp; Lead Management (CRM)</li>
-              <li>Bulk Contact Import (CSV)</li>
+              <li>Contact Import (CSV, Excel, PDF, Word)</li>
               <li>Email Templates</li>
               <li>Team Collaboration</li>
               <li>SMTP Integration</li>
@@ -359,14 +363,14 @@ export default function AboutPage() {
               <li>Email Delivery</li>
               <li>Opens</li>
               <li>Clicks</li>
-              <li>Replies</li>
+              <li>Bounces</li>
               <li>Unsubscribes</li>
               <li>Campaign Performance</li>
             </ul>
             <p>These insights help users improve future campaigns through data-driven decisions.</p>
             <h3 className="text-base font-bold text-zinc-900 mt-6 mb-2">Team Collaboration</h3>
             <p>
-              Invite team members, assign responsibilities, and manage outreach activities from a centralized workspace
+              Invite team members, assign responsibilities, and manage campaign activities from a centralized workspace
               designed for collaboration and efficiency.
             </p>
             <h3 className="text-base font-bold text-zinc-900 mt-6 mb-2">Flexible SMTP Integration</h3>
@@ -375,17 +379,17 @@ export default function AboutPage() {
               control over email delivery.
             </p>
 
-            <h2 className="text-xl font-bold text-zinc-900 mt-8 mb-4">7-Day Free Trial</h2>
+            <h2 className="text-xl font-bold text-zinc-900 mt-8 mb-4">14-Day Free Trial</h2>
             <p>
               We believe every business should experience the platform before making a purchasing decision. That&apos;s why
-              every new PrimeInbox account includes a 7-day free trial, allowing users to explore eligible premium
+              every new PrimeInbox account includes a 14-day free trial, allowing users to explore eligible premium
               features, test workflows, and evaluate the platform before subscribing.
             </p>
             <p>No long-term commitment is required during the trial period.</p>
 
             <h2 className="text-xl font-bold text-zinc-900 mt-8 mb-4">Our Vision</h2>
             <p>
-              Our vision is to become one of the most trusted AI-powered email outreach platforms by helping businesses
+              Our vision is to become one of the most trusted AI-powered email campaign platforms by helping businesses
               communicate more effectively, automate repetitive tasks, and build lasting customer relationships through
               responsible and intelligent technology.
             </p>
@@ -438,10 +442,10 @@ export default function AboutPage() {
 
           <div className="mt-12 rounded-2xl border border-zinc-200/60 bg-gradient-to-br from-blue-50/60 to-indigo-50/40 p-8 md:p-10 text-center">
             <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-zinc-900 mb-3">
-              Join Thousands of Businesses Growing with Smarter Email Outreach
+              Grow Your Business with Smarter Email Campaigns
             </h2>
             <p className="max-w-2xl mx-auto text-sm md:text-base text-zinc-500 leading-relaxed font-medium">
-              PrimeInbox is built for organizations that want to simplify outreach, improve engagement, and scale
+              PrimeInbox is built for organizations that want to simplify their email campaigns, improve engagement, and scale
               communication with confidence. From intelligent email creation to campaign analytics and automation, our
               platform helps businesses focus on building meaningful professional relationships while we handle the
               technology behind the scenes.

@@ -131,7 +131,6 @@ export async function buildReportData(companyId: string, range: RangeKey = "14d"
     { stage: "Sent", value: cur.sent },
     { stage: "Opened", value: cur.opened },
     { stage: "Clicked", value: cur.clicked },
-    { stage: "Replied", value: cur.replied },
   ];
 
   // Campaigns (lifetime stats per campaign)

@@ -27,7 +27,7 @@ const FEATURE_TABS = [
     color: "text-blue-500",
     bg: "bg-blue-500/10",
     border: "border-blue-500/20",
-    desc: "Draft context-aware 2-step sequences, subject lines, and call-to-actions automatically using Gemini prompts, or command our design copilot to change layouts (colors, padding, spacing) conversationally.",
+    desc: "Draft context-aware 2-step sequences, subject lines, and call-to-actions automatically using AI prompts, or command our design copilot to change layouts (colors, padding, spacing) conversationally.",
     bullets: [
       "Generate sequences via AI studio",
       "AI design copilot within the editor",
@@ -43,12 +43,12 @@ const FEATURE_TABS = [
     color: "text-cyan-500",
     bg: "bg-cyan-500/10",
     border: "border-cyan-500/20",
-    desc: "Cycle outbound sends across multiple connected mailboxes with custom daily/hourly limits, priority weights, and active domain-level DKIM signature configs to secure highest inboxing.",
+    desc: "Distribute sends across multiple connected mailboxes with custom daily/hourly limits, priority weights, and optional domain-level DKIM signing to help maintain deliverability.",
     bullets: [
       "Custom hourly and daily limit caps",
-      "Domain-level DKIM keys setup",
+      "Optional domain-level DKIM signing",
       "Priority and rotation weights",
-      "Real-time sender health monitoring"
+      "Multiple connected sender accounts"
     ]
   },
   {
@@ -124,10 +124,10 @@ export default function FeaturesPage() {
               PrimeInbox Core
             </div>
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-zinc-900 mb-6 max-w-4xl mx-auto leading-tight">
-              Powerful tools built to scale <span className="text-blue-600 font-extrabold">your developer outreach</span>
+              Powerful tools built to scale <span className="text-blue-600 font-extrabold">your email campaigns</span>
             </h1>
             <p className="max-w-2xl mx-auto text-sm md:text-base text-zinc-500 leading-relaxed font-normal">
-              A comprehensive outreach platform engineered to secure high deliverability, draft personalized sequence templates, map stargazers, and convert pipelines.
+              A comprehensive email platform built to support reliable deliverability, draft personalized sequence templates, import your contacts, and track engagement.
             </p>
           </FadeIn>
         </Container>
@@ -216,8 +216,8 @@ export default function FeaturesPage() {
                       <div className="w-full text-left space-y-2">
                         <span className="text-[9px] uppercase font-bold text-zinc-400 block">AI Output Mockup</span>
                         <div className="text-[11px] font-semibold text-zinc-800 bg-white p-3 rounded-lg border border-zinc-200/40 leading-relaxed">
-                          <strong>Subject:</strong> Quick question regarding dev scaling at [Company] <br />
-                          Hi [Name], I noticed you starred our open-source repo. I compiled a custom developer sandbox configured specifically for your stacks...
+                          <strong>Subject:</strong> A simpler way to run campaigns at [Company] <br />
+                          Hi [Name], I noticed your team is growing its email marketing. I put together a quick overview tailored to your use case...
                         </div>
                       </div>
                     )}
@@ -246,7 +246,7 @@ export default function FeaturesPage() {
                       <div className="w-full text-left space-y-2">
                         <span className="text-[9px] uppercase font-bold text-zinc-400 block">Variables Auto-Mapping</span>
                         <div className="grid grid-cols-3 gap-2">
-                          {["Github ID", "RepName", "Tier"].map((field) => (
+                          {["First Name", "Company", "Email"].map((field) => (
                             <div key={field} className="bg-white p-2 rounded border border-zinc-200 text-center text-[10px] font-bold text-zinc-700">
                               {field} &rarr; mapped
                             </div>
@@ -260,7 +260,7 @@ export default function FeaturesPage() {
                         <div className="flex gap-2">
                           <div className="bg-blue-50 text-blue-600 border border-blue-100 p-2 rounded text-[10px] font-bold flex-1 text-center">Day 1: Send AI intro</div>
                           <div className="bg-amber-50 text-amber-600 border border-amber-100 p-2 rounded text-[10px] font-bold flex-1 text-center">Day 3: Send follow-up</div>
-                          <div className="bg-emerald-50 text-emerald-600 border border-emerald-100 p-2 rounded text-[10px] font-bold flex-1 text-center">Reply: Auto-pause</div>
+                          <div className="bg-emerald-50 text-emerald-600 border border-emerald-100 p-2 rounded text-[10px] font-bold flex-1 text-center">Unsubscribe: Auto-stop</div>
                         </div>
                       </div>
                     )}
@@ -278,9 +278,9 @@ export default function FeaturesPage() {
         <Container>
           <div className="text-center max-w-3xl mx-auto mb-14">
             <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Additional Capabilities</span>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-zinc-900 tracking-tight mt-1 mb-3">Even more features to power outreach</h2>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-zinc-900 tracking-tight mt-1 mb-3">Even more features to power your campaigns</h2>
             <p className="text-xs sm:text-sm text-zinc-500 font-normal">
-              A comprehensive set of robust outreach options built specifically for modern scaling developer platforms.
+              A comprehensive set of tools built to help businesses run organized, reliable email campaigns.
             </p>
           </div>
 
@@ -288,21 +288,21 @@ export default function FeaturesPage() {
             {[
               {
                 title: "Collaborative Workspaces",
-                desc: "Invite teammates, share connected SMTP sender pools, and collaborate on outbound campaigns from a single dashboard.",
+                desc: "Invite teammates, share connected sender accounts, and collaborate on email campaigns from a single dashboard.",
                 icon: Users,
                 color: "text-purple-600",
                 bg: "bg-purple-50"
               },
               {
-                title: "AI Reply Sentiment Analyzer",
-                desc: "AI classifies response sentiments (positive, neutral, negative), logs logs, and pauses sequences.",
+                title: "Campaign Reports & Exports",
+                desc: "Review sent, open, click and bounce metrics per campaign, and export your reports to Excel, PDF, or Word.",
                 icon: BarChart3,
                 color: "text-indigo-650",
                 bg: "bg-indigo-50"
               },
               {
-                title: "Suppressions & Team Pools",
-                desc: "Manage unsubscribe blocks to protect domain reputation, and invite team members to collaborate on SMTP pools.",
+                title: "Suppression & Unsubscribe Lists",
+                desc: "Add one-click unsubscribe links and automatically keep unsubscribed and bounced addresses on a suppression list.",
                 icon: Code,
                 color: "text-pink-650",
                 bg: "bg-pink-50"

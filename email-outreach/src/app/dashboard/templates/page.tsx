@@ -262,14 +262,14 @@ export default function TemplatesPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("AI Generation failed. Check your GEMINI_API_KEY in .env.");
+      if (!res.ok) throw new Error("AI generation failed. Please try again in a moment.");
 
       const data = await res.json();
       if (!data.success) throw new Error(data.error || "AI generation failed");
 
       const outputText = data.text;
 
-      let subjectLine = "AI Generated Outreach";
+      let subjectLine = "AI Generated Email";
       let bodyContent = outputText;
 
       const subjectMatch = outputText.match(/Subject:\s*(.*)/i);
@@ -280,12 +280,12 @@ export default function TemplatesPage() {
 
       setSubject(subjectLine);
       setBodyHtml(`<div style="font-family: sans-serif; padding: 20px; line-height: 1.5;">\n  ${bodyContent.replace(/\n/g, "<br/>")}\n</div>`);
-      setName(`AI: ${aiTone.toUpperCase()} Outreach Template`);
+      setName(`AI: ${aiTone.toUpperCase()} Email Template`);
 
       toast.success("AI email template generated and populated!");
       setIsAiDrawerOpen(false);
     } catch (err: any) {
-      toast.error(err.message || "Failed to generate outreach template");
+      toast.error(err.message || "Failed to generate email template");
     } finally {
       setIsGeneratingAi(false);
     }
@@ -1276,7 +1276,7 @@ export default function TemplatesPage() {
                   <Sparkles className="w-4 h-4 text-indigo-500" />
                   Generate with AI
                 </h3>
-                <p className="text-[11px] text-zinc-500 mt-0.5 font-medium">Powered by Google Gemini</p>
+                <p className="text-[11px] text-zinc-500 mt-0.5 font-medium">Powered by AI</p>
               </div>
               <button type="button" onClick={() => setIsAiDrawerOpen(false)} className="p-1.5 rounded-lg border border-zinc-200 hover:bg-zinc-50 text-zinc-400 hover:text-zinc-700 cursor-pointer transition-colors">
                 <X className="w-3.5 h-3.5" />
@@ -1288,7 +1288,7 @@ export default function TemplatesPage() {
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Your Product / Company</label>
                 <textarea
-                  placeholder="e.g. PrimeInbox is a cold email outreach SaaS featuring automatic SMTP rotation to bypass spam filters."
+                  placeholder="e.g. PrimeInbox is an email campaign platform that helps businesses send personalized emails and track engagement."
                   value={aiCompanyContext}
                   onChange={(e) => setAiCompanyContext(e.target.value)}
                   rows={2}
@@ -1393,7 +1393,7 @@ export default function TemplatesPage() {
               <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Category Name</label>
               <input
                 type="text"
-                placeholder="e.g. Sales Outreach, Follow-ups"
+                placeholder="e.g. Newsletters, Follow-ups"
                 value={newCatName}
                 onChange={(e) => setNewCatName(e.target.value)}
                 className="w-full h-9 px-3 rounded-lg bg-zinc-50 border border-zinc-200 text-xs text-zinc-800 focus:bg-white focus:border-indigo-300 focus:outline-none font-medium"

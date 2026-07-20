@@ -288,14 +288,14 @@ export default function SuperAdminLoginPage() {
       <div className="w-full max-w-[420px]">
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4 p-2.5 rounded-2xl bg-zinc-950 border border-red-500/20 text-red-500">
-            <ShieldAlert className="w-7 h-7 animate-pulse" />
+          <div className="inline-flex items-center gap-2 mb-4 p-2.5 rounded-2xl bg-white border border-red-100 text-red-600 shadow-sm">
+            <ShieldAlert className="w-7 h-7" />
           </div>
           <h2 className="text-2xl font-extrabold text-zinc-900 tracking-tight">Super Admin Portal</h2>
           <p className="text-xs text-zinc-500 font-semibold mt-1">Authorized access only. Log in to control panel.</p>
         </div>
 
-        <GlowCard className="border border-red-550/10 shadow-none bg-zinc-950/5" glowColor="rgba(239, 68, 68, 0.02)">
+        <GlowCard className="border border-zinc-200/70 shadow-sm bg-none bg-white" glowColor="rgba(239, 68, 68, 0.03)">
           <div className="p-8">
             <form className="flex flex-col gap-4 text-left" onSubmit={handleSubmitLogin(onLoginSubmit)}>
               {generalSuccess && (
@@ -396,7 +396,7 @@ export default function SuperAdminLoginPage() {
               <ShimmerButton 
                 type="submit"
                 disabled={isLoading}
-                className="h-11 w-full mt-2 rounded-xl text-sm font-bold bg-red-600 text-white hover:bg-red-700 flex items-center justify-center gap-2 shadow-lg shadow-red-500/10"
+                className="h-11 w-full mt-2 rounded-xl text-sm font-bold bg-red-600 text-white hover:bg-red-700 border-0 flex items-center justify-center gap-2 shadow-md shadow-red-500/20"
                 shimmerColor="#EF4444"
               >
                 {isLoading ? (
@@ -594,7 +594,7 @@ export default function SuperAdminLoginPage() {
                   <ShimmerButton
                     onClick={onConfirmPasswordChange}
                     disabled={isResetLoading || otpValues.join("").length < 6}
-                    className="h-10 w-full rounded-xl text-xs font-bold bg-red-600 text-white hover:bg-red-750 flex items-center justify-center gap-1.5"
+                    className="h-10 w-full rounded-xl text-xs font-bold bg-red-600 text-white hover:bg-red-700 border-0 flex items-center justify-center gap-1.5"
                     shimmerColor="#EF4444"
                   >
                     {isResetLoading ? (

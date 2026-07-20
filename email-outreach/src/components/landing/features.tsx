@@ -11,14 +11,14 @@ import {
 const FEATURES = [
   {
     title: "AI Copywriter & Sequencer",
-    description: "Draft context-aware 2-step sequences, subject lines, and call-to-actions automatically using Gemini prompts tuned for conversions.",
+    description: "Draft context-aware 2-step sequences, subject lines, and call-to-actions automatically using AI prompts tuned for engagement.",
     icon: Wand2,
     gridClass: "md:col-span-3 lg:col-span-4",
     accent: "rgba(59, 130, 246, 0.06)"
   },
   {
-    title: "SMTP Rotation & DKIM",
-    description: "Cycle outbound volume across multiple sender accounts with custom daily/hourly limits, priority weights, and active DKIM keys.",
+    title: "Multi-Account Sending & DKIM",
+    description: "Distribute sending across multiple connected sender accounts with custom daily/hourly limits, priority weights, and optional DKIM signing.",
     icon: Repeat,
     gridClass: "md:col-span-3 lg:col-span-2",
     accent: "rgba(6, 182, 212, 0.06)"
@@ -39,21 +39,21 @@ const FEATURES = [
   },
   {
     title: "Interactive Analytics",
-    description: "Monitor outbound sends, open rates, links clicked, and bounces over time with dynamic Recharts line and area charts.",
+    description: "Monitor emails sent, open rates, links clicked, and bounces over time with dynamic line and area charts.",
     icon: BarChart,
     gridClass: "md:col-span-3 lg:col-span-2",
     accent: "rgba(99, 102, 241, 0.06)"
   },
   {
     title: "Collaborative Workspaces",
-    description: "Invite teammates, share connected SMTP sender pools, and collaborate on outbound campaigns from a single dashboard.",
+    description: "Invite teammates, share connected sender accounts, and collaborate on email campaigns from a single dashboard.",
     icon: Users,
     gridClass: "md:col-span-3 lg:col-span-3",
     accent: "rgba(99, 102, 241, 0.06)"
   },
   {
-    title: "Sentiment Suppressions",
-    description: "Identify reply sentiments automatically, pause running sequences on detection, and manage global unsubscribes list.",
+    title: "Unsubscribe & Suppression Management",
+    description: "Add one-click unsubscribe links to every email and automatically keep unsubscribed and bounced addresses on a suppression list.",
     icon: Code,
     gridClass: "md:col-span-3 lg:col-span-3",
     accent: "rgba(139, 92, 246, 0.06)"
@@ -70,11 +70,11 @@ export function FeaturesSection() {
               Core Capabilities
             </div>
             <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5 text-zinc-900">
-              Everything you need to scale your outreach
+              Everything you need to run better email campaigns
             </h2>
             <p className="text-sm md:text-base text-zinc-500 font-normal">
-              A comprehensive suite of tools built for developer relations teams to reach the inbox, 
-              engage developers, and grow pipelines.
+              A comprehensive suite of tools built for businesses to reach the inbox, 
+              engage their contacts, and grow relationships.
             </p>
           </FadeIn>
         </div>

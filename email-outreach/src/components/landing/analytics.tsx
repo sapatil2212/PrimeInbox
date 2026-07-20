@@ -8,23 +8,23 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { TrendingUp } from "lucide-react";
 
 const CHART_DATA = [
-  { name: "Mon", opens: 58, clicks: 10.2, replies: 5.1, bounces: 0.5 },
-  { name: "Tue", opens: 62, clicks: 11.5, replies: 6.2, bounces: 0.4 },
-  { name: "Wed", opens: 65, clicks: 13.0, replies: 7.5, bounces: 0.3 },
-  { name: "Thu", opens: 61, clicks: 12.1, replies: 6.8, bounces: 0.3 },
-  { name: "Fri", opens: 68, clicks: 14.2, replies: 8.1, bounces: 0.2 },
-  { name: "Sat", opens: 64, clicks: 11.8, replies: 7.0, bounces: 0.2 },
-  { name: "Sun", opens: 68.4, clicks: 13.5, replies: 7.8, bounces: 0.2 },
+  { name: "Mon", opens: 58, clicks: 10.2, delivered: 98.5, bounces: 0.5 },
+  { name: "Tue", opens: 62, clicks: 11.5, delivered: 98.8, bounces: 0.4 },
+  { name: "Wed", opens: 65, clicks: 13.0, delivered: 99.1, bounces: 0.3 },
+  { name: "Thu", opens: 61, clicks: 12.1, delivered: 99.0, bounces: 0.3 },
+  { name: "Fri", opens: 68, clicks: 14.2, delivered: 99.2, bounces: 0.2 },
+  { name: "Sat", opens: 64, clicks: 11.8, delivered: 99.2, bounces: 0.2 },
+  { name: "Sun", opens: 68.4, clicks: 13.5, delivered: 99.3, bounces: 0.2 },
 ];
 
 const METRICS = [
-  { id: "opens",   label: "Open Rate",   value: "68.4%", trend: "+12.5%", positive: true,  color: "#2563EB" },
-  { id: "clicks",  label: "Click Rate",  value: "14.2%", trend: "+5.2%",  positive: true,  color: "#06B6D4" },
-  { id: "replies", label: "Reply Rate",  value: "8.1%",  trend: "+2.4%",  positive: true,  color: "#8B5CF6" },
-  { id: "bounces", label: "Bounce Rate", value: "0.2%",  trend: "-0.1%",  positive: false, color: "#EF4444" },
+  { id: "opens",     label: "Open Rate",      value: "68.4%", trend: "+12.5%", positive: true,  color: "#2563EB" },
+  { id: "clicks",    label: "Click Rate",     value: "14.2%", trend: "+5.2%",  positive: true,  color: "#06B6D4" },
+  { id: "delivered", label: "Delivered Rate", value: "99.3%", trend: "+0.4%",  positive: true,  color: "#8B5CF6" },
+  { id: "bounces",   label: "Bounce Rate",    value: "0.2%",  trend: "-0.1%",  positive: false, color: "#EF4444" },
 ];
 
-type MetricId = "opens" | "clicks" | "replies" | "bounces";
+type MetricId = "opens" | "clicks" | "delivered" | "bounces";
 
 export function AnalyticsSection() {
   const [activeMetric, setActiveMetric] = useState<MetricId>("opens");
@@ -43,11 +43,11 @@ export function AnalyticsSection() {
                 Advanced Tracking
               </div>
               <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6 text-zinc-900 leading-tight">
-                Insights that drive DevRel revenue
+                Insights that improve every campaign
               </h2>
               <p className="text-sm md:text-base text-zinc-500 mb-8 leading-relaxed font-normal">
-                Go beyond vanity metrics. Track exactly what's working and what's not with real-time,
-                actionable analytics that map developer engagement to sales conversions.
+                Go beyond vanity metrics. Track exactly what's working and what's not with
+                actionable analytics on delivery, opens, clicks, and bounces across your campaigns.
               </p>
 
               <div className="grid grid-cols-2 gap-3">
@@ -137,7 +137,7 @@ export function AnalyticsSection() {
                         <stop offset="5%"  stopColor="#06B6D4" stopOpacity={0.18} />
                         <stop offset="95%" stopColor="#06B6D4" stopOpacity={0} />
                       </linearGradient>
-                      <linearGradient id="gReplies" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id="gDelivered" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%"  stopColor="#8B5CF6" stopOpacity={0.18} />
                         <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
                       </linearGradient>
@@ -192,12 +192,12 @@ export function AnalyticsSection() {
                     <Area
                       isAnimationActive={false}
                       type="monotone"
-                      dataKey="replies"
+                      dataKey="delivered"
                       stroke="#8B5CF6"
-                      strokeWidth={activeMetric === "replies" ? 2.5 : 1}
-                      strokeOpacity={activeMetric === "replies" ? 1 : 0.12}
-                      fill="url(#gReplies)"
-                      fillOpacity={activeMetric === "replies" ? 1 : 0}
+                      strokeWidth={activeMetric === "delivered" ? 2.5 : 1}
+                      strokeOpacity={activeMetric === "delivered" ? 1 : 0.12}
+                      fill="url(#gDelivered)"
+                      fillOpacity={activeMetric === "delivered" ? 1 : 0}
                       activeDot={false}
                     />
                     <Area

@@ -128,7 +128,7 @@ function emailWrapper(bodyContent: string): string {
           <tr>
             <td style="padding:20px 40px 28px;text-align:center;">
               <p style="font-family:'Poppins',Arial,sans-serif;color:#a1a1aa;font-size:11px;line-height:1.6;margin:0 0 4px;">
-                <strong style="color:#71717a;">PrimeInbox</strong> · Email Outreach Platform
+                <strong style="color:#71717a;">PrimeInbox</strong> · Email Campaign Platform
               </p>
               <p style="font-family:'Poppins',Arial,sans-serif;color:#a1a1aa;font-size:11px;line-height:1.6;margin:0 0 4px;">
                 Questions? <a href="mailto:contact.primeinbox@gmail.com" style="color:#6366f1;text-decoration:none;">contact.primeinbox@gmail.com</a>
@@ -152,7 +152,7 @@ function emailWrapper(bodyContent: string): string {
 export async function sendVerificationEmail(email: string, name: string, otp: string) {
   const subject = `${otp} is your PrimeInbox verification code`;
 
-  const text = `Hi ${name},\n\nThank you for signing up for PrimeInbox!\n\nYour verification code is: ${otp}\n\nThis code expires in 5 minutes for your security.\n\nIf you did not create a PrimeInbox account, you can safely ignore this email.\n\nBest regards,\nThe PrimeInbox Team\n\n---\nPrimeInbox - Email Outreach Platform\nSupport: contact.primeinbox@gmail.com\nWebsite: ${appUrl}\n\nThis is an automated message from a notification-only address that cannot accept incoming email.`;
+  const text = `Hi ${name},\n\nThank you for signing up for PrimeInbox!\n\nYour verification code is: ${otp}\n\nThis code expires in 5 minutes for your security.\n\nIf you did not create a PrimeInbox account, you can safely ignore this email.\n\nBest regards,\nThe PrimeInbox Team\n\n---\nPrimeInbox - Email Campaign Platform\nSupport: contact.primeinbox@gmail.com\nWebsite: ${appUrl}\n\nThis is an automated message from a notification-only address that cannot accept incoming email.`;
 
   const body = `
     <h2 style="font-family:'Poppins',Arial,sans-serif;font-size:17px;font-weight:600;color:#18181b;margin:0 0 6px;">Verify your email address</h2>
@@ -236,7 +236,7 @@ export async function sendPasswordResetEmail(email: string, name: string, token:
 export async function sendSuperAdminOtpEmail(email: string, otp: string) {
   const subject = `${otp} is your Super Admin verification code`;
 
-  const text = `SECURITY ALERT - Super Admin Password Change Request\n\nA request has been made to change the PrimeInbox Super Admin password.\n\nYour verification code is: ${otp}\n\nThis code expires in 5 minutes for your security.\n\n⚠️ IMPORTANT: If you did not initiate this request, please investigate immediately and secure your account.\n\nBest regards,\nThe PrimeInbox Security Team\n\n---\nPrimeInbox - Email Outreach Platform\nSecurity Contact: contact.primeinbox@gmail.com\nWebsite: ${appUrl}\n\nThis is an automated security alert from a notification-only address that cannot accept incoming email.`;
+  const text = `SECURITY ALERT - Super Admin Password Change Request\n\nA request has been made to change the PrimeInbox Super Admin password.\n\nYour verification code is: ${otp}\n\nThis code expires in 5 minutes for your security.\n\n⚠️ IMPORTANT: If you did not initiate this request, please investigate immediately and secure your account.\n\nBest regards,\nThe PrimeInbox Security Team\n\n---\nPrimeInbox - Email Campaign Platform\nSecurity Contact: contact.primeinbox@gmail.com\nWebsite: ${appUrl}\n\nThis is an automated security alert from a notification-only address that cannot accept incoming email.`;
 
   const body = `
     <!-- Security badge -->
@@ -292,12 +292,12 @@ export async function sendWorkspaceActivationEmail(
   const priceLine = options?.price != null ? `₹${options.price}` : null;
   const durationLine = options?.durationDays ? `${options.durationDays} days` : null;
 
-  const text = `Hi ${name},\n\nGreat news — your PrimeInbox workspace has been activated!\n\nPlan: ${planName}${priceLine ? `\nAmount: ${priceLine}` : ""}${durationLine ? `\nValidity: ${durationLine}` : ""}\n\nYou can now log in and start sending outreach campaigns:\n${loginUrl}\n\nBest regards,\nThe PrimeInbox Team\n\n---\nPrimeInbox - Email Outreach Platform\nSupport: contact.primeinbox@gmail.com\nWebsite: ${appUrl}`;
+  const text = `Hi ${name},\n\nGreat news — your PrimeInbox workspace has been activated!\n\nPlan: ${planName}${priceLine ? `\nAmount: ${priceLine}` : ""}${durationLine ? `\nValidity: ${durationLine}` : ""}\n\nYou can now log in and start sending your email campaigns:\n${loginUrl}\n\nBest regards,\nThe PrimeInbox Team\n\n---\nPrimeInbox - Email Campaign Platform\nSupport: contact.primeinbox@gmail.com\nWebsite: ${appUrl}`;
 
   const body = `
     <h2 style="font-family:'Poppins',Arial,sans-serif;font-size:17px;font-weight:600;color:#18181b;margin:0 0 6px;">Your workspace is now active 🎉</h2>
     <p style="font-family:'Poppins',Arial,sans-serif;font-size:13px;color:#52525b;line-height:1.6;margin:0 0 24px;">
-      Hi <strong style="color:#18181b;">${name}</strong>, we've confirmed your payment and activated your PrimeInbox workspace. You're all set to start launching outreach campaigns.
+      Hi <strong style="color:#18181b;">${name}</strong>, we've confirmed your payment and activated your PrimeInbox workspace. You're all set to start launching your email campaigns.
     </p>
 
     <!-- Plan details box -->

@@ -16,15 +16,15 @@ import { motion, useScroll, useTransform } from "framer-motion";
 
 const HERO_MARQUEE_ITEMS_RAW = [
   { label: "AI Copywriter & Sequencer", icon: Wand2 },
-  { label: "SMTP Rotation Engine", icon: Repeat },
+  { label: "Multi-Account Sending", icon: Repeat },
   { label: "CSV Header Mapper", icon: Download },
   { label: "Drag-and-Drop Editor", icon: LayoutTemplate },
-  { label: "Recharts Analytics", icon: BarChart3 },
+  { label: "Campaign Analytics", icon: BarChart3 },
   { label: "Collaborative Workspaces", icon: Users },
   { label: "Domain DKIM Security", icon: Key },
-  { label: "Reply Suppression Sync", icon: Mail },
-  { label: "AI Sentiment Analysis", icon: Activity },
-  { label: "Real-time Send Queue", icon: Clock },
+  { label: "One-Click Unsubscribe", icon: Mail },
+  { label: "Open & Click Tracking", icon: Activity },
+  { label: "Scheduled Sending", icon: Clock },
 ];
 
 const HERO_MARQUEE_ITEMS = [...HERO_MARQUEE_ITEMS_RAW, ...HERO_MARQUEE_ITEMS_RAW];
@@ -59,12 +59,12 @@ const LazyChart = lazy(() => import("recharts").then((mod) => ({
 })));
 
 const chartData = [
-  { date: "Mon", sends: 1200, opens: 820, replies: 180 },
-  { date: "Tue", sends: 2100, opens: 1240, replies: 290 },
-  { date: "Wed", sends: 1800, opens: 1010, replies: 240 },
-  { date: "Thu", sends: 3200, opens: 1980, replies: 420 },
-  { date: "Fri", sends: 2800, opens: 1640, replies: 360 },
-  { date: "Sat", sends: 4100, opens: 2440, replies: 510 },
+  { date: "Mon", sends: 1200, opens: 820, clicks: 180 },
+  { date: "Tue", sends: 2100, opens: 1240, clicks: 290 },
+  { date: "Wed", sends: 1800, opens: 1010, clicks: 240 },
+  { date: "Thu", sends: 3200, opens: 1980, clicks: 420 },
+  { date: "Fri", sends: 2800, opens: 1640, clicks: 360 },
+  { date: "Sat", sends: 4100, opens: 2440, clicks: 510 },
 ];
 
 const navLinks = [
@@ -78,17 +78,17 @@ const navLinks = [
 ];
 
 const statCards = [
-  { icon: Send, iconColor: "text-indigo-500", label: "Total Sent", value: "15,200", sub: "Outbound emails dispatched", subIcon: TrendingUp, subIconColor: "text-emerald-600" },
-  { icon: BarChart3, iconColor: "text-emerald-500", label: "Open Rate", value: "68.4%", sub: "Reply rate: 21.3%" },
-  { icon: Key, iconColor: "text-amber-500", label: "Active Senders", value: "8", sub: "Health avg: 99.2%", subIcon: HeartPulse, subIconColor: "text-emerald-600" },
+  { icon: Send, iconColor: "text-indigo-500", label: "Total Sent", value: "15,200", sub: "Emails delivered", subIcon: TrendingUp, subIconColor: "text-emerald-600" },
+  { icon: BarChart3, iconColor: "text-emerald-500", label: "Open Rate", value: "68.4%", sub: "Click rate: 14.2%" },
+  { icon: Key, iconColor: "text-amber-500", label: "Active Senders", value: "8", sub: "Connected accounts", subIcon: HeartPulse, subIconColor: "text-emerald-600" },
   { icon: Clock, iconColor: "text-indigo-500", label: "Today's Queue", value: "1,240", sub: "Active campaigns: 4" },
 ];
 
 const recentActivity = [
-  { campaign: "Q3 Outreach", lead: "alex@acme.io", message: "Email delivered", status: "SUCCESS", time: "10:24" },
-  { campaign: "SaaS Founders", lead: "mia@scale.dev", message: "Opened email", status: "SUCCESS", time: "10:18" },
-  { campaign: "Follow-up #2", lead: "ben@hubly.co", message: "Reply detected", status: "SUCCESS", time: "09:57" },
-  { campaign: "Cold List A", lead: "noah@vex.app", message: "Bounced — invalid", status: "FAILED", time: "09:41" },
+  { campaign: "Product Newsletter", lead: "alex@acme.io", message: "Email delivered", status: "SUCCESS", time: "10:24" },
+  { campaign: "Onboarding Series", lead: "mia@scale.dev", message: "Opened email", status: "SUCCESS", time: "10:18" },
+  { campaign: "Follow-up #2", lead: "ben@hubly.co", message: "Link clicked", status: "SUCCESS", time: "09:57" },
+  { campaign: "Monthly Update", lead: "noah@vex.app", message: "Bounced — invalid", status: "FAILED", time: "09:41" },
 ];
 
 export function HeroSection() {
@@ -131,14 +131,14 @@ export function HeroSection() {
         {/* Hero Title */}
         <SlideUp delay={0.2} yOffset={30}>
           <h1 className="max-w-5xl mx-auto text-3xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-6xl leading-[1.1] md:leading-[1.05] font-extrabold tracking-tight text-zinc-900 mb-4 md:mb-6 px-2">
-            Send Cold Emails That <br className="hidden sm:block" /> Actually <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-650 font-extrabold">Land &amp; Convert.</span>
+            Run Email Campaigns That <br className="hidden sm:block" /> Actually <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-650 font-extrabold">Land &amp; Convert.</span>
           </h1>
         </SlideUp>
 
         {/* Subtitle */}
         <SlideUp delay={0.3} yOffset={20}>
           <p className="max-w-2xl mx-auto text-sm md:text-lg text-zinc-500 mb-7 md:mb-8 leading-relaxed px-4">
-            PrimeInbox helps you launch personalized email campaigns, rotate SMTP senders for top deliverability, and track opens, clicks, and replies — all from one platform.
+            PrimeInbox helps you launch personalized email campaigns, distribute sending across multiple connected accounts for reliable deliverability, and track opens and clicks — all from one platform.
           </p>
         </SlideUp>
 
@@ -253,7 +253,7 @@ export function HeroSection() {
                   <div className="flex items-center gap-3 ml-auto">
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-100 border border-zinc-200 text-[10px] md:text-xs text-zinc-650 font-semibold">
                       <Search className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Search outreach...</span>
+                      <span className="hidden sm:inline">Search campaigns...</span>
                       <kbd className="hidden md:inline-block px-1.5 py-0.5 bg-zinc-50 border border-zinc-200 rounded font-mono text-[9px]">Ctrl K</kbd>
                     </div>
                     <div className="w-8 h-8 rounded-full border border-zinc-200 overflow-hidden shrink-0">
@@ -268,7 +268,7 @@ export function HeroSection() {
                   <div className="flex items-center justify-between shrink-0">
                     <div>
                       <h2 className="text-lg md:text-2xl font-black tracking-tight text-zinc-900">Overview</h2>
-                      <p className="text-[10px] md:text-sm text-zinc-500 font-medium hidden sm:block">Real-time indicators of your outreach performance and deliverability.</p>
+                      <p className="text-[10px] md:text-sm text-zinc-500 font-medium hidden sm:block">Real-time indicators of your campaign performance and deliverability.</p>
                     </div>
                     <div className="h-8 md:h-9 px-3 md:px-5 rounded-lg text-[10px] md:text-xs font-bold bg-indigo-600 text-white flex items-center gap-1.5 shrink-0">
                       <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" /> <span className="hidden sm:inline">Create Campaign</span>
@@ -315,7 +315,7 @@ export function HeroSection() {
 
                     {/* Setup / Quick actions panel */}
                     <div className="bg-white border border-zinc-200 rounded-xl p-4 md:p-5 flex flex-col gap-3 flex-1 overflow-hidden">
-                      <h3 className="text-xs md:text-sm font-bold text-zinc-900 shrink-0">Setup Outreach Engine</h3>
+                      <h3 className="text-xs md:text-sm font-bold text-zinc-900 shrink-0">Setup Campaign Engine</h3>
                       <p className="text-[10px] md:text-xs text-zinc-500 font-medium leading-relaxed hidden md:block">
                         Configure SMTP accounts, build lists, and upload leads to start sending.
                       </p>

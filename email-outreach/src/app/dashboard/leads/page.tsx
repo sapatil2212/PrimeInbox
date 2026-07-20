@@ -384,7 +384,7 @@ export default function LeadsPage() {
  <th className="p-4 font-semibold">Lead Info</th>
  <th className="p-4 font-semibold">Company</th>
  <th className="p-4 font-semibold">Job Title</th>
- <th className="p-4 font-semibold">Outreach Status</th>
+ <th className="p-4 font-semibold">Campaign Status</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-zinc-100">

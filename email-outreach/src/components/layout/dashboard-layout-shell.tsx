@@ -112,10 +112,10 @@ export function DashboardLayoutShell({ children, user, company, trial }: Dashboa
 
   // Commands for command palette
   const commands = [
-    { name: "Create Campaign", desc: "Start a new outreach sequence", href: "/dashboard/campaigns/create" },
+    { name: "Create Campaign", desc: "Start a new email campaign", href: "/dashboard/campaigns/create" },
     { name: "Import Leads", desc: "Upload CSV or list leads", href: "/dashboard/leads" },
     { name: "Connect SMTP", desc: "Add email sending accounts", href: "/dashboard/smtp" },
-    { name: "Compose Template", desc: "Design outreach template", href: "/dashboard/templates" },
+    { name: "Compose Template", desc: "Design email template", href: "/dashboard/templates" },
     { name: "Unsubscribes", desc: "View suppressed / blacklisted emails", href: "/dashboard/unsubscribes" },
     { name: "CRM Contacts", desc: "View managed CRM pipeline", href: "/dashboard/crm" },
     { name: "Workspace Settings", desc: "Adjust timezone or company profile", href: "/dashboard/settings" },
@@ -356,7 +356,7 @@ export function DashboardLayoutShell({ children, user, company, trial }: Dashboa
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-100 border border-zinc-200 hover:border-zinc-300 text-xs text-zinc-650 hover:text-zinc-850 transition-all font-semibold"
             >
               <Search className="w-3.5 h-3.5" />
-              <span>Search outreach...</span>
+              <span>Search campaigns...</span>
               <kbd className="hidden sm:inline-block px-1.5 py-0.5 bg-zinc-50 border border-zinc-200 rounded font-mono text-[9px]">Ctrl K</kbd>
             </button>
 

@@ -181,7 +181,7 @@ export function CookieConsent() {
                     <span className="font-semibold text-sm text-gray-900">Marketing Cookies</span>
                   </div>
                   <p className="text-xs text-gray-600">
-                    Used to track advertisements performance and help display personalized outreach materials.
+                    Used to measure advertising performance and help display personalized marketing materials.
                   </p>
                 </div>
                 <div className="flex items-center h-5">

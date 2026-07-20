@@ -12,23 +12,23 @@ import {
 const FAQS = [
   {
     question: "How does the AI email generator work?",
-    answer: "Our AI is trained on millions of highly converting developer relations and cold outreach emails. It takes your target developer profile, product details, and prompt to construct sequences that follow proven technical copywriting frameworks. You can adjust tone, technical depth, and call-to-actions.",
+    answer: "PrimeInbox uses advanced AI to help you draft email copy. You provide a short prompt along with your company and recipient context, and the assistant generates subject lines, call-to-actions, and multi-step sequences with personalization placeholders. You can review and edit everything before sending.",
   },
   {
-    question: "What is SMTP rotation and why do I need it?",
-    answer: "Sending high volume from a single domain or IP causes spam filters to block you. SMTP rotation cycles your outbound emails through multiple sending accounts, maintaining perfect sender reputation and deliverability.",
+    question: "What is multi-account sending and why is it useful?",
+    answer: "PrimeInbox lets you connect more than one sending account and distribute your campaign volume across them, with configurable daily and hourly limits per account. Spreading volume helps you manage sender reputation and keep deliverability healthy.",
   },
   {
-    question: "Can I connect my own email domains?",
-    answer: "Yes, you can integrate Google Workspace, Microsoft 365, or custom SMTP/IMAP servers. We recommend routing through 3-5 domains for optimal anti-ban rotation.",
+    question: "Can I connect my own email accounts?",
+    answer: "Yes. You can connect your own SMTP accounts — such as Google Workspace, Microsoft 365, or any custom SMTP provider — and PrimeInbox sends through the accounts you configure. Your credentials are stored encrypted.",
   },
   {
-    question: "Do you provide prospect developer leads?",
-    answer: "No, PrimeInbox is a pipeline execution engine. You import your developer targets via CSV or webhooks (like star event triggers or community registers), and we execute the sequence paths.",
+    question: "Do you provide contact lists?",
+    answer: "No. PrimeInbox is a campaign execution platform. You import your own contacts via CSV, Excel, PDF, or Word files, and you are responsible for having permission to email them. We then run your configured campaign sequences.",
   },
   {
-    question: "What happens when a prospect developer replies?",
-    answer: "When a reply is detected, our sentiment analyzer classifies the response, pauses the sequence for that user, and lists the thread in your inbox for manual follow-up.",
+    question: "How do you handle unsubscribes?",
+    answer: "Every email can include a one-click unsubscribe link. When a recipient unsubscribes, or an address hard-bounces, PrimeInbox adds it to your suppression list automatically so it is never contacted again.",
   }
 ];
 
@@ -45,7 +45,7 @@ export function FaqSection() {
               Frequently asked questions
             </h2>
             <p className="text-sm md:text-base text-zinc-500">
-              Clear, transparent answers to help you configure your DevRel campaign channels.
+              Clear, transparent answers to help you set up and run your email campaigns.
             </p>
           </FadeIn>
         </div>

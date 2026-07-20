@@ -21,8 +21,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PrimeInbox | Turn Your DevRel Program Into Revenue Growth",
-  description: "AI-powered Email Outreach Automation SaaS platform. Convert developer engagement into qualified leads and sales opportunities.",
+  title: "PrimeInbox | AI-Powered Email Campaign & Engagement Platform",
+  description: "PrimeInbox is an AI-powered email campaign and sales engagement platform. Create personalized email campaigns, automate follow-ups, manage contacts, and track opens and clicks — all from one dashboard. A product of Brightwave Digital Products LLP.",
   icons: {
     icon: [{ url: "/favicon.png", type: "image/png" }],
     shortcut: "/favicon.png",

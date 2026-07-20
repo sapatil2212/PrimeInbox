@@ -399,7 +399,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
  <div className="p-4 space-y-1">
  <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Sent</div>
  <div className="text-2xl font-black text-zinc-800">{stats.sent}</div>
- <div className="text-[9px] text-zinc-500 font-bold">outbound emails</div>
+ <div className="text-[9px] text-zinc-500 font-bold">emails sent</div>
  </div>
  </GlowCard>
 
@@ -421,9 +421,9 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
 
  <GlowCard className="border border-zinc-200 bg-white" glowColor="rgba(99, 102, 241, 0.02)">
  <div className="p-4 space-y-1">
- <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Reply Rate</div>
- <div className="text-2xl font-black text-amber-650">{stats.replyRate}%</div>
- <div className="text-[9px] text-zinc-500 font-bold">{stats.reply} total replies</div>
+ <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Bounce Rate</div>
+ <div className="text-2xl font-black text-amber-650">{stats.bounceRate}%</div>
+ <div className="text-[9px] text-zinc-500 font-bold">{stats.bounce} total bounces</div>
  </div>
  </GlowCard>
 
@@ -510,7 +510,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
  <tr className="text-zinc-500 font-bold bg-zinc-50/50">
  <th className="p-4 font-semibold">Lead Info</th>
  <th className="p-4 font-semibold">Current Step</th>
- <th className="p-4 font-semibold">Outreach Status</th>
+ <th className="p-4 font-semibold">Campaign Status</th>
  <th className="p-4 font-semibold">Last Sent</th>
  <th className="p-4 font-semibold">Next Action Time</th>
  </tr>
