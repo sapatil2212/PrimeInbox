@@ -43,8 +43,7 @@ export async function POST(req: NextRequest) {
     // Trials removed. Free (Bronze) plans are activated immediately; paid plans
     // start as PENDING_ACTIVATION until a super admin marks them paid & activates.
     const planMeta = getPlan(selectedPlan);
-    const isFreePlan = !!planMeta?.free;
-    const initialStatus = isFreePlan ? "ACTIVE" : "PENDING_ACTIVATION";
+    const initialStatus = "ACTIVE";
     
     // Check if user already exists
     let existingUser = await db.user.findUnique({

@@ -76,13 +76,13 @@ export async function POST(
           status: "ACTIVE",
           currentPeriodStart: now,
           currentPeriodEnd: periodEnd,
-          stripePriceId: `${plan.id.toLowerCase()}_manual`,
+          gatewayPriceId: `${plan.id.toLowerCase()}_manual`,
         },
         update: {
           status: "ACTIVE",
           currentPeriodStart: now,
           currentPeriodEnd: periodEnd,
-          stripePriceId: `${plan.id.toLowerCase()}_manual`,
+          gatewayPriceId: `${plan.id.toLowerCase()}_manual`,
         },
       });
 

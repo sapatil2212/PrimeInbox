@@ -21,7 +21,8 @@ import {
   ArrowLeft,
   Terminal,
   Calendar,
-  Clock,
+  CreditCard,
+  Receipt,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -76,24 +77,21 @@ export function AdminLayoutShell({ children, user }: AdminLayoutShellProps) {
   };
 
   const navLinks = [
-    { label: "Overview", href: "/admin", icon: BarChart3, exact: true },
+    { label: "Overview & Revenue", href: "/admin", icon: BarChart3, exact: true },
+    { label: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard },
+    { label: "Transactions", href: "/admin/transactions", icon: Receipt },
     { label: "Tenants", href: "/admin/tenants", icon: Building },
-    { label: "Pending Activation", href: "/admin/pending-activation", icon: Clock },
     { label: "Users", href: "/admin/users", icon: Users },
     { label: "Demo Enquiry", href: "/admin/demo-enquiry", icon: Calendar },
-    { label: "System Health", href: "/admin/health", icon: Activity },
-    { label: "Logs", href: "/admin/logs", icon: Terminal },
-    { label: "Database", href: "/admin/database", icon: Database },
     { label: "Settings", href: "/admin/settings", icon: Settings },
   ];
 
   const quickActions = [
+    { name: "Revenue Overview", desc: "Zoho Payments live metrics", href: "/admin" },
+    { name: "Subscriptions", desc: "Manage tenant subscriptions", href: "/admin/subscriptions" },
+    { name: "Transactions", desc: "Full payment history", href: "/admin/transactions" },
     { name: "View Tenants", desc: "Manage workspace tenants", href: "/admin/tenants" },
-    { name: "Pending Activation", desc: "Activate paid workspaces", href: "/admin/pending-activation" },
     { name: "Demo Enquiries", desc: "Inbound demo requests", href: "/admin/demo-enquiry" },
-    { name: "System Health", desc: "Check system diagnostics", href: "/admin/health" },
-    { name: "View Logs", desc: "Monitor system logs", href: "/admin/logs" },
-    { name: "Database Status", desc: "Check database connection", href: "/admin/database" },
   ];
 
   const filteredActions = quickActions.filter(

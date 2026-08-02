@@ -143,14 +143,8 @@ export default function SignupPage() {
 
       // Paid plans require manual admin activation — show the "registration
       // completed" message instead of routing into the (locked) dashboard.
-      if (result.pendingActivation) {
-        setShowOtpModal(false);
-        setShowPendingModal(true);
-        return;
-      }
-
-      // Free (Bronze) plans are active immediately and the API has logged the
-      // user in, so send them straight to the dashboard.
+      // User is logged in automatically by the API. Redirect to dashboard.
+      // Free plans get dashboard access; paid plans get the Zoho Payments checkout paywall.
       setVerifySuccess(true);
       setTimeout(() => {
         router.push(result.redirectTo || "/dashboard");

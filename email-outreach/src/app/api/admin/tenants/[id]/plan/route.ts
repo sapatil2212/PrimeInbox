@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 /**
  * Admin-only: manually set a tenant's subscription plan (for payments made
- * outside Razorpay — bank transfer, UPI, cash, etc.). Records an invoice and
+ * outside the payment gateway — bank transfer, UPI, cash, etc.). Records an invoice and
  * a payment with the chosen provider/reference for an audit trail.
  */
 export async function POST(
@@ -63,13 +63,13 @@ export async function POST(
           status: "ACTIVE",
           currentPeriodStart: now,
           currentPeriodEnd: periodEnd,
-          stripePriceId: isFree ? "free_tier" : `${plan!.id.toLowerCase()}_manual`,
+          gatewayPriceId: isFree ? "free_tier" : `${plan!.id.toLowerCase()}_manual`,
         },
         update: {
           status: "ACTIVE",
           currentPeriodStart: now,
           currentPeriodEnd: periodEnd,
-          stripePriceId: isFree ? "free_tier" : `${plan!.id.toLowerCase()}_manual`,
+          gatewayPriceId: isFree ? "free_tier" : `${plan!.id.toLowerCase()}_manual`,
         },
       });
 

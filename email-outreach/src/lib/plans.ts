@@ -8,7 +8,7 @@ export interface Plan {
   name: string;
   /** Monthly price in INR (rupees). 0 means a free plan. */
   price: number;
-  /** Amount in paise for Razorpay (price * 100). */
+  /** Amount in paise (price × 100) for payment gateway. */
   amountPaise: number;
   emails: string;
   smtp: string;

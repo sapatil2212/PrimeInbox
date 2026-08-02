@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { DashboardLayoutShell } from "@/components/layout/dashboard-layout-shell";
 import { getTrialState } from "@/lib/access";
 import { TrialEnded } from "@/components/billing/trial-ended";
-import { WorkspacePending } from "@/components/billing/workspace-pending";
+import { SuspendedAccount } from "@/components/billing/suspended-account";
 import { getPlan } from "@/lib/plans";
 
 export default async function DashboardLayout({
@@ -76,23 +76,26 @@ export default async function DashboardLayout({
  trialEndsAt: (company as any).trialEndsAt ?? null,
  });
 
- if (trial.blocked && user.role !== "SUPER_ADMIN") {
- // Paid workspaces awaiting manual admin activation see a dedicated pending screen.
- if (trial.pendingActivation) {
- return (
- <WorkspacePending
- planName={getPlan(company.subscriptionPlan)?.name || company.subscriptionPlan}
- email={user.email}
- />
- );
- }
- return (
- <TrialEnded
- currentPlan={company.subscriptionPlan}
- prefill={{ name: user.name, email: user.email, contact: user.contactNo || undefined }}
- />
- );
- }
+  if (trial.blocked && user.role !== "SUPER_ADMIN") {
+    // Suspended due to payment failure — show specific suspension page
+    if (company.subscriptionStatus === "SUSPENDED") {
+      return (
+        <SuspendedAccount
+          currentPlan={company.subscriptionPlan}
+          prefill={{ name: user.name, email: user.email, contact: user.contactNo || undefined }}
+          workspaceSlug={company.workspaceSlug}
+        />
+      );
+    }
+
+    // All other blocked states (PENDING_ACTIVATION, INACTIVE, etc.)
+    return (
+      <TrialEnded
+        currentPlan={company.subscriptionPlan}
+        prefill={{ name: user.name, email: user.email, contact: user.contactNo || undefined }}
+      />
+    );
+  }
 
  return (
  <DashboardLayoutShell user={user} company={company} trial={{ onTrial: trial.onTrial, daysLeft: trial.daysLeft }}>

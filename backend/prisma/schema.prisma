@@ -590,17 +590,17 @@ model BounceLog {
 // ==========================================
 
 model Subscription {
-  id                   String   @id @default(uuid())
-  companyId            String   @unique
-  stripeCustomerId     String?  @unique
-  stripeSubscriptionId String?  @unique
-  stripePriceId        String?
-  status               String
-  currentPeriodStart   DateTime
-  currentPeriodEnd     DateTime
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  company              Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id                    String   @id @default(uuid())
+  companyId             String   @unique
+  gatewayCustomerId     String?  @unique
+  gatewaySubscriptionId String?  @unique
+  gatewayPriceId        String?
+  status                String
+  currentPeriodStart    DateTime
+  currentPeriodEnd      DateTime
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  company               Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
 }
 
 model Invoice {
@@ -608,7 +608,7 @@ model Invoice {
   companyId     String
   invoiceNumber String    @unique
   amount        Float
-  currency      String    @default("usd")
+  currency      String    @default("inr")
   status        String
   pdfUrl        String?
   createdAt     DateTime  @default(now())
@@ -622,13 +622,22 @@ model Payment {
   companyId     String
   invoiceId     String
   amount        Float
-  currency      String   @default("usd")
+  currency      String   @default("inr")
   status        String
-  provider      String   @default("stripe")
+  provider      String   @default("zoho")
   transactionId String   @unique
   createdAt     DateTime @default(now())
   company       Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   invoice       Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model WebhookLog {
+  id        String   @id @default(uuid())
+  eventId   String   @unique
+  eventType String
+  payload   String   @db.Text
+  status    String   @default("processed")
+  createdAt DateTime @default(now())
 }
 
 // ==========================================

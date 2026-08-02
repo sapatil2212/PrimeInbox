@@ -18,7 +18,7 @@ const hasSMTP = !!(smtpConfig.host && smtpConfig.auth.user && smtpConfig.auth.pa
 const transporter = hasSMTP ? nodemailer.createTransport(smtpConfig) : null;
 const fromName = process.env.SMTP_FROM || "PrimeInbox";
 const fromEmail = process.env.SMTP_USER || "noreply@primeinbox.dev";
-const appUrl = process.env.APP_URL || "http://localhost:3000";
+const appUrl = process.env.APP_URL || "http://localhost:3001";
 
 export interface SendMailOptions {
   to: string;
@@ -186,41 +186,35 @@ export async function sendVerificationEmail(email: string, name: string, otp: st
   return await sendMail({ to: email, subject, html, text });
 }
 
-// ─── 2. Password reset email ──────────────────────────────────────────────────
+// ─── 2. Password reset OTP email ─────────────────────────────────────────────
 
-export async function sendPasswordResetEmail(email: string, name: string, token: string) {
-  const resetUrl = `${appUrl}/reset-password?token=${token}`;
-  const subject = "Reset your PrimeInbox password";
+export async function sendPasswordResetOtpEmail(email: string, name: string, otp: string) {
+  const subject = `${otp} is your PrimeInbox password reset code`;
 
-  const text = `Hi ${name},\n\nWe received a request to reset your password. You can reset your password by clicking the link below:\n\n${resetUrl}\n\nThis link will expire in 2 hours.\n\nBest regards,\nThe PrimeInbox Team`;
+  const text = `Hi ${name},\n\nWe received a request to reset your password.\n\nYour 6-digit password reset code is: ${otp}\n\nThis code expires in 15 minutes.\n\nIf you did not request a password reset, please ignore this email or contact support.\n\nBest regards,\nThe PrimeInbox Team`;
 
   const body = `
     <h2 style="font-family:'Poppins',Arial,sans-serif;font-size:17px;font-weight:600;color:#18181b;margin:0 0 6px;">Reset your password</h2>
     <p style="font-family:'Poppins',Arial,sans-serif;font-size:13px;color:#52525b;line-height:1.6;margin:0 0 24px;">
-      Hi <strong style="color:#18181b;">${name}</strong>, we received a request to reset the password for your PrimeInbox account. Click the button below to set a new password.
+      Hi <strong style="color:#18181b;">${name}</strong>, we received a request to reset your password. Use the 6-digit verification code below to set a new password.
     </p>
 
-    <!-- CTA button -->
+    <!-- OTP box -->
     <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 20px;">
       <tr>
-        <td align="center">
-          <a href="${resetUrl}" style="display:inline-block;background-color:#6366f1;color:#ffffff;font-family:'Poppins',Arial,sans-serif;font-size:13px;font-weight:600;padding:12px 28px;border-radius:8px;text-decoration:none;letter-spacing:0.2px;">Reset Password</a>
+        <td align="center" style="padding:18px 20px;background-color:#fafafa;border:1px solid #e4e4e7;border-radius:12px;">
+          <p style="font-family:'Poppins',Arial,sans-serif;font-size:11px;font-weight:600;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">Your password reset code</p>
+          <p style="font-family:'Poppins',Arial,sans-serif;font-size:22px;font-weight:700;letter-spacing:6px;color:#4f46e5;margin:0;line-height:1;">${otp}</p>
         </td>
       </tr>
     </table>
 
-    <!-- Fallback link -->
-    <p style="font-family:'Poppins',Arial,sans-serif;font-size:11px;color:#a1a1aa;text-align:center;margin:0 0 20px;">
-      Or paste this link into your browser:<br/>
-      <a href="${resetUrl}" style="color:#6366f1;text-decoration:none;word-break:break-all;">${resetUrl}</a>
-    </p>
-
     <!-- Expiry notice -->
     <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
       <tr>
-        <td style="padding:12px 16px;background-color:#fafafa;border:1px solid #e4e4e7;border-radius:8px;">
-          <p style="font-family:'Poppins',Arial,sans-serif;font-size:12px;color:#71717a;margin:0;line-height:1.5;">
-            🔒 This link expires in <strong>2 hours</strong>. If you didn't request a password reset, you can safely ignore this email.
+        <td style="padding:12px 16px;background-color:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
+          <p style="font-family:'Poppins',Arial,sans-serif;font-size:12px;color:#92400e;margin:0;line-height:1.5;">
+            ⏱ <strong>Expires in 15 minutes.</strong> If you didn't request a password reset, you can safely ignore this email.
           </p>
         </td>
       </tr>
@@ -331,3 +325,190 @@ export async function sendWorkspaceActivationEmail(
   const html = emailWrapper(body);
   return await sendMail({ to: email, subject: "Your PrimeInbox workspace is now active", html, text });
 }
+
+// ─── 8. Subscription renewal reminder (24 hours before billing) ───────────────
+
+export async function sendSubscriptionRenewalReminder(
+  email: string,
+  name: string,
+  opts: {
+    planName: string;
+    amount: number;
+    renewalDate: Date;
+    paymentMode?: string;
+    workspaceSlug: string;
+  }
+) {
+  const dateStr = opts.renewalDate.toLocaleDateString("en-IN", {
+    day: "2-digit", month: "long", year: "numeric",
+  });
+  const amountStr = `₹${opts.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+  const billingUrl = `${appUrl}/dashboard/billing`;
+  const subject = `Your PrimeInbox subscription renews tomorrow — ${amountStr}`;
+
+  const text = `Hi ${name},\n\nThis is a reminder that your PrimeInbox ${opts.planName} subscription will automatically renew tomorrow on ${dateStr}.\n\nAmount: ${amountStr}\nPayment Method: ${opts.paymentMode || "Auto-Pay"}\n\nNo action is needed — the payment will be deducted automatically. If you wish to update your payment method or cancel, visit:\n${billingUrl}\n\nThank you for using PrimeInbox!\n\nBest regards,\nThe PrimeInbox Team`;
+
+  const body = `
+    <h2 style="font-family:'Poppins',Arial,sans-serif;font-size:17px;font-weight:700;color:#18181b;margin:0 0 6px;">Your subscription renews tomorrow</h2>
+    <p style="font-family:'Poppins',Arial,sans-serif;font-size:13px;color:#52525b;line-height:1.6;margin:0 0 22px;">
+      Hi <strong style="color:#18181b;">${name}</strong>, just a heads-up that your <strong>${opts.planName} Plan</strong> subscription is set to automatically renew tomorrow.
+    </p>
+
+    <!-- Renewal details box -->
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 22px;">
+      <tr>
+        <td style="background-color:#f8faff;border:1px solid #e0e7ff;border-radius:12px;padding:20px 24px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td style="padding:6px 0;border-bottom:1px solid #e8eaf6;">
+                <span style="font-family:'Poppins',Arial,sans-serif;font-size:11px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Plan</span>
+                <span style="font-family:'Poppins',Arial,sans-serif;font-size:13px;color:#1e293b;font-weight:700;float:right;">${opts.planName}</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:6px 0;border-bottom:1px solid #e8eaf6;">
+                <span style="font-family:'Poppins',Arial,sans-serif;font-size:11px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Renewal Date</span>
+                <span style="font-family:'Poppins',Arial,sans-serif;font-size:13px;color:#1e293b;font-weight:700;float:right;">${dateStr}</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:6px 0;border-bottom:1px solid #e8eaf6;">
+                <span style="font-family:'Poppins',Arial,sans-serif;font-size:11px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Amount</span>
+                <span style="font-family:'Poppins',Arial,sans-serif;font-size:15px;color:#4f46e5;font-weight:800;float:right;">${amountStr}</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:6px 0;">
+                <span style="font-family:'Poppins',Arial,sans-serif;font-size:11px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Payment Method</span>
+                <span style="font-family:'Poppins',Arial,sans-serif;font-size:13px;color:#1e293b;font-weight:600;float:right;">${opts.paymentMode || "Auto-Pay (Mandate)"}</span>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Info notice -->
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 22px;">
+      <tr>
+        <td style="padding:12px 16px;background-color:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;">
+          <p style="font-family:'Poppins',Arial,sans-serif;font-size:12px;color:#166534;margin:0;line-height:1.5;">
+            ✅ <strong>No action needed.</strong> The payment will be deducted automatically via your registered payment method. Ensure sufficient balance is available.
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Manage link -->
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 4px;">
+      <tr>
+        <td align="center">
+          <a href="${billingUrl}" style="display:inline-block;padding:11px 28px;background-color:#4f46e5;color:#ffffff;font-family:'Poppins',Arial,sans-serif;font-size:13px;font-weight:700;text-decoration:none;border-radius:8px;">
+            Manage Subscription
+          </a>
+        </td>
+      </tr>
+    </table>
+    <p style="font-family:'Poppins',Arial,sans-serif;font-size:11px;color:#a1a1aa;text-align:center;margin:10px 0 0;">
+      To cancel or update payment: <a href="${billingUrl}" style="color:#6366f1;text-decoration:none;">${billingUrl}</a>
+    </p>
+  `;
+
+  const html = emailWrapper(body);
+  return await sendMail({ to: email, subject, html, text });
+}
+
+// ─── 9. Payment failed / account suspended notification ───────────────────────
+
+export async function sendPaymentFailedEmail(
+  email: string,
+  name: string,
+  opts: {
+    planName: string;
+    amount: number;
+    failedAt: Date;
+    workspaceSlug: string;
+    paymentUrl: string;
+  }
+) {
+  const dateStr = opts.failedAt.toLocaleDateString("en-IN", {
+    day: "2-digit", month: "long", year: "numeric",
+  });
+  const amountStr = `₹${opts.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+  const subject = `⚠️ Payment failed — your PrimeInbox workspace has been suspended`;
+
+  const text = `Hi ${name},\n\nUnfortunately, we were unable to automatically deduct your PrimeInbox ${opts.planName} subscription renewal of ${amountStr} on ${dateStr}.\n\nAs a result, your workspace (${opts.workspaceSlug}) has been temporarily suspended.\n\nTo restore access, please complete your payment at:\n${opts.paymentUrl}\n\nIf you have any questions, contact us at contact.primeinbox@gmail.com.\n\nThe PrimeInbox Team`;
+
+  const body = `
+    <!-- Alert banner -->
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 20px;">
+      <tr>
+        <td style="padding:14px 18px;background-color:#fef2f2;border:1px solid #fecaca;border-radius:10px;">
+          <p style="font-family:'Poppins',Arial,sans-serif;font-size:13px;color:#991b1b;font-weight:700;margin:0 0 4px;">⚠️ Automatic payment failed</p>
+          <p style="font-family:'Poppins',Arial,sans-serif;font-size:12px;color:#b91c1c;margin:0;line-height:1.5;">
+            Your workspace has been temporarily suspended until payment is completed.
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    <h2 style="font-family:'Poppins',Arial,sans-serif;font-size:17px;font-weight:700;color:#18181b;margin:0 0 6px;">Action required to restore access</h2>
+    <p style="font-family:'Poppins',Arial,sans-serif;font-size:13px;color:#52525b;line-height:1.6;margin:0 0 22px;">
+      Hi <strong style="color:#18181b;">${name}</strong>, we were unable to charge your registered payment method for your <strong>${opts.planName} Plan</strong> renewal. Please complete your payment to restore full access to your workspace.
+    </p>
+
+    <!-- Failed payment details -->
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 22px;">
+      <tr>
+        <td style="background-color:#fafafa;border:1px solid #e4e4e7;border-radius:12px;padding:20px 24px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td style="padding:6px 0;border-bottom:1px solid #f0f0f0;">
+                <span style="font-family:'Poppins',Arial,sans-serif;font-size:11px;color:#6b7280;font-weight:600;text-transform:uppercase;">Plan</span>
+                <span style="font-family:'Poppins',Arial,sans-serif;font-size:13px;color:#1e293b;font-weight:700;float:right;">${opts.planName}</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:6px 0;border-bottom:1px solid #f0f0f0;">
+                <span style="font-family:'Poppins',Arial,sans-serif;font-size:11px;color:#6b7280;font-weight:600;text-transform:uppercase;">Amount Due</span>
+                <span style="font-family:'Poppins',Arial,sans-serif;font-size:15px;color:#dc2626;font-weight:800;float:right;">${amountStr}</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:6px 0;border-bottom:1px solid #f0f0f0;">
+                <span style="font-family:'Poppins',Arial,sans-serif;font-size:11px;color:#6b7280;font-weight:600;text-transform:uppercase;">Failed On</span>
+                <span style="font-family:'Poppins',Arial,sans-serif;font-size:13px;color:#1e293b;font-weight:600;float:right;">${dateStr}</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:6px 0;">
+                <span style="font-family:'Poppins',Arial,sans-serif;font-size:11px;color:#6b7280;font-weight:600;text-transform:uppercase;">Workspace</span>
+                <span style="font-family:'Poppins',Arial,sans-serif;font-size:13px;color:#1e293b;font-weight:600;float:right;">/${opts.workspaceSlug}</span>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <!-- CTA -->
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 18px;">
+      <tr>
+        <td align="center">
+          <a href="${opts.paymentUrl}" style="display:inline-block;padding:13px 34px;background-color:#dc2626;color:#ffffff;font-family:'Poppins',Arial,sans-serif;font-size:14px;font-weight:800;text-decoration:none;border-radius:10px;letter-spacing:0.2px;">
+            Complete Payment Now →
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="font-family:'Poppins',Arial,sans-serif;font-size:12px;color:#71717a;text-align:center;line-height:1.6;margin:0;">
+      Common reasons: insufficient balance, expired card, bank limit exceeded.<br/>
+      Ensure funds are available and retry. Need help? <a href="mailto:contact.primeinbox@gmail.com" style="color:#dc2626;">contact.primeinbox@gmail.com</a>
+    </p>
+  `;
+
+  const html = emailWrapper(body);
+  return await sendMail({ to: email, subject, html, text });
+}
+

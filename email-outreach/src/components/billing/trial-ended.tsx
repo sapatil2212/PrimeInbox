@@ -32,11 +32,10 @@ export function TrialEnded({
             <LockKeyhole className="w-7 h-7" />
           </div>
           <h1 className="text-2xl font-black tracking-tight text-zinc-900">
-            Your Trial Period has been ended
+            Subscription Required
           </h1>
           <p className="text-sm text-zinc-500 font-medium mt-2">
-            Please subscribe to a plan to continue using PrimeInbox. Choose the plan that fits your
-            email campaign needs below.
+            Please activate a subscription plan to access your PrimeInbox workspace. Choose the plan that fits your email outreach needs below.
           </p>
         </div>
 

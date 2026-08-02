@@ -302,7 +302,7 @@ export async function runCampaignSend(
       processed: 0,
       failed: 0,
       skipped: 0,
-      message: "Trial period ended. Subscribe to a plan to resume sending.",
+      message: "Subscription required. Subscribe to a plan to resume sending.",
     };
   }
 

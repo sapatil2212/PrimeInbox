@@ -1,5 +1,6 @@
 import { runCampaignScheduler } from "./cron/scheduler";
 import { resetHourlyLimits, resetDailyLimits } from "./cron/limits-reset";
+import { notifyUpcomingRenewals, processDueRenewals } from "./cron/subscription-renewal";
 import { db } from "./config/db";
 
 console.log("🚀 PrimeInbox Background Worker starting up...");
@@ -23,6 +24,12 @@ const cronInterval = setInterval(() => {
   // Every hour on the hour (minute 0)
   if (now.getMinutes() === 0) {
     resetHourlyLimits().catch((err) => console.error("[Cron Error] Hourly limits reset failed:", err));
+
+    // Twice daily (at 8 AM and 8 PM): Subscription renewals & notifications
+    if (now.getHours() === 8 || now.getHours() === 20) {
+      notifyUpcomingRenewals().catch((err) => console.error("[Cron Error] Renewal notifications failed:", err));
+      processDueRenewals().catch((err) => console.error("[Cron Error] Due renewals processing failed:", err));
+    }
   }
 
   // Every day at midnight (hour 0, minute 0)
