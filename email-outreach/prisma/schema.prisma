@@ -33,6 +33,7 @@ model Company {
   subscriptionPlan   String             @default("FREE")
   subscriptionStatus String             @default("ACTIVE")
   trialEndsAt        DateTime?
+  subscriptionEndDate DateTime?
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   users              User[]
@@ -79,6 +80,7 @@ model User {
   timezone           String               @default("UTC")
   language           String               @default("en")
   theme              String               @default("light")
+  hasSeenWelcome     Boolean              @default(false)
   company            Company?             @relation(fields: [companyId], references: [id], onDelete: Cascade)
   verificationTokens VerificationToken[]
   passwordResets     PasswordResetToken[]

@@ -27,6 +27,8 @@ model Company {
   workspaceSlug      String             @unique
   subscriptionPlan   String             @default("FREE")
   subscriptionStatus String             @default("ACTIVE")
+  trialEndsAt        DateTime?
+  subscriptionEndDate DateTime?
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   users              User[]
@@ -41,6 +43,7 @@ model Company {
   campaigns          Campaign[]
   campaignTags       CampaignTag[]
   billingSub         Subscription?
+  mandate            Mandate?
   invoices           Invoice[]
   payments           Payment[]
   crmCompanies       CrmCompany[]
@@ -72,6 +75,7 @@ model User {
   timezone           String               @default("UTC")
   language           String               @default("en")
   theme              String               @default("light")
+  hasSeenWelcome     Boolean              @default(false)
   company            Company?             @relation(fields: [companyId], references: [id], onDelete: Cascade)
   verificationTokens VerificationToken[]
   passwordResets     PasswordResetToken[]
@@ -190,6 +194,9 @@ model SmtpAccount {
   healthScore        Float               @default(100.0)
   errorLog           String?             @db.Text
   trackingDomain     String?
+  dkimDomain         String?             // Optional app-level DKIM signing domain
+  dkimSelector       String?             // DKIM selector (e.g. "primeinbox")
+  dkimPrivateKey     String?             @db.Text // AES-256-GCM encrypted PEM private key
   priority           Int                 @default(1)
   rotationWeight     Int                 @default(1)
   lastCheckedAt      DateTime?
@@ -200,6 +207,7 @@ model SmtpAccount {
   campaignQueues     CampaignQueue[]
   campaignLogs       CampaignLog[]
   emailEvents        EmailEvent[]
+  campaigns          Campaign[]
 }
 
 model SmtpGroup {
@@ -341,6 +349,7 @@ model EmailTemplate {
   bodyHtml       String            @db.Text
   bodyText       String?           @db.Text
   variables      Json?
+  includeUnsubscribe Boolean        @default(true)
   isDragDrop     Boolean           @default(false)
   dragDropData   Json?
   createdAt      DateTime          @default(now())
@@ -384,12 +393,15 @@ model Campaign {
   delayMax        Int            @default(180)
   rotationType    RotationType   @default(ROUND_ROBIN)
   smtpGroupId     String?
+  smtpAccountId   String?
+  smtpAccountIds  Json?          // Explicit list of SMTP account IDs for an ad-hoc rotational pool
   timezone        String         @default("UTC")
   weekendSending  Boolean        @default(false)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   company         Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
   smtpGroup       SmtpGroup?     @relation(fields: [smtpGroupId], references: [id], onDelete: SetNull)
+  smtpAccount     SmtpAccount?   @relation(fields: [smtpAccountId], references: [id], onDelete: SetNull)
   steps           CampaignStep[]
   leads           CampaignLead[]
   leadLists       LeadList[]     @relation("CampaignLeadLists")
@@ -465,16 +477,16 @@ model CampaignQueue {
 model CampaignLog {
   id            String        @id @default(uuid())
   campaignId    String
-  leadId        String
-  stepId        String
+  leadId        String?
+  stepId        String?
   smtpAccountId String?
   action        String
   status        String
   message       String?       @db.Text
   createdAt     DateTime      @default(now())
   campaign      Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  lead          Lead          @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  step          CampaignStep  @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  lead          Lead?         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  step          CampaignStep? @relation(fields: [stepId], references: [id], onDelete: Cascade)
   smtpAccount   SmtpAccount?  @relation(fields: [smtpAccountId], references: [id], onDelete: SetNull)
 }
 
@@ -640,6 +652,23 @@ model WebhookLog {
   createdAt DateTime @default(now())
 }
 
+model Mandate {
+  id              String    @id @default(uuid())
+  companyId       String    @unique
+  zohoCustomerId  String
+  zohoMandateId   String    @unique
+  planId          String
+  amount          Float
+  paymentMode     String?
+  status          String    @default("ACTIVE")
+  lastChargedAt   DateTime?
+  nextChargeAt    DateTime?
+  notifiedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  company         Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
 // ==========================================
 // 8. CRM MODULE
 // ==========================================
@@ -714,7 +743,7 @@ model File {
 }
 
 model Attachment {
-  id         String   @id @default(uuid())
+  id         String          @id @default(uuid())
   fileId     String
   templateId String?
   stepId     String?
@@ -759,4 +788,38 @@ model SystemLog {
   message    String   @db.Text
   errorStack String?  @db.Text
   createdAt  DateTime @default(now())
+}
+
+enum DemoEnquiryStatus {
+  NEW
+  CONTACTED
+  SCHEDULED
+  COMPLETED
+  CLOSED
+}
+
+model DemoEnquiry {
+  id           String            @id @default(uuid())
+  name         String
+  email        String
+  company      String?
+  businessType String?
+  contactNo    String?
+  whatsappNo   String?
+  phone        String?
+  message      String            @db.Text
+  demoDate     DateTime?
+  demoTime     String?
+  source       String            @default("contact_form") // contact_form, hero_cta, pricing, etc.
+  status       DemoEnquiryStatus @default(NEW)
+  notes        String?           @db.Text
+  ipAddress    String?
+  userAgent    String?           @db.Text
+  contactedAt  DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([demoDate])
 }

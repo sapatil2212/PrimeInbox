@@ -26,15 +26,20 @@ export interface CompanyBillingFields {
  * Computes the subscription access state for a company.
  *
  * Trials have been removed. Access rules:
- *  - status "ACTIVE" => active workspace (paid or free Bronze), full access.
- *  - status "PENDING_ACTIVATION" => paid signup awaiting admin activation, blocked.
- *  - any other non-active status (SUSPENDED, EXPIRED, legacy TRIALING) => blocked.
+ *  - status "ACTIVE"              => active workspace (paid or free Bronze), full access.
+ *  - status "CANCELLING"          => user cancelled, but plan still active until subscriptionEndDate. Full access.
+ *  - status "PENDING_PAYMENT"     => paid signup completed, awaiting first Zoho payment. Blocked (checkout paywall).
+ *  - status "PENDING_ACTIVATION"  => legacy admin-activation flow. Blocked.
+ *  - status "CANCELLED"           => subscription expired after cancellation. Blocked (deactivated).
+ *  - status "SUSPENDED"           => payment failure. Blocked.
+ *  - any other non-active status  => blocked.
  *  - legacy companies with no explicit status default to ACTIVE at the DB level.
  */
 export function getTrialState(company: CompanyBillingFields): TrialState {
   const status = company.subscriptionStatus;
-  const isPaid = status === "ACTIVE";
-  const pendingActivation = status === "PENDING_ACTIVATION";
+  // ACTIVE and CANCELLING both grant full access
+  const isPaid = status === "ACTIVE" || status === "CANCELLING";
+  const pendingActivation = status === "PENDING_ACTIVATION" || status === "PENDING_PAYMENT";
   const blocked = !isPaid;
 
   return {

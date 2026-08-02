@@ -13,6 +13,9 @@ import {
   CreditCard,
   XCircle,
   FileText,
+  Ban,
+  AlertTriangle,
+  X,
 } from "lucide-react";
 import { CheckoutPlans } from "@/components/billing/checkout-plans";
 import { getPlan } from "@/lib/plans";
@@ -65,12 +68,16 @@ interface TrialInfo {
 
 export default function BillingPage() {
   const [activePlan, setActivePlan] = useState("FREE");
+  const [subscriptionStatus, setSubscriptionStatus] = useState("ACTIVE");
+  const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [mandate, setMandate] = useState<Mandate | null>(null);
   const [trial, setTrial] = useState<TrialInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const fetchBillingInfo = async () => {
     try {
@@ -81,6 +88,8 @@ export default function BillingPage() {
       setInvoices(data.invoices || []);
       setMandate(data.mandate || null);
       setActivePlan(data.plan || "FREE");
+      setSubscriptionStatus(data.subscriptionStatus || "ACTIVE");
+      setSubscriptionEndDate(data.subscriptionEndDate || null);
       setTrial(data.trial || null);
     } catch (err: any) {
       toast.error(err.message || "Failed to load billing status");
@@ -115,6 +124,22 @@ export default function BillingPage() {
     }
   };
 
+  const handleCancelSubscription = async () => {
+    setIsCancelling(true);
+    try {
+      const res = await fetch("/api/billing/cancel", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to cancel subscription");
+      toast.success(data.message || "Subscription cancelled successfully");
+      setShowCancelModal(false);
+      fetchBillingInfo();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to cancel subscription");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 py-20">
@@ -126,6 +151,8 @@ export default function BillingPage() {
 
   const planMeta = getPlan(activePlan);
   const isPaid = trial?.isPaid;
+  const isCancellingStatus = subscriptionStatus === "CANCELLING";
+  const isFree = activePlan === "BRONZE" || activePlan === "FREE";
 
   return (
     <div className="flex-1 flex flex-col gap-8 max-w-6xl mx-auto w-full pb-10">
@@ -137,11 +164,37 @@ export default function BillingPage() {
         </p>
       </header>
 
+      {/* Cancellation Warning Banner */}
+      {isCancellingStatus && subscriptionEndDate && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-5 flex items-start gap-4 shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-5 h-5 text-amber-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-sm text-amber-900">Subscription Cancellation Scheduled</h3>
+            <p className="text-xs text-amber-700 mt-1 leading-relaxed">
+              Your plan is still active and fully functional until{" "}
+              <strong className="text-amber-900">
+                {new Date(subscriptionEndDate).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </strong>
+              . After that date, your account will be deactivated and auto-pay will stop.
+              Your data will be safely preserved.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Status card */}
       <section
         className={cn(
           "rounded-2xl border p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm",
-          trial?.onTrial
+          isCancellingStatus
+            ? "border-amber-200 bg-amber-50/50"
+            : trial?.onTrial
             ? "border-indigo-200 bg-indigo-50/50"
             : isPaid
             ? "border-emerald-200 bg-emerald-50/40"
@@ -152,10 +205,18 @@ export default function BillingPage() {
           <span
             className={cn(
               "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm",
-              isPaid ? "bg-emerald-500 text-white" : "bg-indigo-600 text-white"
+              isCancellingStatus
+                ? "bg-amber-500 text-white"
+                : isPaid ? "bg-emerald-500 text-white" : "bg-indigo-600 text-white"
             )}
           >
-            {isPaid ? <CheckCircle2 className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
+            {isCancellingStatus ? (
+              <Ban className="w-6 h-6" />
+            ) : isPaid ? (
+              <CheckCircle2 className="w-6 h-6" />
+            ) : (
+              <Clock className="w-6 h-6" />
+            )}
           </span>
           <div>
             <div className="flex items-center gap-2">
@@ -163,16 +224,24 @@ export default function BillingPage() {
               <span
                 className={cn(
                   "text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider border",
-                  isPaid
+                  isCancellingStatus
+                    ? "bg-amber-100 text-amber-800 border-amber-200"
+                    : isPaid
                     ? "bg-emerald-100 text-emerald-800 border-emerald-200"
                     : "bg-indigo-100 text-indigo-800 border-indigo-200"
                 )}
               >
-                {trial?.status || "ACTIVE"}
+                {subscriptionStatus || trial?.status || "ACTIVE"}
               </span>
             </div>
             <p className="text-xs text-zinc-600 font-semibold mt-1">
-              {isPaid && subscription
+              {isCancellingStatus && subscriptionEndDate
+                ? `Plan active until ${new Date(subscriptionEndDate).toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })}. Auto-pay has been stopped.`
+                : isPaid && subscription
                 ? `Subscription active until ${new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN", {
                     day: "2-digit",
                     month: "long",
@@ -182,19 +251,31 @@ export default function BillingPage() {
             </p>
           </div>
         </div>
-        {planMeta && (
-          <div className="text-right sm:border-l sm:border-zinc-200/80 sm:pl-6">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 block">Current plan price</span>
-            <div className="text-2xl font-black text-zinc-900 mt-0.5">
-              ₹{planMeta.price.toLocaleString("en-IN")}
-              <span className="text-xs text-zinc-500 font-medium">/mo</span>
+        <div className="flex items-center gap-3">
+          {planMeta && (
+            <div className="text-right sm:border-l sm:border-zinc-200/80 sm:pl-6">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 block">Current plan price</span>
+              <div className="text-2xl font-black text-zinc-900 mt-0.5">
+                ₹{planMeta.price.toLocaleString("en-IN")}
+                <span className="text-xs text-zinc-500 font-medium">/mo</span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+          {/* Cancel button — only show for active paid plans */}
+          {isPaid && !isFree && !isCancellingStatus && (
+            <button
+              onClick={() => setShowCancelModal(true)}
+              className="px-3 py-2 rounded-lg text-[11px] font-bold text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-all flex items-center gap-1.5"
+            >
+              <Ban className="w-3.5 h-3.5" />
+              Cancel Plan
+            </button>
+          )}
+        </div>
       </section>
 
       {/* Auto-Pay Mandate Info (If enrolled) */}
-      {mandate && (
+      {mandate && mandate.status === "ACTIVE" && (
         <section className="bg-gradient-to-r from-indigo-900 to-zinc-900 rounded-2xl p-5 text-white flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-md">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-indigo-300 shrink-0">
@@ -282,12 +363,9 @@ export default function BillingPage() {
                 const lastPayment = inv.payments?.[0];
                 return (
                   <tr key={inv.id} className="hover:bg-zinc-50/60 transition-colors">
-                    {/* Invoice Number */}
                     <td className="py-3.5 px-4 font-mono font-bold text-indigo-700">
                       {inv.invoiceNumber}
                     </td>
-
-                    {/* Date */}
                     <td className="py-3.5 px-4 text-zinc-600 font-medium whitespace-nowrap">
                       {new Date(inv.createdAt).toLocaleDateString("en-IN", {
                         day: "2-digit",
@@ -302,13 +380,9 @@ export default function BillingPage() {
                         })}
                       </span>
                     </td>
-
-                    {/* Amount */}
                     <td className="py-3.5 px-4 font-black text-zinc-900 text-sm">
                       ₹{inv.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                     </td>
-
-                    {/* Transaction ID */}
                     <td className="py-3.5 px-4 font-mono text-zinc-700">
                       {lastPayment?.transactionId ? (
                         <span className="bg-zinc-100 text-zinc-800 px-2 py-1 rounded text-[11px] font-semibold border border-zinc-200/60">
@@ -318,13 +392,9 @@ export default function BillingPage() {
                         <span className="text-zinc-400 text-[11px]">—</span>
                       )}
                     </td>
-
-                    {/* Provider / Payment Method */}
                     <td className="py-3.5 px-4 text-zinc-600 font-semibold uppercase text-[11px]">
                       {lastPayment?.provider || mandate?.paymentMode || "Online"}
                     </td>
-
-                    {/* Status */}
                     <td className="py-3.5 px-4 text-center">
                       <span
                         className={cn(
@@ -346,8 +416,6 @@ export default function BillingPage() {
                         {inv.status}
                       </span>
                     </td>
-
-                    {/* Action PDF Download */}
                     <td className="py-3.5 px-4 text-right">
                       <button
                         onClick={() => downloadPdf(inv.id, inv.invoiceNumber)}
@@ -378,6 +446,76 @@ export default function BillingPage() {
           </table>
         </div>
       </section>
+
+      {/* Cancel Subscription Confirmation Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-[420px] bg-white border border-zinc-200/60 rounded-2xl shadow-2xl p-6 text-center space-y-5 relative animate-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setShowCancelModal(false)}
+              className="absolute top-3 right-3 p-1.5 text-zinc-400 hover:text-zinc-600 rounded-lg hover:bg-zinc-100 transition-all"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="w-14 h-14 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mx-auto border border-red-100">
+              <AlertTriangle className="w-7 h-7" />
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-lg font-extrabold text-zinc-900 tracking-tight">
+                Cancel your subscription?
+              </h3>
+              <p className="text-xs text-zinc-500 leading-relaxed font-medium">
+                Your <strong className="text-zinc-700">{planMeta?.name || activePlan}</strong> plan will remain active until the end of your current billing period
+                {subscription?.currentPeriodEnd && (
+                  <>
+                    {" "}(
+                    <strong className="text-zinc-700">
+                      {new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </strong>
+                    )
+                  </>
+                )}
+                . After that, your account will be deactivated.
+              </p>
+            </div>
+
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 font-semibold text-left space-y-1">
+              <p>• Auto-pay will be stopped immediately</p>
+              <p>• Full workspace access until period ends</p>
+              <p>• Your data will be safely preserved</p>
+              <p>• You can resubscribe anytime</p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="flex-1 h-10 rounded-xl text-xs font-bold bg-zinc-100 text-zinc-700 hover:bg-zinc-200 transition-all border border-zinc-200"
+              >
+                Keep My Plan
+              </button>
+              <button
+                onClick={handleCancelSubscription}
+                disabled={isCancelling}
+                className="flex-1 h-10 rounded-xl text-xs font-bold bg-red-600 text-white hover:bg-red-500 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {isCancelling ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Ban className="w-3.5 h-3.5" />
+                )}
+                {isCancelling ? "Cancelling..." : "Yes, Cancel"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

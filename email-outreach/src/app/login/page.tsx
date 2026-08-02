@@ -65,6 +65,19 @@ function LoginContent() {
       if (!response.ok) {
         throw new Error(result.error || "Invalid credentials");
       }
+
+      // If the account is deactivated, show a warning and redirect to dashboard
+      // where the DeactivatedAccount component will handle resubscription checkout
+      if (result.deactivated) {
+        setGeneralError(
+          "Your subscription has expired. Redirecting you to reactivate your account..."
+        );
+        setTimeout(() => {
+          router.push("/dashboard");
+          router.refresh();
+        }, 1500);
+        return;
+      }
       
       // Force refresh router state and redirect immediately
       router.push(callbackUrl);

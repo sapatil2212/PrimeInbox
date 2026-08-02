@@ -75,7 +75,13 @@ export async function GET(req: NextRequest) {
 
     const company = await db.company.findUnique({
       where: { id: companyId },
-      select: { subscriptionPlan: true, name: true, subscriptionStatus: true, trialEndsAt: true },
+      select: {
+        subscriptionPlan: true,
+        name: true,
+        subscriptionStatus: true,
+        subscriptionEndDate: true,
+        trialEndsAt: true,
+      },
     });
 
     const trial = company
@@ -105,6 +111,8 @@ export async function GET(req: NextRequest) {
       invoices,
       mandate,
       plan: company?.subscriptionPlan || "FREE",
+      subscriptionStatus: company?.subscriptionStatus || "ACTIVE",
+      subscriptionEndDate: company?.subscriptionEndDate || null,
       trial,
     });
   } catch (error) {

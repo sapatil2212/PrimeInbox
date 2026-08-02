@@ -168,6 +168,37 @@ async function sendPaymentFailedEmail(
   await sendEmail(ownerEmail, subject, html, text);
 }
 
+// ─── Account Deactivated Email ────────────────────────────────────────────────
+async function sendAccountDeactivatedEmail(
+  ownerEmail: string,
+  ownerName: string,
+  planName: string,
+  workspaceSlug: string
+) {
+  const paymentUrl = `${appUrl}/dashboard/billing`;
+  const subject = `Your PrimeInbox account has been deactivated`;
+
+  const html = emailWrapper(`
+    <h2 style="font-size:17px;font-weight:700;color:#18181b;margin:0 0 6px;">Account Deactivated</h2>
+    <p style="font-size:13px;color:#52525b;line-height:1.6;margin:0 0 20px;">
+      Hi <strong>${ownerName}</strong>, your <strong>${planName} Plan</strong> subscription period has ended and your workspace <strong>/${workspaceSlug}</strong> has been deactivated.
+    </p>
+    <table cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 20px;"><tr>
+      <td style="padding:14px 18px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;">
+        <p style="font-size:12px;color:#991b1b;margin:0;line-height:1.5;">
+          <strong>Your data is safely preserved.</strong> You can reactivate your workspace at any time by subscribing to a plan.
+        </p>
+      </td>
+    </tr></table>
+    <table cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 16px;"><tr><td align="center">
+      <a href="${paymentUrl}" style="display:inline-block;padding:13px 34px;background:#4f46e5;color:#fff;font-size:14px;font-weight:800;text-decoration:none;border-radius:10px;">Reactivate Account →</a>
+    </td></tr></table>
+  `);
+
+  const text = `Hi ${ownerName},\n\nYour ${planName} subscription period has ended and your workspace /${workspaceSlug} has been deactivated.\nYour data is safely preserved. Reactivate at: ${paymentUrl}`;
+  await sendEmail(ownerEmail, subject, html, text);
+}
+
 // ─── 1. notifyUpcomingRenewals ────────────────────────────────────────────────
 /**
  * Sends 24-hour pre-debit notifications for mandates due in ~24 hours.
@@ -254,7 +285,14 @@ export async function processDueRenewals() {
     const now = new Date();
 
     const dueMandates = await db.mandate.findMany({
-      where: { status: "ACTIVE", nextChargeAt: { lte: now } },
+      where: {
+        status: "ACTIVE",
+        nextChargeAt: { lte: now },
+        // Skip mandates belonging to companies that are CANCELLING
+        company: {
+          subscriptionStatus: { not: "CANCELLING" },
+        },
+      },
     });
 
     if (dueMandates.length === 0) {
@@ -431,5 +469,88 @@ async function handlePaymentFailure(
     console.warn(`[Subscription Renewal] Company ${companyId} SUSPENDED due to payment failure.`);
   } catch (err: any) {
     console.error(`[Subscription Renewal] Failed to handle payment failure for ${companyId}:`, err.message);
+  }
+}
+
+// ─── 3. processExpiredCancellations ───────────────────────────────────────────
+/**
+ * Deactivates companies whose cancellation grace period has ended.
+ * Finds companies with status CANCELLING and subscriptionEndDate in the past,
+ * marks them as CANCELLED, clears their plan, and emails the owner.
+ */
+export async function processExpiredCancellations() {
+  console.log("[Subscription Lifecycle] Checking for expired cancellations...");
+  try {
+    const now = new Date();
+
+    const expiredCompanies = await db.company.findMany({
+      where: {
+        subscriptionStatus: "CANCELLING",
+        subscriptionEndDate: { lte: now },
+      },
+      select: {
+        id: true,
+        subscriptionPlan: true,
+        workspaceSlug: true,
+      },
+    });
+
+    if (expiredCompanies.length === 0) {
+      console.log("[Subscription Lifecycle] No expired cancellations to process.");
+      return;
+    }
+
+    console.log(`[Subscription Lifecycle] Found ${expiredCompanies.length} companies to deactivate.`);
+
+    for (const company of expiredCompanies) {
+      try {
+        await db.$transaction(async (tx) => {
+          // Deactivate the company
+          await tx.company.update({
+            where: { id: company.id },
+            data: {
+              subscriptionStatus: "CANCELLED",
+              subscriptionPlan: "FREE",
+            },
+          });
+
+          // Update subscription status
+          await tx.subscription.updateMany({
+            where: { companyId: company.id },
+            data: { status: "CANCELLED" },
+          });
+
+          // Log the deactivation
+          await tx.systemLog.create({
+            data: {
+              level: "INFO",
+              service: "subscription-lifecycle",
+              message: `Account DEACTIVATED for company ${company.id} | Former plan: ${company.subscriptionPlan} | Cancellation grace period ended`,
+            },
+          });
+        });
+
+        // Email the owner
+        const owner = await getCompanyOwner(company.id);
+        if (owner) {
+          try {
+            await sendAccountDeactivatedEmail(
+              owner.email,
+              owner.name,
+              company.subscriptionPlan,
+              company.workspaceSlug
+            );
+          } catch (emailErr: any) {
+            console.warn(`[Subscription Lifecycle] Failed to send deactivation email for ${company.id}:`, emailErr.message);
+          }
+        }
+
+        console.log(`[Subscription Lifecycle] ✅ Company ${company.id} deactivated (cancellation expired).`);
+      } catch (companyErr: any) {
+        console.error(`[Subscription Lifecycle] Failed to deactivate company ${company.id}:`, companyErr.message);
+      }
+    }
+  } catch (error: any) {
+    console.error("[Subscription Lifecycle] Error in processExpiredCancellations:", error.message);
   }
 }

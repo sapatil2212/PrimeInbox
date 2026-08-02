@@ -1,6 +1,6 @@
 import { runCampaignScheduler } from "./cron/scheduler";
 import { resetHourlyLimits, resetDailyLimits } from "./cron/limits-reset";
-import { notifyUpcomingRenewals, processDueRenewals } from "./cron/subscription-renewal";
+import { notifyUpcomingRenewals, processDueRenewals, processExpiredCancellations } from "./cron/subscription-renewal";
 import { db } from "./config/db";
 
 console.log("🚀 PrimeInbox Background Worker starting up...");
@@ -29,6 +29,7 @@ const cronInterval = setInterval(() => {
     if (now.getHours() === 8 || now.getHours() === 20) {
       notifyUpcomingRenewals().catch((err) => console.error("[Cron Error] Renewal notifications failed:", err));
       processDueRenewals().catch((err) => console.error("[Cron Error] Due renewals processing failed:", err));
+      processExpiredCancellations().catch((err) => console.error("[Cron Error] Expired cancellations processing failed:", err));
     }
   }
 

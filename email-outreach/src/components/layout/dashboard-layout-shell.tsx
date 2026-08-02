@@ -28,6 +28,8 @@ import {
   Ban
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WelcomeModal } from "@/components/billing/welcome-modal";
+import { getPlan } from "@/lib/plans";
 
 interface DashboardLayoutShellProps {
   children: React.ReactNode;
@@ -49,15 +51,17 @@ interface DashboardLayoutShellProps {
     onTrial: boolean;
     daysLeft: number;
   };
+  hasSeenWelcome?: boolean;
 }
 
-export function DashboardLayoutShell({ children, user, company, trial }: DashboardLayoutShellProps) {
+export function DashboardLayoutShell({ children, user, company, trial, hasSeenWelcome }: DashboardLayoutShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showWelcome, setShowWelcome] = useState(hasSeenWelcome === false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   // Reduce root font size for the dashboard to make elements more compact and professional
@@ -482,6 +486,15 @@ export function DashboardLayoutShell({ children, user, company, trial }: Dashboa
             </div>
           </div>
         </div>
+      )}
+
+      {/* First-login Welcome Modal */}
+      {showWelcome && (
+        <WelcomeModal
+          userName={user.name}
+          planName={getPlan(company.subscriptionPlan)?.name}
+          onDismiss={() => setShowWelcome(false)}
+        />
       )}
 
     </div>

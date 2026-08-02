@@ -512,3 +512,89 @@ export async function sendPaymentFailedEmail(
   return await sendMail({ to: email, subject, html, text });
 }
 
+// ── Subscription Cancelled Confirmation Email ──────────────────────────────
+export async function sendSubscriptionCancelledEmail(
+  email: string,
+  name: string,
+  planName: string,
+  endDate: Date
+) {
+  const dateStr = endDate.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+  const billingUrl = `${appUrl}/dashboard/billing`;
+  const subject = `Your PrimeInbox ${planName} subscription has been cancelled`;
+  const text = `Hi ${name},\n\nYour ${planName} subscription has been cancelled. Your plan will remain active until ${dateStr}.\n\nYou can resubscribe anytime at: ${billingUrl}`;
+
+  const body = `
+    <h2 style="font-family:'Poppins',Arial,sans-serif;font-size:17px;font-weight:700;color:#18181b;margin:0 0 6px;">Subscription Cancelled</h2>
+    <p style="font-family:'Poppins',Arial,sans-serif;font-size:13px;color:#52525b;line-height:1.6;margin:0 0 20px;">
+      Hi <strong>${name}</strong>, your <strong>${planName} Plan</strong> subscription has been cancelled as requested.
+    </p>
+
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 20px;background-color:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:18px 22px;">
+      <tr><td style="padding:5px 0;border-bottom:1px solid #fde68a;font-family:'Poppins',Arial,sans-serif;font-size:12px;">
+        <span style="color:#6b7280;font-weight:600;">Status</span>
+        <span style="float:right;font-weight:700;color:#d97706;">Cancelling</span>
+      </td></tr>
+      <tr><td style="padding:5px 0;border-bottom:1px solid #fde68a;font-family:'Poppins',Arial,sans-serif;font-size:12px;">
+        <span style="color:#6b7280;font-weight:600;">Plan Active Until</span>
+        <span style="float:right;font-weight:800;color:#1e293b;">${dateStr}</span>
+      </td></tr>
+      <tr><td style="padding:5px 0;font-family:'Poppins',Arial,sans-serif;font-size:12px;">
+        <span style="color:#6b7280;font-weight:600;">Auto-Pay</span>
+        <span style="float:right;font-weight:600;color:#dc2626;">Stopped</span>
+      </td></tr>
+    </table>
+
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 20px;">
+      <tr><td style="padding:12px 16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-family:'Poppins',Arial,sans-serif;font-size:12px;color:#166534;">
+        Your workspace will continue to work normally until <strong>${dateStr}</strong>. After that, your account will be deactivated but your data will be preserved.
+      </td></tr>
+    </table>
+
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr><td align="center">
+      <a href="${billingUrl}" style="display:inline-block;padding:11px 28px;background-color:#4f46e5;color:#ffffff;font-family:'Poppins',Arial,sans-serif;font-size:13px;font-weight:700;text-decoration:none;border-radius:8px;">
+        Manage Subscription
+      </a>
+    </td></tr></table>
+  `;
+
+  const html = emailWrapper(body);
+  return await sendMail({ to: email, subject, html, text });
+}
+
+// ── Account Deactivated Email ──────────────────────────────────────────────
+export async function sendAccountDeactivatedEmail(
+  email: string,
+  name: string,
+  planName: string
+) {
+  const billingUrl = `${appUrl}/dashboard/billing`;
+  const subject = `Your PrimeInbox account has been deactivated`;
+  const text = `Hi ${name},\n\nYour ${planName} subscription period has ended and your account has been deactivated.\n\nYour data is safely preserved. Resubscribe anytime at: ${billingUrl}`;
+
+  const body = `
+    <h2 style="font-family:'Poppins',Arial,sans-serif;font-size:17px;font-weight:700;color:#18181b;margin:0 0 6px;">Account Deactivated</h2>
+    <p style="font-family:'Poppins',Arial,sans-serif;font-size:13px;color:#52525b;line-height:1.6;margin:0 0 20px;">
+      Hi <strong>${name}</strong>, your <strong>${planName} Plan</strong> subscription period has ended and your workspace has been deactivated.
+    </p>
+
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 20px;">
+      <tr><td style="padding:12px 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-family:'Poppins',Arial,sans-serif;font-size:12px;color:#991b1b;">
+        <strong>Your data is safely preserved.</strong> You can reactivate your workspace at any time by subscribing to a plan.
+      </td></tr>
+    </table>
+
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr><td align="center">
+      <a href="${billingUrl}" style="display:inline-block;padding:13px 34px;background-color:#4f46e5;color:#ffffff;font-family:'Poppins',Arial,sans-serif;font-size:14px;font-weight:800;text-decoration:none;border-radius:10px;">
+        Reactivate Account
+      </a>
+    </td></tr></table>
+  `;
+
+  const html = emailWrapper(body);
+  return await sendMail({ to: email, subject, html, text });
+}

@@ -5,6 +5,7 @@ import { DashboardLayoutShell } from "@/components/layout/dashboard-layout-shell
 import { getTrialState } from "@/lib/access";
 import { TrialEnded } from "@/components/billing/trial-ended";
 import { SuspendedAccount } from "@/components/billing/suspended-account";
+import { DeactivatedAccount } from "@/components/billing/deactivated-account";
 import { getPlan } from "@/lib/plans";
 
 export default async function DashboardLayout({
@@ -33,6 +34,7 @@ export default async function DashboardLayout({
    timezone: true,
    language: true,
    contactNo: true,
+   hasSeenWelcome: true,
    company: {
     select: {
      id: true,
@@ -40,6 +42,7 @@ export default async function DashboardLayout({
      workspaceSlug: true,
      subscriptionPlan: true,
      subscriptionStatus: true,
+     subscriptionEndDate: true,
      trialEndsAt: true,
     },
    },
@@ -66,6 +69,7 @@ export default async function DashboardLayout({
  workspaceSlug:"personal",
  subscriptionPlan:"FREE",
  subscriptionStatus:"ACTIVE",
+ subscriptionEndDate: null,
  trialEndsAt: null,
  };
 
@@ -88,7 +92,17 @@ export default async function DashboardLayout({
       );
     }
 
-    // All other blocked states (PENDING_ACTIVATION, INACTIVE, etc.)
+    // Deactivated after cancellation — show reactivation checkout
+    if (company.subscriptionStatus === "CANCELLED") {
+      return (
+        <DeactivatedAccount
+          currentPlan={company.subscriptionPlan}
+          prefill={{ name: user.name, email: user.email, contact: user.contactNo || undefined }}
+        />
+      );
+    }
+
+    // All other blocked states (PENDING_PAYMENT, PENDING_ACTIVATION, INACTIVE, etc.)
     return (
       <TrialEnded
         currentPlan={company.subscriptionPlan}
@@ -98,7 +112,12 @@ export default async function DashboardLayout({
   }
 
  return (
- <DashboardLayoutShell user={user} company={company} trial={{ onTrial: trial.onTrial, daysLeft: trial.daysLeft }}>
+ <DashboardLayoutShell
+   user={user}
+   company={company}
+   trial={{ onTrial: trial.onTrial, daysLeft: trial.daysLeft }}
+   hasSeenWelcome={user.hasSeenWelcome}
+ >
  {children}
  </DashboardLayoutShell>
  );

@@ -40,10 +40,10 @@ export async function POST(req: NextRequest) {
     
     const { companyName, businessType, plan, name, email, contactNo, whatsappNo, password } = result.data;
     const selectedPlan = plan || "SILVER";
-    // Trials removed. Free (Bronze) plans are activated immediately; paid plans
-    // start as PENDING_ACTIVATION until a super admin marks them paid & activates.
+    // Free (Bronze) plans activate immediately; paid plans start as PENDING_PAYMENT
+    // until the user completes their first Zoho Payments checkout.
     const planMeta = getPlan(selectedPlan);
-    const initialStatus = "ACTIVE";
+    const initialStatus = planMeta?.free ? "ACTIVE" : "PENDING_PAYMENT";
     
     // Check if user already exists
     let existingUser = await db.user.findUnique({

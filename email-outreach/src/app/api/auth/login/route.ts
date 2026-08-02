@@ -30,6 +30,14 @@ export async function POST(req: NextRequest) {
     // Find user in DB
     const user = await db.user.findUnique({
       where: { email: email.toLowerCase() },
+      include: {
+        company: {
+          select: {
+            subscriptionStatus: true,
+            subscriptionPlan: true,
+          },
+        },
+      },
     });
     
     if (!user) {
@@ -103,6 +111,32 @@ export async function POST(req: NextRequest) {
         { status: 403 }
       );
     }
+
+    // Check if the account is deactivated (subscription cancelled & expired)
+    const companyStatus = user.company?.subscriptionStatus;
+    if (companyStatus === "CANCELLED") {
+      // Still set the session — the dashboard layout will show the DeactivatedAccount
+      // checkout page. This way the user can resubscribe from within the dashboard.
+      const ipAddress = req.headers.get("x-forwarded-for") || "unknown";
+      await db.user.update({
+        where: { id: user.id },
+        data: { lastLogin: new Date(), lastIp: ipAddress },
+      });
+
+      await setSessionCookie({
+        userId: user.id,
+        companyId: user.companyId,
+        role: user.role,
+        email: user.email,
+        name: user.name,
+      }, rememberMe);
+
+      return NextResponse.json({
+        success: true,
+        message: "Logged in successfully",
+        deactivated: true,
+      });
+    }
     
     // Update user details
     const ipAddress = req.headers.get("x-forwarded-for") || "unknown";
@@ -146,3 +180,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
