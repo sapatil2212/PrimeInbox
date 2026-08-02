@@ -124,38 +124,29 @@ export async function POST(req: NextRequest) {
 
     const isActive = company?.subscriptionStatus === "ACTIVE";
 
-    // For an active (free) workspace, log the user in straight away so they can
-    // be sent directly to the dashboard.
-    if (isActive) {
-      await setSessionCookie({
-        userId: user.id,
-        companyId: user.companyId,
-        role: user.role,
-        email: user.email,
-        name: user.name,
-      });
+    // Always log the user in upon email verification and redirect to /dashboard.
+    // If the workspace is active (free Bronze plan), they get immediate access.
+    // If the workspace is blocked (paid plan), /dashboard will render <TrialEnded>
+    // with <CheckoutPlans> and the Zoho Payments checkout widget.
+    await setSessionCookie({
+      userId: user.id,
+      companyId: user.companyId,
+      role: user.role,
+      email: user.email,
+      name: user.name,
+    });
 
-      await db.user.update({
-        where: { id: user.id },
-        data: { lastLogin: new Date() },
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: "Email verified! Welcome to PrimeInbox.",
-        activated: true,
-        pendingActivation: false,
-        redirectTo: "/dashboard",
-        plan: company?.subscriptionPlan || null,
-      });
-    }
+    await db.user.update({
+      where: { id: user.id },
+      data: { lastLogin: new Date() },
+    });
 
     return NextResponse.json({
       success: true,
-      message: "Your registration is completed! Your workspace will be activated soon.",
-      activated: false,
-      pendingActivation: true,
-      redirectTo: "/login",
+      message: "Email verified! Welcome to PrimeInbox.",
+      activated: isActive,
+      pendingActivation: !isActive,
+      redirectTo: "/dashboard",
       plan: company?.subscriptionPlan || null,
     });
   } catch (error) {

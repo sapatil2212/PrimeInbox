@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
+import { PLAN_MAP } from "@/lib/plans";
 import net from "net";
 
 // Helper to check TCP port connection (Redis status)
@@ -72,7 +73,62 @@ export async function GET(req: NextRequest) {
     
     const workerStatus = isRedisConnected ? "ACTIVE" : "INACTIVE";
 
-    // 3. Global tenant companies list
+    // 3. Financial & Zoho Payment Metrics
+    const [
+      successfulPaymentsSum,
+      successPaymentsCount,
+      failedPaymentsCount,
+      totalPaymentsCount,
+      activeMandatesCount,
+      recentPayments,
+      companiesByPlan,
+      recentInvoices,
+      activeSubscriptionsCount,
+    ] = await Promise.all([
+      db.payment.aggregate({
+        _sum: { amount: true },
+        where: { status: "SUCCESS" },
+      }),
+      db.payment.count({ where: { status: "SUCCESS" } }),
+      db.payment.count({ where: { status: "FAILED" } }),
+      db.payment.count(),
+      db.mandate.count({ where: { status: "ACTIVE" } }),
+      db.payment.findMany({
+        take: 20,
+        orderBy: { createdAt: "desc" },
+        include: {
+          company: {
+            select: { name: true, workspaceSlug: true, subscriptionPlan: true },
+          },
+        },
+      }),
+      db.company.groupBy({
+        by: ["subscriptionPlan"],
+        _count: { id: true },
+      }),
+      db.invoice.findMany({
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        include: {
+          company: { select: { name: true, workspaceSlug: true } },
+          payments: { take: 1, orderBy: { createdAt: "desc" }, select: { transactionId: true } },
+        },
+      }),
+      db.subscription.count({ where: { status: "ACTIVE" } }),
+    ]);
+
+    const totalRevenue = successfulPaymentsSum._sum.amount || 0;
+
+    // Calculate MRR from active paid plans
+    const activeCompanies = await db.company.findMany({
+      where: { subscriptionStatus: "ACTIVE", subscriptionPlan: { not: "BRONZE" } },
+      select: { subscriptionPlan: true },
+    });
+    const mrr = activeCompanies.reduce((sum, c) => {
+      return sum + (PLAN_MAP[c.subscriptionPlan]?.price ?? 0);
+    }, 0);
+
+    // 4. Global tenant companies list
     const tenants = await db.company.findMany({
       select: {
         id: true,
@@ -91,6 +147,11 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
+    const planDistribution: Record<string, number> = {};
+    for (const group of companiesByPlan) {
+      planDistribution[group.subscriptionPlan] = group._count.id;
+    }
+
     return NextResponse.json({
       success: true,
       stats: {
@@ -98,6 +159,14 @@ export async function GET(req: NextRequest) {
         usersCount,
         campaignsCount,
         smtpCount,
+        totalRevenue,
+        mrr,
+        activeSubscriptionsCount,
+        successPaymentsCount,
+        failedPaymentsCount,
+        totalPaymentsCount,
+        activeMandatesCount,
+        planDistribution,
       },
       health: {
         database: { status: dbStatus, latency: `${dbLatency}ms` },
@@ -113,6 +182,30 @@ export async function GET(req: NextRequest) {
         createdAt: t.createdAt,
         users: t._count.users,
         campaigns: t._count.campaigns,
+      })),
+      recentPayments: recentPayments.map(p => ({
+        id: p.id,
+        transactionId: p.transactionId,
+        companyName: p.company?.name || "Unknown",
+        slug: p.company?.workspaceSlug || "",
+        plan: p.company?.subscriptionPlan || "UNKNOWN",
+        amount: p.amount,
+        currency: p.currency,
+        status: p.status,
+        provider: p.provider,
+        createdAt: p.createdAt,
+      })),
+      recentInvoices: recentInvoices.map((inv) => ({
+        id: inv.id,
+        invoiceNumber: inv.invoiceNumber,
+        companyName: inv.company?.name ?? "Unknown",
+        slug: inv.company?.workspaceSlug ?? "",
+        amount: inv.amount,
+        currency: inv.currency,
+        status: inv.status,
+        pdfUrl: inv.pdfUrl,
+        zohoTransactionId: inv.payments?.[0]?.transactionId ?? null,
+        createdAt: inv.createdAt,
       })),
     });
   } catch (error) {

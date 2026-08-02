@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
           status: "ACTIVE",
           currentPeriodStart: new Date(),
           currentPeriodEnd: monthFromNow,
-          stripePriceId: "free_tier",
+          gatewayPriceId: "free_tier",
         },
       });
       // Note: do NOT reset company.subscriptionPlan here — it would wipe the
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
           companyId,
           invoiceNumber: `INV-${Date.now().toString().slice(-6)}-1`,
           amount: 0.0,
-          currency: "usd",
+          currency: "inr",
           status: "PAID",
         },
       });
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
           companyId,
           invoiceId: firstInvoice.id,
           amount: 0.0,
-          currency: "usd",
+          currency: "inr",
           status: "SUCCESS",
           provider: "system",
           transactionId: `TXN-FREE-${Date.now().toString().slice(-8)}`,
@@ -86,10 +86,24 @@ export async function GET(req: NextRequest) {
         })
       : null;
 
+    const mandate = await db.mandate.findUnique({
+      where: { companyId },
+      select: {
+        id: true,
+        zohoMandateId: true,
+        paymentMode: true,
+        status: true,
+        amount: true,
+        lastChargedAt: true,
+        nextChargeAt: true,
+      },
+    });
+
     return NextResponse.json({
       success: true,
       subscription,
       invoices,
+      mandate,
       plan: company?.subscriptionPlan || "FREE",
       trial,
     });
@@ -134,13 +148,13 @@ export async function POST(req: NextRequest) {
           status: "ACTIVE",
           currentPeriodStart: new Date(),
           currentPeriodEnd: nextPeriodEnd,
-          stripePriceId: `${plan.toLowerCase()}_tier`,
+          gatewayPriceId: `${plan.toLowerCase()}_tier`,
         },
         update: {
           status: "ACTIVE",
           currentPeriodStart: new Date(),
           currentPeriodEnd: nextPeriodEnd,
-          stripePriceId: `${plan.toLowerCase()}_tier`,
+          gatewayPriceId: `${plan.toLowerCase()}_tier`,
         },
       });
 
@@ -151,7 +165,7 @@ export async function POST(req: NextRequest) {
             companyId,
             invoiceNumber: `INV-${Date.now().toString().slice(-6)}-${plan.toUpperCase()}`,
             amount: Number(amount),
-            currency: "usd",
+            currency: "inr",
             status: "PAID",
           },
         });
@@ -161,9 +175,9 @@ export async function POST(req: NextRequest) {
             companyId,
             invoiceId: invoice.id,
             amount: Number(amount),
-            currency: "usd",
+            currency: "inr",
             status: "SUCCESS",
-            provider: "stripe",
+            provider: "zoho",
             transactionId: `TXN-${plan.toUpperCase()}-${Date.now().toString().slice(-8)}`,
           },
         });

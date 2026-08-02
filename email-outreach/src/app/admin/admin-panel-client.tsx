@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import Link from "next/link";
 import { toast, confirmDialog } from "@/components/ui/feedback";
 import { cn } from "@/lib/utils";
@@ -9,19 +8,36 @@ import {
   Building,
   Users,
   Send,
-  Key,
-  Activity,
-  Database,
   Loader2,
-  Trash2,
-  Play,
-  Terminal,
-  Server,
   Clock,
   BadgeCheck,
-  BellRing,
-  X,
+  IndianRupee,
+  CheckCircle2,
+  XCircle,
+  Repeat,
+  CreditCard,
+  Download,
+  ArrowRight,
+  FileText,
+  PieChart as PieChartIcon,
+  BarChart3,
+  TrendingUp,
 } from "lucide-react";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  AreaChart,
+  Area,
+} from "recharts";
 
 interface TenantItem {
   id: string;
@@ -32,14 +48,6 @@ interface TenantItem {
   createdAt: string;
   users: number;
   campaigns: number;
-}
-
-interface LogItem {
-  id: string;
-  level: string;
-  service: string;
-  message: string;
-  createdAt: string;
 }
 
 interface HealthInfo {
@@ -53,70 +61,61 @@ interface StatsData {
   usersCount: number;
   campaignsCount: number;
   smtpCount: number;
+  totalRevenue: number;
+  mrr: number;
+  activeSubscriptionsCount: number;
+  successPaymentsCount: number;
+  failedPaymentsCount: number;
+  totalPaymentsCount: number;
+  activeMandatesCount: number;
+  planDistribution: Record<string, number>;
 }
 
-interface PendingRegistration {
+interface InvoiceItem {
   id: string;
-  name: string;
+  invoiceNumber: string;
+  companyName: string;
   slug: string;
-  plan: string;
-  ownerName: string;
-  ownerEmail: string;
-  ownerContact: string | null;
+  amount: number;
+  currency: string;
+  status: string;
+  pdfUrl?: string;
+  zohoTransactionId?: string;
   createdAt: string;
 }
+
+interface PaymentItem {
+  id: string;
+  transactionId: string;
+  companyName: string;
+  slug: string;
+  plan: string;
+  amount: number;
+  currency: string;
+  status: string;
+  provider: string;
+  createdAt: string;
+}
+
+const PLAN_COLORS: Record<string, string> = {
+  BRONZE: "#f59e0b",
+  SILVER: "#9ca3af",
+  GOLD: "#eab308",
+  PLATINUM: "#6366f1",
+  FREE: "#3b82f6",
+};
 
 export function AdminPanelClient() {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [health, setHealth] = useState<HealthInfo | null>(null);
   const [tenants, setTenants] = useState<TenantItem[]>([]);
-  const [logs, setLogs] = useState<LogItem[]>([]);
+  const [recentPayments, setRecentPayments] = useState<PaymentItem[]>([]);
+  const [recentInvoices, setRecentInvoices] = useState<InvoiceItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [tenantQuery, setTenantQuery] = useState("");
-  const [logFilter, setLogFilter] = useState("ALL");
-
-  // New-registration / pending-activation alert
-  const [pendingList, setPendingList] = useState<PendingRegistration[]>([]);
-  const [showPendingAlert, setShowPendingAlert] = useState(false);
-  const [activatingId, setActivatingId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
-
-  const fetchPending = async () => {
-    try {
-      const res = await fetch("/api/admin/pending-activations");
-      if (!res.ok) return;
-      const data = await res.json();
-      const list: PendingRegistration[] = data.pending || [];
-      setPendingList(list);
-      if (list.length > 0) setShowPendingAlert(true);
-    } catch {
-      // Non-blocking — the dedicated page surfaces errors.
-    }
-  };
-
-  const handleActivate = async (t: PendingRegistration) => {
-    setActivatingId(t.id);
-    try {
-      const res = await fetch(`/api/admin/tenants/${t.id}/activate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId: t.plan, method: "manual", durationDays: 30 }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to activate workspace");
-      toast.success(data.message || "Workspace activated");
-      const remaining = pendingList.filter((p) => p.id !== t.id);
-      setPendingList(remaining);
-      if (remaining.length === 0) setShowPendingAlert(false);
-      fetchAdminData();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to activate workspace");
-    } finally {
-      setActivatingId(null);
-    }
-  };
 
   const fetchAdminData = async () => {
     try {
@@ -126,11 +125,8 @@ export function AdminPanelClient() {
       setStats(statsData.stats);
       setHealth(statsData.health);
       setTenants(statsData.tenants || []);
-
-      const logsRes = await fetch("/api/admin/logs");
-      if (!logsRes.ok) throw new Error("Failed to load system logs");
-      const logsData = await logsRes.json();
-      setLogs(logsData.logs || []);
+      setRecentPayments(statsData.recentPayments || []);
+      setRecentInvoices(statsData.recentInvoices || []);
     } catch (err: any) {
       toast.error(err.message || "Failed to load admin data");
     } finally {
@@ -140,383 +136,488 @@ export function AdminPanelClient() {
 
   useEffect(() => {
     fetchAdminData();
-    fetchPending();
     const interval = setInterval(() => fetchAdminData(), 30000);
     return () => clearInterval(interval);
   }, []);
 
-  const handleAction = async (actionType: "flush_queue" | "trigger_health") => {
-    if (actionType === "flush_queue") {
-      const ok = await confirmDialog({
-        title: "Flush the queue?",
-        description: "All pending jobs in the queue will be cleared.",
-        confirmText: "Flush",
-      });
-      if (!ok) return;
-    }
-
-    try {
-      const res = await fetch("/api/admin/logs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: actionType }),
-      });
-      if (!res.ok) throw new Error("Failed to execute action");
-      const data = await res.json();
-      toast.success(data.message || "Action completed");
-      fetchAdminData();
-    } catch (err: any) {
-      toast.error(err.message || "Action failed");
-    }
-  };
-
-  const filteredTenants = tenants.filter((t) =>
-    t.name.toLowerCase().includes(tenantQuery.toLowerCase()) ||
-    t.slug.toLowerCase().includes(tenantQuery.toLowerCase())
+  const filteredTenants = tenants.filter(
+    (t) =>
+      t.name.toLowerCase().includes(tenantQuery.toLowerCase()) ||
+      t.slug.toLowerCase().includes(tenantQuery.toLowerCase())
   );
-
-  const filteredLogs = logs.filter((l) => logFilter === "ALL" || l.level === logFilter);
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-6 h-6 animate-spin text-zinc-400 mx-auto mb-2" />
-          <p className="text-[10px] font-bold uppercase text-zinc-400">Loading...</p>
+          <p className="text-[10px] font-bold uppercase text-zinc-400">Loading admin metrics...</p>
         </div>
       </div>
     );
   }
 
+  // Format Plan Distribution data for Recharts Pie Chart
+  const planPieData = stats?.planDistribution
+    ? Object.entries(stats.planDistribution).map(([name, value]) => ({
+        name,
+        value,
+      }))
+    : [];
+
+  // Payment Breakdown Data for Bar Chart
+  const paymentBreakdownData = stats
+    ? [
+        { name: "Successful Payments", count: stats.successPaymentsCount, fill: "#10b981" },
+        { name: "Failed Payments", count: stats.failedPaymentsCount, fill: "#ef4444" },
+        { name: "Active Mandates", count: stats.activeMandatesCount, fill: "#6366f1" },
+      ]
+    : [];
+
+  // Platform usage data
+  const platformUsageData = stats
+    ? [
+        { category: "Workspaces", count: stats.companiesCount },
+        { category: "Active Subs", count: stats.activeSubscriptionsCount },
+        { category: "Users", count: stats.usersCount },
+        { category: "Campaigns", count: stats.campaignsCount },
+        { category: "SMTP Accounts", count: stats.smtpCount },
+      ]
+    : [];
+
   return (
-    <div className="p-5 md:p-7 max-w-7xl mx-auto space-y-5">
-      {/* New registration / pending activation alert modal */}
-      {showPendingAlert && pendingList.length > 0 && mounted &&
-        createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="w-full max-w-lg bg-white border border-zinc-200 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-start justify-between p-5 border-b border-zinc-100 bg-gradient-to-r from-indigo-50 to-white">
-              <div className="flex items-center gap-3">
-                <div className="relative w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                  <BellRing className="w-5 h-5" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-600 text-white text-[9px] font-black flex items-center justify-center">
-                    {pendingList.length}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-zinc-900">New registration{pendingList.length === 1 ? "" : "s"}</h3>
-                  <p className="text-xs text-zinc-500 font-medium">
-                    {pendingList.length} workspace{pendingList.length === 1 ? "" : "s"} awaiting paid activation
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowPendingAlert(false)}
-                className="text-zinc-400 hover:text-zinc-700"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="max-h-[50vh] overflow-y-auto divide-y divide-zinc-100">
-              {pendingList.map((t) => (
-                <div key={t.id} className="flex items-center justify-between gap-3 px-5 py-3">
-                  <div className="min-w-0">
-                    <div className="text-sm font-bold text-zinc-900 truncate">{t.name}</div>
-                    <div className="text-[11px] text-zinc-500 truncate">
-                      {t.ownerName} · {t.ownerEmail}
-                    </div>
-                    <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-zinc-100 text-zinc-600 border border-zinc-200/60">
-                      {t.plan}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => handleActivate(t)}
-                    disabled={activatingId === t.id}
-                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-[10px] font-bold transition-colors disabled:opacity-60"
-                  >
-                    {activatingId === t.id ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <BadgeCheck className="w-3.5 h-3.5" />
-                    )}
-                    Mark as Paid &amp; Activate
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex items-center justify-between gap-3 p-4 border-t border-zinc-100 bg-zinc-50/50">
-              <Link
-                href="/admin/pending-activation"
-                className="text-[11px] font-bold text-indigo-600 hover:underline"
-              >
-                Open Pending Activation page
-              </Link>
-              <button
-                onClick={() => setShowPendingAlert(false)}
-                className="h-8 px-4 rounded-lg border border-zinc-200 hover:bg-white text-xs font-bold text-zinc-600"
-              >
-                Dismiss
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
+    <div className="p-5 md:p-7 max-w-7xl mx-auto space-y-6">
       {/* Page Header */}
       <div>
         <h1 className="text-lg md:text-xl font-bold text-zinc-900">Admin Overview</h1>
-        <p className="text-xs text-zinc-400 mt-0.5">Monitor system health and platform metrics</p>
+        <p className="text-xs text-zinc-400 mt-0.5">
+          Platform metrics, interactive charts, and Zoho Payments revenue analytics
+        </p>
       </div>
 
-      {/* Health Status Cards */}
-      {health && (
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="bg-white border border-zinc-200/70 rounded-xl p-4 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-lg bg-zinc-50 border border-zinc-200/60 text-emerald-500">
-                <Database className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Database</h4>
-                <p className="text-xs font-bold text-zinc-900 mt-0.5">{health.database.status}</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-[9px] text-zinc-400 font-bold block uppercase">Latency</span>
-              <span className="text-[11px] font-bold text-zinc-600">{health.database.latency}</span>
-            </div>
-          </div>
-
-          <div className="bg-white border border-zinc-200/70 rounded-xl p-4 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-lg bg-zinc-50 border border-zinc-200/60 text-indigo-500">
-                <Server className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Redis Cache</h4>
-                <p className="text-xs font-bold text-zinc-900 mt-0.5">{health.redis.status}</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-[9px] text-zinc-400 font-bold block uppercase">Port</span>
-              <span className="text-[11px] font-bold text-zinc-600">{health.redis.port}</span>
-            </div>
-          </div>
-
-          <div className="bg-white border border-zinc-200/70 rounded-xl p-4 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-lg bg-zinc-50 border border-zinc-200/60 text-amber-500">
-                <Activity className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Send Queue</h4>
-                <p className="text-xs font-bold text-zinc-900 mt-0.5">{health.queue.workerStatus}</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-[9px] text-zinc-400 font-bold block uppercase">Backlog</span>
-              <span className="text-[11px] font-bold text-zinc-600">{health.queue.pendingJobs} jobs</span>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Stats Cards */}
+      {/* Zoho Payments Financial & Revenue Overview */}
       {stats && (
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="bg-white border border-zinc-200/70 rounded-xl p-4 flex flex-col gap-1">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <Building className="w-3.5 h-3.5 text-zinc-400" />
-              <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Tenants</span>
-            </div>
-            <span className="text-xl font-bold text-zinc-900">{stats.companiesCount}</span>
-            <p className="text-[9px] text-zinc-400 font-medium">Active workspaces</p>
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+              Zoho Payments &amp; Revenue Overview
+            </h2>
+            <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              Live Gateway Metrics
+            </span>
           </div>
 
-          <div className="bg-white border border-zinc-200/70 rounded-xl p-4 flex flex-col gap-1">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <Users className="w-3.5 h-3.5 text-zinc-400" />
-              <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Users</span>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="bg-gradient-to-br from-violet-900 to-zinc-900 text-white rounded-xl p-4 flex flex-col justify-between shadow-md">
+              <div className="flex items-center justify-between text-violet-200">
+                <span className="text-[10px] font-bold uppercase tracking-wider">Total Revenue</span>
+                <IndianRupee className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div className="mt-3">
+                <span className="text-2xl font-black">₹{stats.totalRevenue.toLocaleString("en-IN")}</span>
+                <p className="text-[10px] text-zinc-300 font-medium mt-0.5">Collected via Zoho Payments</p>
+              </div>
             </div>
-            <span className="text-xl font-bold text-zinc-900">{stats.usersCount}</span>
-            <p className="text-[9px] text-zinc-400 font-medium">Total platform users</p>
-          </div>
 
-          <div className="bg-white border border-zinc-200/70 rounded-xl p-4 flex flex-col gap-1">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <Send className="w-3.5 h-3.5 text-zinc-400" />
-              <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Campaigns</span>
+            <div className="bg-white border border-zinc-200/70 rounded-xl p-4 flex flex-col justify-between">
+              <div className="flex items-center justify-between text-zinc-400">
+                <span className="text-[10px] font-bold uppercase tracking-wider">Active Subs</span>
+                <BadgeCheck className="w-4 h-4 text-indigo-500" />
+              </div>
+              <div className="mt-3">
+                <span className="text-2xl font-black text-zinc-900">{stats.activeSubscriptionsCount || 0}</span>
+                <p className="text-[10px] text-indigo-600 font-semibold mt-0.5">Paying customers</p>
+              </div>
             </div>
-            <span className="text-xl font-bold text-zinc-900">{stats.campaignsCount}</span>
-            <p className="text-[9px] text-zinc-400 font-medium">Active sequences</p>
-          </div>
 
-          <div className="bg-white border border-zinc-200/70 rounded-xl p-4 flex flex-col gap-1">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <Key className="w-3.5 h-3.5 text-zinc-400" />
-              <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">SMTP Accounts</span>
+            <div className="bg-white border border-zinc-200/70 rounded-xl p-4 flex flex-col justify-between">
+              <div className="flex items-center justify-between text-zinc-400">
+                <span className="text-[10px] font-bold uppercase tracking-wider">Successful Payments</span>
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              </div>
+              <div className="mt-3">
+                <span className="text-2xl font-black text-zinc-900">{stats.successPaymentsCount}</span>
+                <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">Completed transactions</p>
+              </div>
             </div>
-            <span className="text-xl font-bold text-zinc-900">{stats.smtpCount}</span>
-            <p className="text-[9px] text-zinc-400 font-medium">Connected servers</p>
+
+            <div className="bg-white border border-zinc-200/70 rounded-xl p-4 flex flex-col justify-between">
+              <div className="flex items-center justify-between text-zinc-400">
+                <span className="text-[10px] font-bold uppercase tracking-wider">Active Mandates</span>
+                <Repeat className="w-4 h-4 text-blue-500" />
+              </div>
+              <div className="mt-3">
+                <span className="text-2xl font-black text-zinc-900">{stats.activeMandatesCount}</span>
+                <p className="text-[10px] text-blue-600 font-semibold mt-0.5">Recurring auto-pay mandates</p>
+              </div>
+            </div>
           </div>
         </section>
       )}
 
-      {/* Main Content Grid */}
-      <section className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        {/* Tenant Registry */}
-        <div className="xl:col-span-2 bg-white border border-zinc-200/70 rounded-xl p-5 flex flex-col gap-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <h3 className="font-bold text-sm text-zinc-900">Workspace Registry</h3>
-              <p className="text-[11px] text-zinc-400 mt-0.5">All registered tenant workspaces</p>
+      {/* Interactive Analytics & Charts Section */}
+      {stats && mounted && (
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Chart 1: Subscription Plan Distribution (Pie/Donut) */}
+          <div className="bg-white border border-zinc-200/70 rounded-xl p-5 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <h3 className="font-bold text-sm text-zinc-900 flex items-center gap-2">
+                  <PieChartIcon className="w-4 h-4 text-indigo-600" />
+                  Subscription Plans
+                </h3>
+                <p className="text-[11px] text-zinc-400 mt-0.5">Workspaces grouped by pricing tier</p>
+              </div>
             </div>
-            <input
-              type="text"
-              placeholder="Filter workspaces..."
-              value={tenantQuery}
-              onChange={(e) => setTenantQuery(e.target.value)}
-              className="h-8 w-full sm:w-44 px-3 rounded-lg bg-zinc-50 border border-zinc-200 text-[11px] font-semibold text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-zinc-300"
-            />
+
+            <div className="h-60 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={planPieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={55}
+                    outerRadius={80}
+                    paddingAngle={4}
+                    dataKey="value"
+                    label={({ name, percent }: { name?: string; percent?: number }) =>
+                      name && percent !== undefined ? `${name} ${(percent * 100).toFixed(0)}%` : ""
+                    }
+                  >
+                    {planPieData.map((entry) => (
+                      <Cell
+                        key={`cell-${entry.name}`}
+                        fill={PLAN_COLORS[entry.name] || "#6366f1"}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#18181b",
+                      borderColor: "#27272a",
+                      color: "#ffffff",
+                      borderRadius: "8px",
+                      fontSize: "11px",
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="flex flex-wrap gap-3 justify-center pt-2 border-t border-zinc-100">
+              {planPieData.map((item) => (
+                <div key={item.name} className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-600">
+                  <span
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{ backgroundColor: PLAN_COLORS[item.name] || "#6366f1" }}
+                  />
+                  {item.name}: <span className="font-bold text-zinc-900">{item.value}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
+          {/* Chart 2: Payment Gateway Status Breakdown (Bar Chart) */}
+          <div className="bg-white border border-zinc-200/70 rounded-xl p-5 flex flex-col justify-between">
+            <div className="mb-2">
+              <h3 className="font-bold text-sm text-zinc-900 flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-emerald-600" />
+                Payment & Mandate Metrics
+              </h3>
+              <p className="text-[11px] text-zinc-400 mt-0.5">Gateway status breakdown</p>
+            </div>
+
+            <div className="h-60 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={paymentBreakdownData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#71717a" }} interval={0} />
+                  <YAxis tick={{ fontSize: 10, fill: "#71717a" }} allowDecimals={false} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#18181b",
+                      borderColor: "#27272a",
+                      color: "#ffffff",
+                      borderRadius: "8px",
+                      fontSize: "11px",
+                    }}
+                  />
+                  <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                    {paymentBreakdownData.map((entry, index) => (
+                      <Cell key={`bar-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="flex justify-around pt-2 border-t border-zinc-100 text-[11px] text-zinc-500">
+              <div>
+                Total Txns: <span className="font-bold text-zinc-900">{stats.totalPaymentsCount}</span>
+              </div>
+              <div>
+                Success Rate:{" "}
+                <span className="font-bold text-emerald-600">
+                  {stats.totalPaymentsCount > 0
+                    ? `${((stats.successPaymentsCount / stats.totalPaymentsCount) * 100).toFixed(0)}%`
+                    : "100%"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Chart 3: Platform Overview Comparative Chart */}
+          <div className="bg-white border border-zinc-200/70 rounded-xl p-5 flex flex-col justify-between">
+            <div className="mb-2">
+              <h3 className="font-bold text-sm text-zinc-900 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-violet-600" />
+                Platform Scale Overview
+              </h3>
+              <p className="text-[11px] text-zinc-400 mt-0.5">Total counts across resources</p>
+            </div>
+
+            <div className="h-60 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={platformUsageData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
+                  <XAxis dataKey="category" tick={{ fontSize: 9, fill: "#71717a" }} interval={0} />
+                  <YAxis tick={{ fontSize: 10, fill: "#71717a" }} allowDecimals={false} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#18181b",
+                      borderColor: "#27272a",
+                      color: "#ffffff",
+                      borderRadius: "8px",
+                      fontSize: "11px",
+                    }}
+                  />
+                  <Bar dataKey="count" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="text-right pt-2 border-t border-zinc-100">
+              <Link
+                href="/admin/tenants"
+                className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center justify-end gap-1"
+              >
+                View all tenants <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Platform Core Metrics */}
+      <section className="space-y-3">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Platform Usage Metrics</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="bg-white border border-zinc-200/70 rounded-xl p-4 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase">Workspaces</p>
+              <p className="text-xl font-black text-zinc-900 mt-1">{stats?.companiesCount || 0}</p>
+            </div>
+            <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-lg">
+              <Building className="w-4 h-4" />
+            </div>
+          </div>
+
+          <div className="bg-white border border-zinc-200/70 rounded-xl p-4 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase">Total Users</p>
+              <p className="text-xl font-black text-zinc-900 mt-1">{stats?.usersCount || 0}</p>
+            </div>
+            <div className="p-2.5 bg-violet-50 text-violet-600 rounded-lg">
+              <Users className="w-4 h-4" />
+            </div>
+          </div>
+
+          <div className="bg-white border border-zinc-200/70 rounded-xl p-4 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase">Campaigns</p>
+              <p className="text-xl font-black text-zinc-900 mt-1">{stats?.campaignsCount || 0}</p>
+            </div>
+            <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg">
+              <Send className="w-4 h-4" />
+            </div>
+          </div>
+
+          <div className="bg-white border border-zinc-200/70 rounded-xl p-4 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase">SMTP Accounts</p>
+              <p className="text-xl font-black text-zinc-900 mt-1">{stats?.smtpCount || 0}</p>
+            </div>
+            <div className="p-2.5 bg-amber-50 text-amber-600 rounded-lg">
+              <Send className="w-4 h-4" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Recent Payments Section */}
+      <section className="bg-white border border-zinc-200/70 rounded-xl p-5 flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-sm text-zinc-900 flex items-center gap-2">
+              <CreditCard className="w-4 h-4 text-emerald-600" />
+              Recent Payment Transactions
+            </h3>
+            <p className="text-[11px] text-zinc-400 mt-0.5">Live transactions from Zoho Payments gateway</p>
+          </div>
+          <Link
+            href="/admin/transactions"
+            className="flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+          >
+            View all <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left text-[11px]">
+            <thead>
+              <tr className="border-b border-zinc-100 text-zinc-400 font-bold uppercase text-[9px] tracking-wider">
+                <th className="pb-2.5">Transaction ID</th>
+                <th className="pb-2.5">Workspace</th>
+                <th className="pb-2.5">Plan</th>
+                <th className="pb-2.5 text-right">Amount</th>
+                <th className="pb-2.5 text-center">Status</th>
+                <th className="pb-2.5 text-center">Provider</th>
+                <th className="pb-2.5 text-right">Date</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100">
+              {recentPayments.map((p) => (
+                <tr key={p.id} className="hover:bg-zinc-50/50 transition-colors">
+                  <td className="py-2.5 font-mono text-[10px] font-bold text-zinc-800">
+                    {p.transactionId}
+                  </td>
+                  <td className="py-2.5">
+                    <p className="font-bold text-zinc-900">{p.companyName}</p>
+                    <p className="text-[9px] text-zinc-400">/{p.slug}</p>
+                  </td>
+                  <td className="py-2.5">
+                    <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-zinc-100 text-zinc-700 border border-zinc-200">
+                      {p.plan}
+                    </span>
+                  </td>
+                  <td className="py-2.5 text-right font-black text-zinc-900">
+                    ₹{p.amount.toLocaleString("en-IN")}
+                  </td>
+                  <td className="py-2.5 text-center">
+                    <span
+                      className={cn(
+                        "px-2 py-0.5 rounded-md text-[9px] font-bold border uppercase tracking-wider",
+                        p.status === "SUCCESS"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : "bg-red-50 text-red-700 border-red-200"
+                      )}
+                    >
+                      {p.status}
+                    </span>
+                  </td>
+                  <td className="py-2.5 text-center text-xs font-semibold text-zinc-500 uppercase">{p.provider}</td>
+                  <td className="py-2.5 text-right text-[10px] text-zinc-400 font-medium">
+                    {new Date(p.createdAt).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </td>
+                </tr>
+              ))}
+              {recentPayments.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="py-6 text-center text-zinc-400">
+                    No payments recorded yet. Online checkout transactions will appear here automatically.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Recent Invoices mini list */}
+      {recentInvoices.length > 0 && (
+        <section className="bg-white border border-zinc-200/70 rounded-xl p-5 flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-bold text-sm text-zinc-900 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-indigo-600" />
+                Recent Invoices
+              </h3>
+              <p className="text-[11px] text-zinc-400 mt-0.5">Latest 5 invoices with PDF download</p>
+            </div>
+            <Link
+              href="/admin/transactions"
+              className="flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+            >
+              View all <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left text-[11px] text-zinc-600">
+            <table className="w-full border-collapse text-left text-[11px]">
               <thead>
                 <tr className="border-b border-zinc-100 text-zinc-400 font-bold uppercase text-[9px] tracking-wider">
-                  <th className="pb-2.5">Company</th>
-                  <th className="pb-2.5">Slug</th>
-                  <th className="pb-2.5 text-center">Plan</th>
+                  <th className="pb-2.5">Invoice #</th>
+                  <th className="pb-2.5">Workspace</th>
+                  <th className="pb-2.5 text-right">Amount</th>
                   <th className="pb-2.5 text-center">Status</th>
-                  <th className="pb-2.5 text-right">Users</th>
+                  <th className="pb-2.5 text-center">Zoho Tx ID</th>
+                  <th className="pb-2.5 text-right">Date</th>
+                  <th className="pb-2.5 text-right">PDF</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
-                {filteredTenants.map((t) => (
-                  <tr key={t.id} className="hover:bg-zinc-50/50 transition-colors">
-                    <td className="py-2.5 font-bold text-zinc-900">{t.name}</td>
-                    <td className="py-2.5 font-semibold text-zinc-500">/{t.slug}</td>
+                {recentInvoices.map((inv) => (
+                  <tr key={inv.id} className="hover:bg-zinc-50/50 transition-colors">
+                    <td className="py-2.5 font-mono text-[10px] font-bold text-indigo-700">{inv.invoiceNumber}</td>
+                    <td className="py-2.5">
+                      <p className="font-bold text-zinc-900">{inv.companyName}</p>
+                      <p className="text-[9px] text-zinc-400">/{inv.slug}</p>
+                    </td>
+                    <td className="py-2.5 text-right font-black text-zinc-900">₹{inv.amount.toLocaleString("en-IN")}</td>
                     <td className="py-2.5 text-center">
-                      <span className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-zinc-100 text-zinc-600 border border-zinc-200/60">
-                        {t.plan}
+                      <span
+                        className={cn(
+                          "px-2 py-0.5 rounded-md text-[9px] font-bold border uppercase",
+                          inv.status === "PAID"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
+                        )}
+                      >
+                        {inv.status}
                       </span>
                     </td>
-                    <td className="py-2.5 text-center">
-                      <span className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                        {t.status}
-                      </span>
+                    <td className="py-2.5 text-center font-mono text-[9px] text-zinc-600">
+                      {inv.zohoTransactionId?.slice(-12) || "—"}
                     </td>
-                    <td className="py-2.5 text-right font-semibold text-zinc-700">{t.users}</td>
+                    <td className="py-2.5 text-right text-[10px] text-zinc-400">
+                      {new Date(inv.createdAt).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </td>
+                    <td className="py-2.5 text-right">
+                      <a
+                        href={`/api/admin/invoices/${inv.id}/pdf`}
+                        download
+                        className="flex items-center justify-end gap-1 text-[10px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+                      >
+                        <Download className="w-3 h-3" /> PDF
+                      </a>
+                    </td>
                   </tr>
                 ))}
-                {filteredTenants.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="py-6 text-center text-zinc-400">No workspaces found.</td>
-                  </tr>
-                )}
               </tbody>
             </table>
           </div>
-        </div>
-
-        {/* System Control Panel */}
-        <div className="bg-white border border-zinc-200/70 rounded-xl p-5 flex flex-col gap-5">
-          <div>
-            <h3 className="font-bold text-sm text-zinc-900">System Controls</h3>
-            <p className="text-[11px] text-zinc-400 mt-0.5">Administrative actions</p>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <div className="p-3.5 bg-zinc-50 border border-zinc-200/60 rounded-lg flex flex-col gap-1.5">
-              <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Trash2 className="w-3 h-3" /> Queue Management
-              </span>
-              <p className="text-[10px] text-zinc-500 leading-relaxed">Flush the sending backlog to cancel frozen runs</p>
-              <button
-                onClick={() => handleAction("flush_queue")}
-                className="mt-1.5 h-8 px-3 rounded-lg bg-white hover:bg-zinc-50 border border-zinc-200 text-[11px] font-bold text-zinc-600 hover:text-zinc-900 flex items-center justify-center gap-1.5 transition-colors"
-              >
-                <Trash2 className="w-3 h-3" /> Flush Queue
-              </button>
-            </div>
-
-            <div className="p-3.5 bg-zinc-50 border border-zinc-200/60 rounded-lg flex flex-col gap-1.5">
-              <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Play className="w-3 h-3" /> Health Check
-              </span>
-              <p className="text-[10px] text-zinc-500 leading-relaxed">Run diagnostic telemetry across services</p>
-              <button
-                onClick={() => handleAction("trigger_health")}
-                className="mt-1.5 h-8 px-3 rounded-lg bg-white hover:bg-zinc-50 border border-zinc-200 text-[11px] font-bold text-zinc-600 hover:text-zinc-900 flex items-center justify-center gap-1.5 transition-colors"
-              >
-                <Play className="w-3 h-3" /> Run Diagnostic
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Log Stream */}
-      <section className="bg-white border border-zinc-200/70 rounded-xl p-5 flex flex-col gap-3">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h3 className="font-bold text-sm text-zinc-900 flex items-center gap-1.5">
-              System Logs <Terminal className="w-3.5 h-3.5 text-zinc-400" />
-            </h3>
-            <p className="text-[11px] text-zinc-400 mt-0.5">Real-time platform activity stream</p>
-          </div>
-
-          <div className="flex items-center gap-1 bg-zinc-50 p-1 rounded-lg border border-zinc-200/70">
-            {["ALL", "INFO", "WARN", "ERROR"].map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setLogFilter(filter)}
-                className={cn(
-                  "px-2.5 py-1 rounded-md text-[9px] font-bold tracking-wider uppercase transition-colors cursor-pointer",
-                  logFilter === filter
-                    ? "bg-white text-zinc-700 border border-zinc-200"
-                    : "text-zinc-400 hover:text-zinc-700"
-                )}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-zinc-950 border border-zinc-900 rounded-lg p-3.5 font-mono text-[10px] max-h-72 overflow-y-auto divide-y divide-zinc-900/40">
-          {filteredLogs.map((log) => (
-            <div key={log.id} className="py-2 flex flex-col sm:flex-row sm:items-center gap-2 select-text">
-              <span className="text-zinc-500 shrink-0 flex items-center gap-1.5">
-                <Clock className="w-2.5 h-2.5" />
-                {new Date(log.createdAt).toLocaleTimeString()}
-              </span>
-              <span
-                className={cn(
-                  "px-1.5 py-0.5 rounded text-[8px] font-bold uppercase shrink-0",
-                  log.level === "ERROR"
-                    ? "bg-red-950/50 text-red-400/90 border border-red-900/30"
-                    : log.level === "WARN"
-                    ? "bg-amber-950/50 text-amber-400/90 border border-amber-900/30"
-                    : "bg-zinc-900 text-zinc-400"
-                )}
-              >
-                {log.level}
-              </span>
-              <span className="text-zinc-500 shrink-0 font-semibold uppercase text-[8px] border border-zinc-800 px-1.5 py-0.5 rounded bg-zinc-900/30">
-                {log.service}
-              </span>
-              <span className="text-zinc-300 ml-1 leading-relaxed break-all">{log.message}</span>
-            </div>
-          ))}
-          {filteredLogs.length === 0 && (
-            <div className="py-6 text-center text-zinc-500">No logs available.</div>
-          )}
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 }
